@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/container"
+    tools:context="com.example.avendano.cp_scan.Activities.AssessmentActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="5dp"
+        android:layout_below="@+id/toolbar"
+        android:id="@+id/linear">
+
+        <Button
+            android:id="@+id/scan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@drawable/style_button_white"
+            android:padding="4dp"
+            android:text="Scan"
+            android:textColor="@color/darkorange" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OR" />
+
+        <EditText
+            android:id="@+id/serial_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/style_edittext"
+            android:drawableRight="@drawable/drawable"
+            android:hint="Serial Number"
+            android:inputType="text"
+            android:paddingLeft="5dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_below="@+id/linear"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/lightGrey"
+        android:id="@+id/view"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_below="@+id/view"
+        android:id="@+id/scan_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="5dp"
+        android:layout_marginBottom="?attr/actionBarSize">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <EditText
+        android:id="@+id/remark"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        android:textColor="@color/black"
+        android:hint="Write a remark..."
+        android:padding="4dp"
+        android:inputType="text"
+        android:maxLength="80"/>
+</RelativeLayout>

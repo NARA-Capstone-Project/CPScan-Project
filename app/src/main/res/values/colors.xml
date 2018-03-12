@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#ffc107</color>
+    <color name="colorPrimaryDark">#ffa000</color>
+    <color name="darkorange">#ff8000</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="bg">#fcfcfc</color>
+    <color name="lightBlue">#00bfff</color>
+    <color name="iconColor">#c1bebe</color>
+    <color name="darkGrey">#949191</color>
+    <color name="tab_indicator">#815d0b</color>
+    <color name="white">#ffffff</color>
+    <color name="lightGrey">#dad9d9</color>
+    <color name="black">#000000</color>
+</resources>

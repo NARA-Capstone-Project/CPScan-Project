@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.avendano.cp_scan">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".Activities.LogInActivity" />
+        <activity
+            android:name=".Activities.MainActivity"
+            android:configChanges="orientation"
+            android:label="CP-Scan"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".Activities.RequestActivity" />
+        <activity android:name=".Activities.ViewRoom" />
+        <activity android:name=".Activities.RoomPc" />
+        <activity
+            android:name=".Activities.ScheduleActivity"
+            android:label="@string/title_activity_schedule"
+            android:theme="@style/AppTheme" />
+        <activity android:name=".Activities.PcAssessment" />
+        <activity android:name=".Activities.AssessmentActivity" />
+        <activity android:name=".Activities.Client_Page">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".Connection_Detector.NetworkStateChange"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".Activities.ViewPc"></activity>
+    </application>
+
+</manifest>
