@@ -78,7 +78,6 @@ public class RoomPc extends AppCompatActivity {
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                hideDialog();
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
@@ -109,6 +108,7 @@ public class RoomPc extends AppCompatActivity {
                     }
                     adapter = new ComputerAdapter(RoomPc.this, compList, refresh);
                     recyclerView.setAdapter(adapter);
+                    hideDialog();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -120,7 +120,6 @@ public class RoomPc extends AppCompatActivity {
             }
         });
         RequestQueueHandler.getInstance(this).addToRequestQueue(str);
-
     }
 
     private void checkComputers(int comp_id, int room_id, int pc_no, String model
@@ -147,7 +146,6 @@ public class RoomPc extends AppCompatActivity {
             hideDialog();
             adapter = new ComputerAdapter(RoomPc.this, compList, refresh);
             recyclerView.setAdapter(adapter);
-
             adapter.notifyDataSetChanged();
         }
     }
@@ -165,8 +163,6 @@ public class RoomPc extends AppCompatActivity {
                 Computers computers = new Computers(status, pcno, model, compid, room_id);
                 compList.add(computers);
             } while (c.moveToNext());
-            adapter = new ComputerAdapter(RoomPc.this, compList, refresh);
-            recyclerView.setAdapter(adapter);
         }
     }
 

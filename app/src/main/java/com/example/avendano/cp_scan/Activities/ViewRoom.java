@@ -4,6 +4,9 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -28,6 +32,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -35,7 +42,7 @@ import java.util.Date;
 
 public class ViewRoom extends AppCompatActivity {
 
-    ImageView room_sched, room_computers;
+    ImageView room_sched, room_computers, room_image;
     Button report;
     private int room_id;
     private SQLiteHandler db;
@@ -82,6 +89,7 @@ public class ViewRoom extends AppCompatActivity {
         lastAssess = (TextView) findViewById(R.id.date_assess);
         dialog = new ProgressDialog(this);
         dialog.setCancelable(false);
+        room_image = (ImageView) findViewById(R.id.room_image);
 
         dialog.setMessage("Loading...");
 
@@ -145,7 +153,7 @@ public class ViewRoom extends AppCompatActivity {
                                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            addPcToAssess();
+                                            addPcToAssessFrmServer();
                                         }
                                     })
                                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -170,7 +178,7 @@ public class ViewRoom extends AppCompatActivity {
                         }
                     } else {
                         if (connection_detector.isConnected()) {
-                            addPcToAssess();
+                            addPcToAssessFrmServer();
                         } else {
                             final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
                             builder.setMessage("No Internet Connection")
@@ -201,32 +209,58 @@ public class ViewRoom extends AppCompatActivity {
         clearDb();
         showDialog();
         roomDetails();
+//        getImage();
     }
 
-    private void addPcToAssess() {
-        Cursor c = db.getCompInARoom(room_id);
-        if (c.moveToFirst()) {
-            do {
-                int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
-                int pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
-                String model = c.getString(c.getColumnIndex(db.COMP_MODEL));
-                String pr = c.getString(c.getColumnIndex(db.COMP_PR));
-                String mb = c.getString(c.getColumnIndex(db.COMP_MB));
-                String monitor = c.getString(c.getColumnIndex(db.COMP_MONITOR));
-                String kboard = c.getString(c.getColumnIndex(db.COMP_KBOARD));
-                String mouse = c.getString(c.getColumnIndex(db.COMP_MOUSE));
-                String ram = c.getString(c.getColumnIndex(db.COMP_RAM));
-                String vga = c.getString(c.getColumnIndex(db.COMP_VGA));
-                String hdd = c.getString(c.getColumnIndex(db.COMP_HDD));
-                String comp_status = c.getString(c.getColumnIndex(db.COMP_STATUS));
+    private void addPcToAssessFrmServer() {
+        StringRequest str = new StringRequest(Request.Method.GET
+                , AppConfig.URL_GET_ALL_PC
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        int comp_id = obj.getInt("comp_id");
+                        int room_id = 0;
+                        if (!obj.isNull("room_id")) {
+                            room_id = obj.getInt("room_id");
+                        }
+                        int pc_no = obj.getInt("pc_no");
+                        String model = obj.getString("model");
+                        String mb = obj.getString("mb");
+                        String pr = obj.getString("pr");
+                        String monitor = obj.getString("monitor");
+                        String ram = obj.getString("ram");
+                        String kboard = obj.getString("kboard");
+                        String mouse = obj.getString("mouse");
+                        String vga = obj.getString("vga");
+                        String hdd = obj.getString("hdd");
+                        String comp_status = obj.getString("comp_status");
 
-                long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
-                Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
+                        if (room_id == ViewRoom.this.room_id) {
+                            long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
+                            Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
+                            Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
+                            goToAssessment();
+                            break;
+                        }
+                    }
+                } catch (JSONException e) {
+                    Toast.makeText(ViewRoom.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.v("RESULT", "Error: " + error.getMessage());
+            }
+        });
+        RequestQueueHandler.getInstance(ViewRoom.this).addToRequestQueue(str);
+    }
 
-            } while (c.moveToNext());
-        }
-
+    private void goToAssessment() {
         Intent intent = new Intent(ViewRoom.this, AssessmentActivity.class);
         intent.putExtra("room_id", room_id);
         startActivity(intent);
@@ -303,7 +337,7 @@ public class ViewRoom extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 hideDialog();
                 getLocalRoomDetails();
-                Log.w("Volleyerror 1", "ViewRoom: "+error.getMessage());
+                Log.w("Volleyerror 1", "ViewRoom: " + error.getMessage());
             }
         });
         RequestQueueHandler.getInstance(this).addToRequestQueue(stringRequest);
@@ -329,6 +363,36 @@ public class ViewRoom extends AppCompatActivity {
             this.pc_count.setText("" + pc_count);
             this.pc_working.setText("" + pc_working);
         }
+    }
+
+    private void getImage(){
+        class GetImage extends AsyncTask<Integer, Void, Bitmap> {
+
+            @Override
+            protected Bitmap doInBackground(Integer... integers) {
+                int id = integers[0];
+                String get = AppConfig.ROOT_URL + "cict_getRoom_Image.php?id=" + id;
+                URL url =null;
+                Bitmap image = null;
+                try {
+                    url = new URL(get);
+                    image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return image;
+            }
+
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                super.onPostExecute(bitmap);
+                room_image.setImageBitmap(bitmap);
+            }
+        }
+        GetImage gi = new GetImage();
+        gi.execute(room_id);
     }
 
     private void clearDb() {

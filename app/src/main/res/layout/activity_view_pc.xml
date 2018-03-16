@@ -39,11 +39,18 @@
                 android:layout_below="@+id/pc_no"
                 android:text="Room" />
 
+            <TextView
+                android:id="@+id/pc_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/pc_room"
+                android:text="Status" />
+
             <Button
                 android:id="@+id/pc_report"
                 android:layout_width="wrap_content"
                 android:layout_height="30dp"
-                android:layout_below="@+id/pc_room"
+                android:layout_below="@+id/pc_status"
                 android:layout_marginTop="10dp"
                 android:background="@color/darkorange"
                 android:text="Report"

@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.avendano.cp_scan.Activities.PcAssessment">
+    android:layout_height="match_parent">
+    <!--tools:context="com.example.avendano.cp_scan.Activities.PcAssessment"-->
 
 
     <include
@@ -87,6 +87,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
+        android:layout_marginBottom="?attr/actionBarSize"
         >
         <LinearLayout
             android:layout_width="match_parent"
@@ -253,13 +254,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/lightGrey"
-        android:layout_above="@+id/save"
-        android:id="@+id/view2"
-        android:layout_marginBottom="5dp"/>
     <Button
         android:layout_alignParentBottom="true"
         android:id="@+id/save"

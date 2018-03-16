@@ -32,17 +32,19 @@ import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Getter_Setter.Assess_Computers;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import dmax.dialog.SpotsDialog;
 
 public class AssessmentActivity extends AppCompatActivity {
 
@@ -54,7 +56,7 @@ public class AssessmentActivity extends AppCompatActivity {
     SQLiteHandler db;
     AssessAdapter adapter;
     int room_id;
-
+    android.app.AlertDialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +65,8 @@ public class AssessmentActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        dialog = new SpotsDialog(AssessmentActivity.this, "Saving...");
 
         room_id = getIntent().getIntExtra("room_id", 0);
         scan = (Button) findViewById(R.id.scan);
@@ -87,7 +91,6 @@ public class AssessmentActivity extends AppCompatActivity {
                     if (event.getRawX() >= (serial_edttxt.getRight() - serial_edttxt.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
                         // your action here
                         String uniq = serial_edttxt.getText().toString().trim();
-
                         if (uniq.length() > 0) {
                             if (checkSerial(uniq)) {
                                 if (!checkIfScanned(uniq)) {
@@ -99,6 +102,7 @@ public class AssessmentActivity extends AppCompatActivity {
                                         intent.putExtra("room_id", room_id);
                                         intent.putExtra("comp_id", comp_id);
                                         intent.putExtra("model", model);
+                                        intent.putExtra("manual", false);
                                         startActivity(intent);
                                         finish();
                                     }
@@ -106,7 +110,7 @@ public class AssessmentActivity extends AppCompatActivity {
                                     Toast.makeText(AssessmentActivity.this, "PC already assessed", Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                Toast.makeText(AssessmentActivity.this, "Computer-not belong in this room. ", Toast.LENGTH_SHORT).show();
+                                searchSerial(uniq);
                             }
                         } else {
                             Toast.makeText(getApplicationContext(), "Empty Field", Toast.LENGTH_SHORT).show();
@@ -118,8 +122,65 @@ public class AssessmentActivity extends AppCompatActivity {
             }
         });
 
+        //scanned
+        scan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IntentIntegrator integrator = new IntentIntegrator(AssessmentActivity.this);
+                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+                integrator.setPrompt("Place QR code to scan");
+                integrator.setCameraId(0);
+                integrator.setBeepEnabled(false);
+                integrator.setBarcodeImageEnabled(false);
+                integrator.initiateScan();
+            }
+        });
+
         //inflate pc
         loadPc();
+    }
+
+    //scan
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                //split # offline or online
+                String content = result.getContents();
+                String[] parts = content.split("#");
+                String serial = parts[0];
+                String conn = parts[1];
+                if (checkSerial(serial)) {
+                    if (!checkIfScanned(serial)) {
+                        int comp_id = getCompId(serial);
+                        if (comp_id != 0) {
+                            String model = getModel(serial);
+                            Intent intent = new Intent(getApplicationContext(), PcAssessment.class);
+                            intent.putExtra("room_id", room_id);
+                            intent.putExtra("comp_id", comp_id);
+                            intent.putExtra("model", model);
+                            if(conn.equalsIgnoreCase("online"))
+                                intent.putExtra("manual", true);
+                            else
+                                intent.putExtra("manual", false);
+                            startActivity(intent);
+                            finish();
+                        }
+                    } else {
+                        Toast.makeText(AssessmentActivity.this, "PC already assessed", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    searchSerial(serial);
+                }
+
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private boolean checkIfScanned(String serial) {
@@ -218,6 +279,53 @@ public class AssessmentActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
+    private void searchSerial(String serial){
+        class SearchComp extends AsyncTask<String, Void, String>{
+            @Override
+            protected String doInBackground(String... strings) {
+                String serial = strings[0];
+                String msg = "";
+                Cursor c = db.getCompIdAndModel(serial);
+                if (c.moveToFirst()) {
+                    int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
+                    Cursor c1 = db.getCompDetails(comp_id);
+                    if(c1.moveToFirst()){
+                        String room_name = "";
+                        int pc_no = c1.getInt(c1.getColumnIndex(db.COMP_NAME));
+                        int room_id = c1.getInt(c1.getColumnIndex(db.ROOMS_ID));
+                        Cursor c2 = db.getRoomDetails(room_id);
+                        if(c2.moveToFirst()){
+                            room_name = c2.getString(c2.getColumnIndex(db.ROOMS_NAME));
+                        }
+                        msg = "PC " + pc_no + " should be in room " + room_name;
+                    }
+                }else{
+                    msg = "Computer not found in database";
+                }
+                return msg;
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                AlertDialog.Builder builder = new AlertDialog.Builder(AssessmentActivity.this);
+                builder.setMessage(s);
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //send sms to custodians
+                        Toast.makeText(AssessmentActivity.this, "Alert sent to custodians", Toast.LENGTH_SHORT).show();
+                        serial_edttxt.setText("");
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        }
+        new SearchComp().execute(serial);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.assess_menu, menu);
@@ -236,7 +344,6 @@ public class AssessmentActivity extends AppCompatActivity {
                 } else {
                     Log.e("Assessed Count", "Count: " + db.assessPcCount());
                     new AddReportToServer().execute();
-                    goToViewRoom();
                 }
                 break;
             case R.id.cancel:
@@ -295,10 +402,7 @@ public class AssessmentActivity extends AppCompatActivity {
     }
 
     private void saveReport() {
-        final String rem= remark.getText().toString().trim();
-        Calendar calendar = Calendar.getInstance();
-        final String date = new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
-        final String time = new SimpleDateFormat("HH:mm:ss").format(calendar.getTime());
+        final String rem = remark.getText().toString().trim();
         final JSONArray array = details();
         StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_SAVE_A_REPORT
@@ -328,14 +432,13 @@ public class AssessmentActivity extends AppCompatActivity {
                 Map<String, String> params = new HashMap<>();
                 params.put("tech_id", SharedPrefManager.getInstance(AssessmentActivity.this).getUserId());
                 params.put("room_id", String.valueOf(room_id));
-                params.put("date", date);
-                params.put("time", time);
                 params.put("remarks", rem);
                 return params;
             }
         };
         RequestQueueHandler.getInstance(this).addToRequestQueue(str);
     }
+
     private JSONArray details() {
         Cursor c = db.getAssessedPc();
         JSONArray array = new JSONArray();
@@ -394,17 +497,17 @@ public class AssessmentActivity extends AppCompatActivity {
                 newObj.put("comp_id", oldObj.getInt("comp_id"));
                 newObj.put("pc_no", oldObj.getInt("pc_no"));
                 newObj.put("model", oldObj.getString("model"));
-                newObj.put("mb",  oldObj.getString("mb"));
+                newObj.put("mb", oldObj.getString("mb"));
                 newObj.put("mb_serial", oldObj.getString("mb_serial"));
-                newObj.put("monitor",  oldObj.getString("monitor"));
+                newObj.put("monitor", oldObj.getString("monitor"));
                 newObj.put("mon_serial", oldObj.getString("mon_serial"));
-                newObj.put("pr",  oldObj.getString("pr"));
-                newObj.put("kb",  oldObj.getString("kb"));
-                newObj.put("mouse",  oldObj.getString("mouse"));
-                newObj.put("ram",  oldObj.getString("ram"));
-                newObj.put("hdd",  oldObj.getString("hdd"));
-                newObj.put("vga",  oldObj.getString("vga"));
-                newObj.put("comp_status",  oldObj.getString("comp_status"));
+                newObj.put("pr", oldObj.getString("pr"));
+                newObj.put("kb", oldObj.getString("kb"));
+                newObj.put("mouse", oldObj.getString("mouse"));
+                newObj.put("ram", oldObj.getString("ram"));
+                newObj.put("hdd", oldObj.getString("hdd"));
+                newObj.put("vga", oldObj.getString("vga"));
+                newObj.put("comp_status", oldObj.getString("comp_status"));
                 newObj.put("rep_id", String.valueOf(rep));
                 //add objects to new jsoon array
                 newArray.put(newObj);
@@ -413,10 +516,16 @@ public class AssessmentActivity extends AppCompatActivity {
             }
         }
         Log.e("NEW JSONARRAY", "" + newArray.toString());
-        saveReportDetails(rep, newArray);
+        saveReportDetails(newArray);
     }
 
     public class AddReportToServer extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog.show();
+        }
+
         @Override
         protected Void doInBackground(Void... voids) {
             saveReport();
@@ -425,7 +534,7 @@ public class AssessmentActivity extends AppCompatActivity {
     }
 
     //savereportdetails
-    private void saveReportDetails(final int id, JSONArray array) {
+    private void saveReportDetails(JSONArray array) {
         //request
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
                 , AppConfig.URL_SAVE_A_DETAILS
@@ -435,15 +544,20 @@ public class AssessmentActivity extends AppCompatActivity {
             public void onResponse(JSONArray response) {
                 try {
                     JSONObject obj = response.getJSONObject(0);
-                    if(!obj.getBoolean("error"))
+                    if (!obj.getBoolean("error"))
+                    {
                         Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                        goToViewRoom();
+                    }
                 } catch (JSONException e) {
-                    Log.e("error", " "+ e.getMessage());
+                    Log.e("error", " " + e.getMessage());
                 }
+                dialog.dismiss();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                dialog.dismiss();
                 Log.w("save details", "NOT SUCCESS: " + error.getMessage());
             }
         });

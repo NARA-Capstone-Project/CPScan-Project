@@ -48,16 +48,12 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
     public void onBindViewHolder(@NonNull RecyclerHolder holder, final int position) {
         holder.headTxt.setText(reportList.get(position).getCategory());
         holder.midTxt.setText(reportList.get(position).getRoom_name());
-        holder.subTxt.setText("Last Assess: " + reportList.get(position).getDate());
+        holder.subTxt.setText("Date: " + reportList.get(position).getDate());
         holder.img.setBackgroundResource(R.drawable.ic_report_orange);
         holder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //intent to ViewRoom
-                Intent intent = new Intent(mCtx.getApplicationContext(), ViewRoom.class);
-                intent.putExtra("room_id", reportList.get(position).getRoom_id());
-                intent.putExtra("rep_id", reportList.get(position).getRep_id());
-                act.startActivity(intent);
+                //intent to ViewReport
             }
         });
     }

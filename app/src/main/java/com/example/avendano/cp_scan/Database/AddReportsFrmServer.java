@@ -43,50 +43,42 @@ public class AddReportsFrmServer {
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                //rep id ,room_id, cust id tech id category date time
-                //signed remarks sync stat
                 try {
                     if (response != null && response.length() > 0) {
-                        Object json = new JSONTokener(response).nextValue();
-                        if (json instanceof JSONObject) {
-                            JSONObject obj = new JSONObject(response);
-                            Toast.makeText(mCtx.getApplicationContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
-                        } else {
-                            JSONArray array = new JSONArray(response);
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject obj = array.getJSONObject(i);
-                                int rep_id = obj.getInt("rep_id");
-                                String cat = obj.getString("category");
-                                int room_id = obj.getInt("room_id");
-                                String cust_id = obj.getString("cust_id");
-                                String tech_id = obj.getString("tech_id");
-                                String date = obj.getString("date");
-                                String time = obj.getString("time");
-                                int signed = obj.getInt("cust_signed");
-                                String remarks = obj.getString("remarks");
-                                int comp_id = obj.getInt("comp_id");
-                                String model = obj.getString("model");
-                                String mb = obj.getString("mb");
-                                String mb_serial = obj.getString("mb_serial");
-                                String pr = obj.getString("pr");
-                                String monitor = obj.getString("monitor");
-                                String mon_serial = obj.getString("mon_serial");
-                                String ram = obj.getString("ram");
-                                String kb = obj.getString("kb");
-                                String mouse = obj.getString("mouse");
-                                String vga = obj.getString("vga");
-                                String hdd = obj.getString("hdd");
-                                String comp_status = obj.getString("status");
-                                String room_name = obj.getString("room_name");
-                                int pc_no = obj.getInt("pc_no");
 
-                                saveReportToLocal(rep_id, room_id, cust_id, cat, tech_id, date, time, signed,
-                                        remarks, room_name);
+                        JSONArray array = new JSONArray(response);
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            int rep_id = obj.getInt("rep_id");
+                            String cat = obj.getString("category");
+                            int room_id = obj.getInt("room_id");
+                            String cust_id = obj.getString("cust_id");
+                            String tech_id = obj.getString("tech_id");
+                            String date = obj.getString("date");
+                            String time = obj.getString("time");
+                            int signed = obj.getInt("cust_signed");
+                            String remarks = obj.getString("remarks");
+                            int comp_id = obj.getInt("comp_id");
+                            String model = obj.getString("model");
+                            String mb = obj.getString("mb");
+                            String mb_serial = obj.getString("mb_serial");
+                            String pr = obj.getString("pr");
+                            String monitor = obj.getString("monitor");
+                            String mon_serial = obj.getString("mon_serial");
+                            String ram = obj.getString("ram");
+                            String kb = obj.getString("kb");
+                            String mouse = obj.getString("mouse");
+                            String vga = obj.getString("vga");
+                            String hdd = obj.getString("hdd");
+                            String comp_status = obj.getString("status");
+                            String room_name = obj.getString("room_name");
+                            int pc_no = obj.getInt("pc_no");
 
-                                saveDetailsToLocal(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor
-                                        , mon_serial, ram, kb, mouse, vga, hdd, comp_status);
+                            saveReportToLocal(rep_id, room_id, cust_id, cat, tech_id, date, time, signed,
+                                    remarks, room_name);
 
-                            }
+                            saveDetailsToLocal(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor
+                                    , mon_serial, ram, kb, mouse, vga, hdd, comp_status);
                         }
                     }
                 } catch (Exception e) {

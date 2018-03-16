@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.Snackbar;
@@ -21,6 +22,7 @@ import com.example.avendano.cp_scan.BottomNavigationHelper;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Fragments.AccountFragment;
+import com.example.avendano.cp_scan.Fragments.ReportFragment;
 import com.example.avendano.cp_scan.Fragments.RoomFragment;
 import com.example.avendano.cp_scan.Fragments.TaskFragment;
 import com.example.avendano.cp_scan.R;
@@ -49,6 +51,7 @@ public class Client_Page extends AppCompatActivity {
         final AccountFragment accountFragment = new AccountFragment();
         final RoomFragment roomFragment = new RoomFragment();
         final TaskFragment taskFragment = new TaskFragment();
+        final ReportFragment reportFragment = new ReportFragment();
 
         navigationView = (BottomNavigationView) findViewById(R.id.navigation);
         BottomNavigationHelper.disableShiftMode(navigationView);
@@ -58,6 +61,7 @@ public class Client_Page extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.navigation_report:
+                        setFragment(reportFragment);
                         return true;
                     case R.id.navigation_room:
                         setFragment(roomFragment);
@@ -119,19 +123,33 @@ public class Client_Page extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-
         if (result != null) {
             if (result.getContents() == null) {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getApplicationContext(), result.getContents(), Toast.LENGTH_SHORT).show();
                 String content = result.getContents();
-                //ViewPc
-                //search serial then pass comp id sa viewpc
+                String[] parts = content.split("#");
+                String serial = parts[0];
+                if (getCompId(serial) != 0) {
+                    Intent intent = new Intent(Client_Page.this, ViewPc.class);
+                    intent.putExtra("comp_id", getCompId(serial));
+                    Client_Page.this.startActivity(intent);
+                } else {
+                    Toast.makeText(Client_Page.this, "Computer is not found in database", Toast.LENGTH_SHORT).show();
+                }
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private int getCompId(String serial) {
+        Cursor c = db.getCompIdAndModel(serial);
+        if (c.moveToFirst()) {
+            int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
+            return comp_id;
+        }
+        return 0;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Fragments;
 
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -14,18 +15,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ReportAdapter;
-import com.example.avendano.cp_scan.Adapter.RoomAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Getter_Setter.Reports;
-import com.example.avendano.cp_scan.Getter_Setter.Rooms;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -34,7 +35,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import dmax.dialog.SpotsDialog;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,28 +49,35 @@ public class ReportFragment extends Fragment {
     List<Reports> reportsList;
     RecyclerView recyclerView;
     SwipeRefreshLayout swiper;
-    ProgressDialog progressDialog;
+    AlertDialog dialog;
     ReportAdapter reportAdapter;
+    View view;
 
     public ReportFragment() {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_room, container, false);
-
+        view = inflater.inflate(R.layout.fragment_room, container, false);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                swiper.setRefreshing(true);
+                new ReportsLoader().execute("Server");
+            }
+        });
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage("Loading...");
-        showDialog();
+        dialog = new SpotsDialog(getContext(), "Loading...");
+        dialog.show();
+
+        new ReportsLoader().execute("Server");
 
         return view;
     }
@@ -75,16 +87,40 @@ public class ReportFragment extends Fragment {
         super.onCreate(savedInstanceState);
         db = new SQLiteHandler(getContext());
         reportsList = new ArrayList<>();
+
+    }
+
+    class ReportsLoader extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            String method = strings[0];
+            if (method.equalsIgnoreCase("local"))
+                loadLocalReports();
+            else
+                loadFromServer();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
+            recyclerView.setAdapter(reportAdapter);
+            reportAdapter.notifyDataSetChanged();
+            swiper.setRefreshing(false);
+        }
     }
 
     private void loadFromServer() {
-        StringRequest stringRequest = new StringRequest(Request.Method.GET
+        reportsList.clear();
+        StringRequest stringRequest = new StringRequest(Request.Method.POST
                 , AppConfig.URL_GET_REPORT
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
-                    hideDialog();
+                    Log.w("REsP", "length : " + response.length());
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
@@ -113,52 +149,70 @@ public class ReportFragment extends Fragment {
                         String mon_serial = obj.getString("mon_serial");
                         int pc_no = obj.getInt("pc_no");
 
-                       boolean save = checkReport(cat,rep_id,room_id,signed,cust_id, tech_id,date, time, remarks,
-                                room_name);
-                       if(!save){
-                           saveToDetails(rep_id,comp_id,pc_no, mb, mb_serial,pr,monitor, mon_serial,ram,hdd,vga,kb,comp_status, model,mouse);
-                       }
-                       if(cust_id.equals(SharedPrefManager.getInstance(getContext()).getUserId())
-                               || tech_id.equals(SharedPrefManager.getInstance(getContext()).getUserId())){
-                           Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
-                           reportsList.add(reports);
-                       }
+                        Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
+                        reportsList.add(reports);
+
+                        checkReport(cat, rep_id, room_id, signed, cust_id, tech_id, date, time, remarks,
+                                room_name, comp_id, pc_no, mb, mb_serial, pr, monitor,
+                                mon_serial, ram, hdd, vga, kb, comp_status, model, mouse);
                     }
-                    hideDialog();
-                    reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
-                    recyclerView.setAdapter(reportAdapter);
+
+                    Log.w("LOADED", "Server reports");
+                    if (reportsList.size() == 0) {
+                        db.deleteReportDetails();
+                        db.deleteReport();
+                        Toast.makeText(getContext(), "No Reports", Toast.LENGTH_SHORT).show();
+                    } else {
+                        reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
+                        recyclerView.setAdapter(reportAdapter);
+                        reportAdapter.notifyDataSetChanged();
+                    }
                 } catch (JSONException e) {
+                    new ReportsLoader().execute("Local");
                     Log.e("JSON ERROR 1", "ReportFragment: " + e.getMessage());
-                    new ReportsLoader().execute(SharedPrefManager.getInstance(getContext()).getUserId());
                 }
+                dialog.dismiss();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.w("Volleyerror 1", "Load RoomsLoader");
-                new ReportsLoader().execute(SharedPrefManager.getInstance(getContext()).getUserId());
+                Log.w("Volleyerror 1", "Load ReportsLoader: " + error.getMessage());
+                new ReportsLoader().execute("Local");
             }
-        });
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("user_id", SharedPrefManager.getInstance(getContext()).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
     }
 
-    private void saveToDetails(int rep_id, int comp_id,int pc_no, String mb, String mb_serial
+    private void saveToDetails(int rep_id, int comp_id, int pc_no, String mb, String mb_serial
             , String pr, String monitor, String mon_serial
             , String ram, String hdd, String vga, String kb, String comp_status, String model, String mouse) {
-            db.addReportDetails(rep_id,comp_id,pc_no,model, mb, mb_serial,pr,monitor, mon_serial,ram,kb,mouse,vga, hdd,comp_status);
+        db.addReportDetails(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor, mon_serial, ram, kb, mouse, vga, hdd, comp_status);
+        Log.w("REPORT DETAILS", "COUNT: " + db.getReportDetailsCount());
     }
 
-    private boolean checkReport(String cat, int rep_id, int room_id,
+    private void checkReport(String cat, int rep_id, int room_id,
                              int signed, String cust_id, String tech_id,
-                             String date, String time, String remarks, String room_name) {
-        Cursor c = db.getReportDetailsById(rep_id);
-        if (!c.moveToFirst()) {
+                             String date, String time, String remarks, String room_name,
+                             int comp_id, int pc_no, String mb, String mb_serial, String pr, String monitor,
+                             String mon_serial, String ram, String hdd, String vga, String kb,
+                             String comp_status, String model, String mouse) {
+        Cursor c = db.getReportByRepId(rep_id);
+        Log.e("REPORT COUNT", "SQLITE: " + db.getReportCount());
+        if (c.moveToFirst()) {
+            Log.w("NEW REPORT INSERT:", "Status : 0");
+        } else {
             long in = db.addReport(rep_id, room_id, cust_id, cat, tech_id
                     , date, time, signed, remarks, room_name);
             Log.w("NEW REPORT INSERT:", "Status : " + in);
-            return false;
-        }else{
-            return true;
+            saveToDetails(rep_id, comp_id, pc_no, mb, mb_serial, pr, monitor, mon_serial, ram
+                    , hdd, vga, kb, comp_status, model, mouse);
         }
     }
 
@@ -168,30 +222,12 @@ public class ReportFragment extends Fragment {
         db.close();
     }
 
-    class ReportsLoader extends AsyncTask<String, Void, Void> {
-
-        @Override
-        protected Void doInBackground(String... strings) {
-            String user = strings[0];
-            loadLocalReports(user);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            hideDialog();
-            reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
-            recyclerView.setAdapter(reportAdapter);
-            reportAdapter.notifyDataSetChanged();
-        }
-    }
-
-    private void loadLocalReports(String user) {
+    private void loadLocalReports() {
+        Log.w("LOADED", "Local reports");
+        String user = SharedPrefManager.getInstance(getContext()).getUserId();
         Cursor c = db.getReportByUserId(user);
         if (c.moveToFirst()) {
             do {
-
                 int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
                 String date = c.getString(c.getColumnIndex(db.REPORT_DATE));
                 String cat = c.getString(c.getColumnIndex(db.REPORT_CATEGORY));
@@ -201,17 +237,10 @@ public class ReportFragment extends Fragment {
                 Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
                 reportsList.add(reports);
             } while (c.moveToNext());
-            reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
-            recyclerView.setAdapter(reportAdapter);
+        } else {
+            //no list
+            Toast.makeText(getContext(), "No Reports", Toast.LENGTH_SHORT).show();
         }
-    }
-    private void showDialog() {
-        if (!progressDialog.isShowing())
-            progressDialog.show();
-    }
-
-    private void hideDialog() {
-        if (progressDialog.isShowing())
-            progressDialog.dismiss();
+        dialog.dismiss();
     }
 }

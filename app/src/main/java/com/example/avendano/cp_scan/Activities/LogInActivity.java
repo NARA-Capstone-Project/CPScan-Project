@@ -116,12 +116,12 @@ public class LogInActivity extends AppCompatActivity {
 
     public void sync(){
             AddCompFrmServer comp = new AddCompFrmServer(LogInActivity.this, db);
-//            AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this,db);
+            AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this,db);
             AddReportsFrmServer reports = new AddReportsFrmServer(LogInActivity.this);
             AddSchedFrmServer sched = new AddSchedFrmServer(LogInActivity.this,db);
             sched.SyncFunction();
             comp.SyncFunction();
-//            rooms.SyncFunction();
+            rooms.SyncFunction();
             reports.addAllReports();
     }
     private void logUser(final String username, final String password) {

@@ -1,8 +1,11 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +18,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ComputerAdapter;
+import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -31,8 +35,8 @@ public class ViewPc extends AppCompatActivity {
     SQLiteHandler db;
     ProgressDialog progressDialog;
 
-    TextView pcno, room_name;
-    TextView pc_model, pc_mb, pc_monitor,pc_processor, pc_ram,pc_hdd, pc_mouse, pc_vga, pc_kb;
+    TextView pcno, room_name, comp_status;
+    TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
     Button report;
 
 
@@ -43,7 +47,6 @@ public class ViewPc extends AppCompatActivity {
 
         comp_id = getIntent().getIntExtra("comp_id", 0);
 
-        Log.w("COMP_ID", "ID: " + comp_id);
         db = new SQLiteHandler(this);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading...");
@@ -59,7 +62,30 @@ public class ViewPc extends AppCompatActivity {
         pc_vga = (TextView) findViewById(R.id.pc_vga);
         pc_kb = (TextView) findViewById(R.id.pc_kb);
         report = (Button) findViewById(R.id.pc_report);
+        comp_status = (TextView) findViewById(R.id.pc_status);
 
+        report.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
+                if (connection_detector.isConnected()) {
+                    Intent intent = new Intent(ViewPc.this, ReportPc.class);
+                    intent.putExtra("comp_id", comp_id);
+                    startActivity(intent);
+                }else{
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+                    builder.setMessage("No Internet Connection")
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+            }
+        });
         showDialog();
         loadDetails();
     }
@@ -79,11 +105,11 @@ public class ViewPc extends AppCompatActivity {
                         if (!obj.isNull("room_id")) {
                             room_id = obj.getInt("room_id");
                         }
-                        if(comp_id == ViewPc.this.comp_id){
+                        if (comp_id == ViewPc.this.comp_id) {
                             //textview settext
-                            if(room_id == 0){
+                            if (room_id == 0) {
                                 ViewPc.this.room_name.setText("No Assign Room");
-                            }else{
+                            } else {
                                 getRoomName(room_id);
                             }
                             pcno.setText("PC " + obj.getInt("pc_no"));
@@ -96,6 +122,7 @@ public class ViewPc extends AppCompatActivity {
                             pc_mouse.setText(obj.getString("mouse"));
                             pc_vga.setText(obj.getString("vga"));
                             pc_hdd.setText(obj.getString("hdd"));
+                            comp_status.setText(obj.getString("comp_status"));
                             break;
                         }
                     }
@@ -115,15 +142,15 @@ public class ViewPc extends AppCompatActivity {
     }
 
     private void getRoomName(int room_id) {
-     Cursor c = db.getRoomDetails(room_id);
-     if(c.moveToFirst()){
-         room_name.setText(c.getString(c.getColumnIndex(db.ROOMS_NAME)));
-     }
+        Cursor c = db.getRoomDetails(room_id);
+        if (c.moveToFirst()) {
+            room_name.setText(c.getString(c.getColumnIndex(db.ROOMS_NAME)));
+        }
     }
 
     private void loadLocalPc() {
         Cursor c = db.getCompDetails(comp_id);
-        if(c.moveToFirst()){
+        if (c.moveToFirst()) {
             pcno.setText("PC " + c.getInt(c.getColumnIndex(db.COMP_NAME)));
             pc_model.setText(c.getString(c.getColumnIndex(db.COMP_MODEL)));
             pc_processor.setText(c.getString(c.getColumnIndex(db.COMP_PR)));
@@ -134,8 +161,9 @@ public class ViewPc extends AppCompatActivity {
             pc_mouse.setText(c.getString(c.getColumnIndex(db.COMP_MOUSE)));
             pc_vga.setText(c.getString(c.getColumnIndex(db.COMP_VGA)));
             pc_hdd.setText(c.getString(c.getColumnIndex(db.COMP_HDD)));
-        }else{
-            pcno.setText("PC --" );
+            comp_status.setText(c.getString(c.getColumnIndex(db.COMP_STATUS)));
+        } else {
+            pcno.setText("PC --");
             pc_model.setText("--");
             pc_processor.setText("--");
             pc_mb.setText("--");
@@ -145,9 +173,11 @@ public class ViewPc extends AppCompatActivity {
             pc_mouse.setText("--");
             pc_vga.setText("--");
             pc_hdd.setText("--");
+            comp_status.setText("--");
             View v = ViewPc.this.findViewById(android.R.id.content);
             Snackbar.make(v, "No data retrieved.", Snackbar.LENGTH_SHORT).show();
         }
+        hideDialog();
     }
 
     private void showDialog() {

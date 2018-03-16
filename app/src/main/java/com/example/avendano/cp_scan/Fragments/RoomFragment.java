@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Fragments;
 
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -23,6 +24,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Adapter.ReportAdapter;
 import com.example.avendano.cp_scan.Adapter.RoomAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
@@ -40,6 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import dmax.dialog.SpotsDialog;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -48,8 +52,9 @@ public class RoomFragment extends Fragment {
     List<Rooms> roomsList;
     RecyclerView recyclerView;
     SwipeRefreshLayout swiper;
-    ProgressDialog progressDialog;
+    AlertDialog progressDialog;
     RoomAdapter roomAdapter;
+    View view;
 
     public RoomFragment() {
         // Required empty public constructor
@@ -59,10 +64,8 @@ public class RoomFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.fragment_room, container, false);
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_room, container, false);
-
-        loadRooms();
 
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
@@ -71,15 +74,15 @@ public class RoomFragment extends Fragment {
             @Override
             public void onRefresh() {
                 swiper.setRefreshing(true);
-                loadRooms();
+                loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
             }
         });
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
-        progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage("Loading...");
+        progressDialog = new SpotsDialog(getContext(), "Loading...");
         showDialog();
+
+        loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
 
         return view;
     }
@@ -89,102 +92,6 @@ public class RoomFragment extends Fragment {
         super.onCreate(savedInstanceState);
         db = new SQLiteHandler(getContext());
         roomsList = new ArrayList<>();
-    }
-
-    private void loadRooms() {
-        if (SharedPrefManager.getInstance(getContext()).getUserRole().equalsIgnoreCase("custodian")) {
-            loadFromServer("custodian");
-        } else {
-            loadFromServer("all");
-        }
-    }
-
-    private void loadFromServer(final String role) {
-        roomsList.clear();
-        StringRequest stringRequest = new StringRequest(Request.Method.GET
-                , AppConfig.URL_GET_ALL_ROOM
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        //room_id room name(dept + room no) custodian, custodian id technician technician id
-                        //building, floor
-                        int room_id = obj.getInt("room_id");
-                        int floor = obj.getInt("floor");
-                        String room_name = "";
-                        if (obj.isNull("dept_name")) {
-                            room_name = obj.getString("room_name");
-                        } else {
-                            room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
-                        }
-                        String custodian = obj.getString("room_custodian");
-                        String cust_id = obj.getString("cust_id");
-                        String technician = obj.getString("room_technician");
-                        String tech_id = obj.getString("tech_id");
-                        String building = obj.getString("building");
-                        int pc_count = obj.getInt("pc_count");
-                        int pc_working = obj.getInt("pc_working");
-                        String lastAssess = "";
-                        if(obj.isNull("lastAssess")){
-                            lastAssess = "--";
-                        }else{
-                            lastAssess = obj.getString("lastAssess");
-                        }
-
-                        checkRoom(room_id, room_name, custodian, cust_id, technician, tech_id,
-                                building, floor, pc_count, pc_working, lastAssess);
-
-                        if(role.equalsIgnoreCase("custodian")){
-                            if(cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId())){
-                                Rooms rooms = new Rooms(room_id, custodian, technician, room_name,
-                                        building);
-                                roomsList.add(rooms);
-                            }
-                        }else{
-                            Rooms rooms = new Rooms(room_id, custodian, technician, room_name,
-                                    building);
-                            roomsList.add(rooms);
-                        }
-
-                    }
-                    hideDialog();
-                    swiper.setRefreshing(false);
-                    roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
-                    recyclerView.setAdapter(roomAdapter);
-                    roomAdapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    Log.e("JSON ERROR 1" , "RoomFragment: " + e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("Volleyerror 1" , "Load RoomsLoader: " + error.getMessage());
-                new RoomsLoader().execute(role);
-            }
-        });
-        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
-    }
-
-    private void checkRoom(int room_id, String room_name, String custodian, String cust_id,
-                           String technician, String tech_id, String building, int floor,
-                           int pc_count, int pc_working, String lastAssess) {
-        Cursor c = db.getRoomDetails(room_id);
-        if(!c.moveToFirst()){
-            long in = db.addRooms(room_id,room_name,custodian,cust_id,technician,tech_id,building
-            ,floor, pc_count,pc_working, lastAssess);
-
-            Log.w("NEW ROOM INSERT:", "Status : " + in);
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        db.close();
     }
 
     class RoomsLoader extends AsyncTask<String, Void, Void> {
@@ -211,8 +118,94 @@ public class RoomFragment extends Fragment {
         }
     }
 
-    private void loadCustodianRooms() {
+    private void loadFromServer(final String role) {
         roomsList.clear();
+        StringRequest stringRequest = new StringRequest(Request.Method.GET
+                , AppConfig.URL_GET_ALL_ROOM
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    hideDialog();
+                    if (response != null && response.length() > 0) {
+                        JSONArray array = new JSONArray(response);
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            int room_id = obj.getInt("room_id");
+                            int floor = obj.getInt("floor");
+                            String room_name = "";
+                            if (obj.isNull("dept_name")) {
+                                room_name = obj.getString("room_name");
+                            } else {
+                                room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
+                            }
+                            String custodian = obj.getString("room_custodian");
+                            String cust_id = obj.getString("cust_id");
+                            String technician = obj.getString("room_technician");
+                            String tech_id = obj.getString("tech_id");
+                            String building = obj.getString("building");
+                            int pc_count = obj.getInt("pc_count");
+                            int pc_working = obj.getInt("pc_working");
+                            String lastAssess = "";
+                            if (obj.isNull("lastAssess")) {
+                                lastAssess = "--";
+                            } else {
+                                lastAssess = obj.getString("lastAssess");
+                            }
+                            Rooms rooms = new Rooms(room_id,custodian,technician,room_name,building);
+
+                            if(role.equalsIgnoreCase("custodian")){
+                                if(cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId()))
+                                    roomsList.add(rooms);
+                            }
+                            else
+                                roomsList.add(rooms);
+
+                            checkRoom(room_id, room_name, custodian, cust_id, technician, tech_id,
+                                    building, floor, pc_count, pc_working, lastAssess);
+
+                        }
+                        Log.w("LOADED" , "Server rooms");
+                        roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
+                        recyclerView.setAdapter(roomAdapter);
+                    }else{
+                        //empty list view
+                        //delete ung sqlite kung may laman
+                    }
+                    Log.e("ROOM RESPONSE", response);
+                } catch (JSONException e) {
+                    Log.e("JSON ERROR 1", "RoomFragment: " + e.getMessage());
+                    new RoomsLoader().execute(role);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Volleyerror 1", "Load RoomsLoader: " + error.getMessage());
+                new RoomsLoader().execute(role);
+            }
+        });
+        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
+    }
+
+    private void checkRoom(int room_id, String room_name, String custodian, String cust_id,
+                           String technician, String tech_id, String building, int floor,
+                           int pc_count, int pc_working, String lastAssess) {
+        Cursor c = db.getRoomDetails(room_id);
+        if (!c.moveToFirst()) {
+            long in = db.addRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building
+                    , floor, pc_count, pc_working, lastAssess);
+            Log.w("NEW ROOM INSERT:", "Status : " + in);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        db.close();
+    }
+
+    private void loadCustodianRooms() {
         Cursor c = db.getCustodianRoom(SharedPrefManager.getInstance(getContext()).getUserId());
         if (c.moveToNext()) {
             do {
@@ -232,7 +225,6 @@ public class RoomFragment extends Fragment {
     }
 
     private void loadAllRoom() {
-        roomsList.clear();
         Cursor c = db.getAllRoom();
         if (c.moveToFirst()) {
             do {

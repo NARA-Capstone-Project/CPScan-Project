@@ -18,7 +18,7 @@
             android:name=".Activities.MainActivity"
             android:configChanges="orientation"
             android:label="CP-Scan"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity android:name=".Activities.RequestActivity" />
         <activity android:name=".Activities.ViewRoom" />
         <activity android:name=".Activities.RoomPc" />
@@ -44,7 +44,9 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".Activities.ViewPc"></activity>
+        <activity android:name=".Activities.ViewPc" />
+        <activity android:name=".Activities.ViewInventoryReport"></activity>
+        <activity android:name=".Activities.ReportPc"></activity>
     </application>
 
 </manifest>

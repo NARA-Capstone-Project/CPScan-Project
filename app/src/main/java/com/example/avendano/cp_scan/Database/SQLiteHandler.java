@@ -292,7 +292,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {COMP_ID, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, ROOMS_ID};
-        Cursor cursor = db.query(TABLE_COMPUTERS, columns, COMP_ID + " = ?", new String[]{String.valueOf(comp_id)}, null, null, COMP_NAME);
+        Cursor cursor = db.query(TABLE_COMPUTERS, columns, COMP_ID + " = ?", new String[]{String.valueOf(comp_id)}, null, null, null);
         return cursor;
     }
 
@@ -436,7 +436,16 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
                 REPORT_REMARKS, REPORT_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
         Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, COLUMN_CUST_ID + " = ? OR " +
-                COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE);
+                COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC");
+        return c;
+    }
+
+    public Cursor getReportByRepId(int rep_id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
+                REPORT_REMARKS, REPORT_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
+        Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, REPORT_ID + " = ? "
+                , new String[]{String.valueOf(rep_id)}, null, null, null);
         return c;
     }
 
