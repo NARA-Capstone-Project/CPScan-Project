@@ -148,11 +148,14 @@ public class ReportFragment extends Fragment {
                         String mb_serial = obj.getString("mb_serial");
                         String mon_serial = obj.getString("mon_serial");
                         int pc_no = obj.getInt("pc_no");
+                        int htech_signed = obj.getInt("htech_signed");
+                        int admin_signed = obj.getInt("admin_signed");
 
                         Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
                         reportsList.add(reports);
 
-                        checkReport(cat, rep_id, room_id, signed, cust_id, tech_id, date, time, remarks,
+                        checkReport(cat, rep_id, room_id, signed,htech_signed, admin_signed,
+                                cust_id, tech_id, date, time, remarks,
                                 room_name, comp_id, pc_no, mb, mb_serial, pr, monitor,
                                 mon_serial, ram, hdd, vga, kb, comp_status, model, mouse);
                     }
@@ -198,7 +201,7 @@ public class ReportFragment extends Fragment {
     }
 
     private void checkReport(String cat, int rep_id, int room_id,
-                             int signed, String cust_id, String tech_id,
+                             int cust_signed, int htech_signed, int admin_signed, String cust_id, String tech_id,
                              String date, String time, String remarks, String room_name,
                              int comp_id, int pc_no, String mb, String mb_serial, String pr, String monitor,
                              String mon_serial, String ram, String hdd, String vga, String kb,
@@ -209,7 +212,7 @@ public class ReportFragment extends Fragment {
             Log.w("NEW REPORT INSERT:", "Status : 0");
         } else {
             long in = db.addReport(rep_id, room_id, cust_id, cat, tech_id
-                    , date, time, signed, remarks, room_name);
+                    , date, time, cust_signed, htech_signed, admin_signed, remarks, room_name);
             Log.w("NEW REPORT INSERT:", "Status : " + in);
             saveToDetails(rep_id, comp_id, pc_no, mb, mb_serial, pr, monitor, mon_serial, ram
                     , hdd, vga, kb, comp_status, model, mouse);

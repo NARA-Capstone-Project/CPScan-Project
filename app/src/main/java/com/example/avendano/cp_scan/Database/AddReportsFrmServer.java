@@ -73,8 +73,12 @@ public class AddReportsFrmServer {
                             String comp_status = obj.getString("status");
                             String room_name = obj.getString("room_name");
                             int pc_no = obj.getInt("pc_no");
+                            int htech_signed = obj.getInt("htech_signed");
+                            int admin_signed = obj.getInt("admin_signed");
 
-                            saveReportToLocal(rep_id, room_id, cust_id, cat, tech_id, date, time, signed,
+
+                            saveReportToLocal(rep_id, room_id, cust_id, cat, tech_id, date, time,
+                                    signed, htech_signed, admin_signed,
                                     remarks, room_name);
 
                             saveDetailsToLocal(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor
@@ -112,10 +116,11 @@ public class AddReportsFrmServer {
         return;
     }
 
-    private void saveReportToLocal(int rep_id, int room, String cust_id, String category, String user_id, String date, String time
-            , int signed, String remarks, String room_name) {
+    private void saveReportToLocal(int rep_id, int room, String cust_id,
+                                   String category, String user_id, String date, String time
+            , int cust_signed, int htech_signed, int admin_signed, String remarks, String room_name) {
         long insert = db.addReport(rep_id, room, cust_id, category, user_id,
-                date, time, signed, remarks, room_name);
+                date, time, cust_signed, htech_signed, admin_signed, remarks, room_name);
 
         Log.w("REPORT Insert TO SQL: ", "Status : " + insert);
         return;

@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -35,10 +38,11 @@ public class ViewPc extends AppCompatActivity {
     SQLiteHandler db;
     ProgressDialog progressDialog;
 
-    TextView pcno, room_name, comp_status;
+    TextView pcno, room_name, comp_status, instr;
     TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
-    Button report;
-
+    CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
+    Button report, cancel;
+    RadioGroup rGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,15 +67,76 @@ public class ViewPc extends AppCompatActivity {
         pc_kb = (TextView) findViewById(R.id.pc_kb);
         report = (Button) findViewById(R.id.pc_report);
         comp_status = (TextView) findViewById(R.id.pc_status);
+        cancel = (Button) findViewById(R.id.cancel);
+        monitor = findViewById(R.id.check_mon);
+        mb = findViewById(R.id.check_mb);
+        pr = findViewById(R.id.check_pr);
+        ram = findViewById(R.id.check_ram);
+        hdd = findViewById(R.id.check_hdd);
+        instr = (TextView) findViewById(R.id.instr);
+        keyboard = findViewById(R.id.check_kb);
+        mouse = findViewById(R.id.check_mouse);
+        vga = findViewById(R.id.check_vga);
+        rGroup = findViewById(R.id.group);
+
+        rGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton btn = rGroup.findViewById(checkedId);
+                String stat = btn.getText().toString().trim();
+                if (stat.equalsIgnoreCase("missing"))
+                    instr.setText("Check the missing peripherals");
+                else if (stat.equalsIgnoreCase("defective"))
+                    instr.setText("Check the defective peripherals");
+            }
+        });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cancel.setVisibility(View.GONE);
+                monitor.setVisibility(View.GONE);
+                mb.setVisibility(View.GONE);
+                pr.setVisibility(View.GONE);
+                ram.setVisibility(View.GONE);
+                hdd.setVisibility(View.GONE);
+                keyboard.setVisibility(View.GONE);
+                mouse.setVisibility(View.GONE);
+                vga.setVisibility(View.GONE);
+                rGroup.setVisibility(View.GONE);
+                instr.setVisibility(View.GONE);
+            }
+        });
 
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
                 if (connection_detector.isConnected()) {
-                    Intent intent = new Intent(ViewPc.this, ReportPc.class);
-                    intent.putExtra("comp_id", comp_id);
-                    startActivity(intent);
+                    if(cancel.getVisibility() == View.VISIBLE){
+                        //add report
+                    }else {
+                        instr.setVisibility(View.VISIBLE);
+                        cancel.setVisibility(View.VISIBLE);
+                        monitor.setVisibility(View.VISIBLE);
+                        mb.setVisibility(View.VISIBLE);
+                        pr.setVisibility(View.VISIBLE);
+                        ram.setVisibility(View.VISIBLE);
+                        hdd.setVisibility(View.VISIBLE);
+                        keyboard.setVisibility(View.VISIBLE);
+                        mouse.setVisibility(View.VISIBLE);
+                        vga.setVisibility(View.VISIBLE);
+                        rGroup.setVisibility(View.VISIBLE);
+
+                        monitor.setChecked(false);
+                        mb.setChecked(false);
+                        pr.setChecked(false);
+                        ram.setChecked(false);
+                        hdd.setChecked(false);
+                        keyboard.setChecked(false);
+                        mouse.setChecked(false);
+                        vga.setChecked(false);
+                    }
                 }else{
                     final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                     builder.setMessage("No Internet Connection")

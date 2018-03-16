@@ -7,6 +7,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.AdapterView;
 
 /**
  * Created by Avendano on 6 Mar 2018.
@@ -57,8 +58,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public static final String REPORT_CATEGORY = "category";
     public static final String REPORT_DATE = "date";
     public static final String REPORT_TIME = "time";
-    public static final String REPORT_SIGNED = "cust_signed";
-    public static final String REPORT_REMARKS = "remarks"; // sa assessment details din may remarks for room
+    public static final String REPORT_CUST_SIGNED = "cust_signed";
+    public static final String REPORT_REMARKS = "remarks";
+    public static final String REPORT_HTECH_SIGNED = "htech_signed";
+    public static final String REPORT_ADMIN_SIGNED = "admin_signed";
 
 
     //TABLE REPORT DETAILS
@@ -133,7 +136,9 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             + REPORT_CATEGORY + " varchar, " // hindi ipapasa sa server
             + REPORT_DATE + " DATE,"
             + REPORT_TIME + " TIME,"
-            + REPORT_SIGNED + " TINYINT,"
+            + REPORT_CUST_SIGNED + " TINYINT,"
+            + REPORT_HTECH_SIGNED + " TINYINT,"
+            + REPORT_ADMIN_SIGNED + " TINYINT,"
             + REPORT_REMARKS + " TEXT"
             + ");";
 
@@ -412,18 +417,20 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
 
     public long addReport(int rep_id, int room_id, String cust_id, String category, String user_id, String date, String time
-            , int signed, String remarks, String room_name) {
+            , int cust_signed, int htech_signed, int admin_signed, String remarks, String room_name) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(REPORT_ID, rep_id);
         values.put(ROOMS_ID, room_id);
         values.put(ROOMS_NAME, room_name);
         values.put(COLUMN_CUST_ID, cust_id);
+        values.put(REPORT_HTECH_SIGNED, htech_signed);
+        values.put(REPORT_ADMIN_SIGNED, admin_signed);
         values.put(COLUMN_TECH_ID, user_id);
         values.put(REPORT_CATEGORY, category);
         values.put(REPORT_DATE, date);
         values.put(REPORT_TIME, time);
-        values.put(REPORT_SIGNED, signed);
+        values.put(REPORT_CUST_SIGNED, cust_signed);
         values.put(REPORT_REMARKS, remarks);
 
         long rowInserted = db.insert(TABLE_ASSESSMENT_REPORT, null, values);
@@ -434,7 +441,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public Cursor getReportByUserId(String user_id) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
-                REPORT_REMARKS, REPORT_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
+                REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY, REPORT_ADMIN_SIGNED
+                , REPORT_HTECH_SIGNED};
         Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, COLUMN_CUST_ID + " = ? OR " +
                 COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC");
         return c;
@@ -443,39 +451,18 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public Cursor getReportByRepId(int rep_id) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
-                REPORT_REMARKS, REPORT_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
+                REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY, REPORT_ADMIN_SIGNED
+                , REPORT_HTECH_SIGNED};
         Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, REPORT_ID + " = ? "
                 , new String[]{String.valueOf(rep_id)}, null, null, null);
         return c;
     }
 
-    public Cursor getAllUnsyncReport() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String sql = "SELECT * FROM " + TABLE_ASSESSMENT_REPORT + " WHERE " + COLUMN_SYNC + " = 0;";
-        Cursor c = db.rawQuery(sql, null);
-        return c;
-    }
-
-    public void updateReportSyncStatus(int rep_id, int status) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_SYNC, status);
-        db.update(TABLE_ASSESSMENT_REPORT, values, REPORT_ID + " = ? "
-                , new String[]{String.valueOf(rep_id)});
-    }
-
     public Cursor getLastAssessment(int room_id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] cols = new String[]{COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID, REPORT_REMARKS, REPORT_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
+        String[] cols = new String[]{COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID, REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY};
         Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols,
                 ROOMS_ID + " = ?", new String[]{String.valueOf(room_id)}, null, null, REPORT_DATE + " DESC", "1");
-        return c;
-    }
-
-    public Cursor getLastAssessment() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String sql = "SELECT * from " + TABLE_ASSESSMENT_REPORT + " ORDER BY " + REPORT_DATE + " DESC LIMIT 1";
-        Cursor c = db.rawQuery(sql, null);
         return c;
     }
 

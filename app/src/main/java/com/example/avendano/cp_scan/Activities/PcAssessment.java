@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
@@ -32,6 +33,7 @@ public class PcAssessment extends AppCompatActivity {
     Button save;
     SQLiteHandler db;
     int comp_id, pc_no;
+    TextView instr;
 
     AlertDialog dialog;
 
@@ -67,13 +69,12 @@ public class PcAssessment extends AppCompatActivity {
         vga = findViewById(R.id.vga_check);
         rGroup = findViewById(R.id.group);
 
-        RadioButton missing = (RadioButton) findViewById(R.id.missing);
-        missing.setVisibility(View.INVISIBLE);
-
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
         manual = getIntent().getBooleanExtra("manual", false);
         model = getIntent().getStringExtra("model");
+
+        instr = (TextView) findViewById(R.id.instr);
 
         if (manual) {
 
@@ -87,6 +88,19 @@ public class PcAssessment extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 new addAssessment().execute();
+            }
+        });
+        rGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton btn = rGroup.findViewById(checkedId);
+                String stat = btn.getText().toString().trim();
+                if (stat.equalsIgnoreCase("working"))
+                    instr.setText("Check the working peripherals");
+                else if (stat.equalsIgnoreCase("defective"))
+                    instr.setText("Check the defective peripherals");
+                else
+                    instr.setText("Check the missing peripherals");
             }
         });
     }
@@ -138,7 +152,7 @@ public class PcAssessment extends AppCompatActivity {
     public class addAssessment extends AsyncTask<Void, Void, Void> {
         int idx;
         RadioButton btn;
-        String status;
+        String status, mon, motherboard, processor, comp_ram, comp_hdd, comp_kb, comp_mouse, comp_vga;;
         AlertDialog saving;
 
         @Override
@@ -153,54 +167,138 @@ public class PcAssessment extends AppCompatActivity {
             idx = rGroup.getCheckedRadioButtonId();
             btn = rGroup.findViewById(idx);
             status = btn.getText().toString().trim();
+            if (status.equalsIgnoreCase("missing")) {
+                if (monitor.isChecked()) {
+                    mon = "Missing";
+                } else {
+                    mon = WORKING;
+                }
+                if (mb.isChecked()) {
+                    motherboard = "Missing";
+                } else {
+                    motherboard = WORKING;
+                }
+                if (pr.isChecked()) {
+                    processor = "Missing";
+                } else {
+                    processor = pr.getText().toString().trim();
+                }
+                if (ram.isChecked()) {
+                    comp_ram = "Missing";
+                } else {
+                    comp_ram = ram.getText().toString().trim();
+                }
+                if (hdd.isChecked()) {
+                    comp_hdd = "Missing";
+                } else {
+                    comp_hdd = hdd.getText().toString().trim();
+                }
+                if (keyboard.isChecked()) {
+                    comp_kb = "Missing";
+                } else {
+                    comp_kb = WORKING;
+                }
+                if (mouse.isChecked()) {
+                    comp_mouse = "Missing";
+                } else {
+                    comp_mouse = WORKING;
+                }
+                if (vga.isChecked()) {
+                    comp_vga = "Missing";
+                } else {
+                    comp_vga = "BUILT-IN";
+                }
+            }else if (status.equalsIgnoreCase("defective")){
+                if (monitor.isChecked()) {
+                    mon = NOT_WORKING;
+                } else {
+                    mon = WORKING;
+                }
+                if (mb.isChecked()) {
+                    motherboard = NOT_WORKING;
+                } else {
+                    motherboard = WORKING;
+                }
+                if (pr.isChecked()) {
+                    processor = NOT_WORKING;
+                } else {
+                    processor = pr.getText().toString().trim();
+                }
+                if (ram.isChecked()) {
+                    comp_ram = NOT_WORKING;
+                } else {
+                    comp_ram = ram.getText().toString().trim();
+                }
+                if (hdd.isChecked()) {
+                    comp_hdd = NOT_WORKING;
+                } else {
+                    comp_hdd = hdd.getText().toString().trim();
+                }
+                if (keyboard.isChecked()) {
+                    comp_kb = NOT_WORKING;
+                } else {
+                    comp_kb = WORKING;
+                }
+                if (mouse.isChecked()) {
+                    comp_mouse = NOT_WORKING;
+                } else {
+                    comp_mouse = WORKING;
+                }
+                if (vga.isChecked()) {
+                    comp_vga = NOT_WORKING;
+                } else {
+                    comp_vga = "BUILT-IN";
+                }
+            }else { //working
+                if (monitor.isChecked()) {
+                    mon = WORKING;
+                } else {
+                    mon = NOT_WORKING;
+                }
+                if (mb.isChecked()) {
+                    motherboard = WORKING;
+                } else {
+                    motherboard = NOT_WORKING;
+                }
+                if (pr.isChecked()) {
+                    processor = pr.getText().toString().trim();
+                } else {
+                    processor = NOT_WORKING;
+                }
+                if (ram.isChecked()) {
+                    comp_ram = ram.getText().toString().trim();
+                } else {
+                    comp_ram = NOT_WORKING;
+                }
+                if (hdd.isChecked()) {
+                    comp_hdd = hdd.getText().toString().trim();
+                } else {
+                    comp_hdd = NOT_WORKING;
+                }
+                if (keyboard.isChecked()) {
+                    comp_kb = WORKING;
+                } else {
+                    comp_kb = NOT_WORKING;
+                }
+                if (mouse.isChecked()) {
+                    comp_mouse = WORKING;
+                } else {
+                    comp_mouse = NOT_WORKING;
+                }
+                if (vga.isChecked()) {
+                    comp_vga = "BUILT-IN";
+                } else {
+                    comp_vga = NOT_WORKING;
+                }
+            }
 
-            String mon, motherboard, processor, comp_ram, comp_hdd, comp_kb, comp_mouse, comp_vga;
-            if (monitor.isChecked()) {
-                mon = WORKING;
-            } else {
-                mon = NOT_WORKING;
-            }
-            if (mb.isChecked()) {
-                motherboard = WORKING;
-            } else {
-                motherboard = NOT_WORKING;
-            }
-            if (pr.isChecked()) {
-                processor = pr.getText().toString().trim();
-            } else {
-                processor = NOT_WORKING;
-            }
-            if (ram.isChecked()) {
-                comp_ram = ram.getText().toString().trim();
-            } else {
-                comp_ram = NOT_WORKING;
-            }
-            if (hdd.isChecked()) {
-                comp_hdd = hdd.getText().toString().trim();
-            } else {
-                comp_hdd = NOT_WORKING;
-            }
-            if (keyboard.isChecked()) {
-                comp_kb = WORKING;
-            } else {
-                comp_kb = NOT_WORKING;
-            }
-            if (mouse.isChecked()) {
-                comp_mouse = WORKING;
-            } else {
-                comp_mouse = NOT_WORKING;
-            }
-            if (vga.isChecked()) {
-                comp_vga = "BUILT-IN";
-            } else {
-                comp_vga = NOT_WORKING;
-            }
             long in = db.addAssessedPc(comp_id, pc_no, model, motherboard, mb.getText().toString().trim()
                     , processor, mon, monitor.getText().toString().trim(), comp_ram, comp_kb, comp_mouse, status
                     , comp_vga, comp_hdd);
+
             db.updateScannedStatus(1, comp_id);
             Log.w("DETAILS INSERTED: ", "Insert STATUS: " + in);
-            Log.w("DETAILS Count: ", "Count: " + db.assessPcCount());
+
             return null;
         }
 
