@@ -38,7 +38,7 @@ public class ViewPc extends AppCompatActivity {
     SQLiteHandler db;
     ProgressDialog progressDialog;
 
-    TextView pcno, room_name, comp_status, instr;
+    TextView pcno, room_name, comp_status, instr, pc_os;
     TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
     Button report, cancel;
@@ -65,6 +65,7 @@ public class ViewPc extends AppCompatActivity {
         pc_mouse = (TextView) findViewById(R.id.pc_mouse);
         pc_vga = (TextView) findViewById(R.id.pc_vga);
         pc_kb = (TextView) findViewById(R.id.pc_kb);
+        pc_os = (TextView) findViewById(R.id.pc_os);
         report = (Button) findViewById(R.id.pc_report);
         comp_status = (TextView) findViewById(R.id.pc_status);
         cancel = (Button) findViewById(R.id.cancel);
@@ -188,6 +189,7 @@ public class ViewPc extends AppCompatActivity {
                             pc_vga.setText(obj.getString("vga"));
                             pc_hdd.setText(obj.getString("hdd"));
                             comp_status.setText(obj.getString("comp_status"));
+                            pc_os.setText(obj.getString("os"));
                             break;
                         }
                     }

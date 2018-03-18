@@ -4,6 +4,8 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Base64DataException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,8 +32,12 @@ import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class LogInActivity extends AppCompatActivity {
 
@@ -124,6 +130,7 @@ public class LogInActivity extends AppCompatActivity {
             rooms.SyncFunction();
             reports.addAllReports();
     }
+
     private void logUser(final String username, final String password) {
 
         StringRequest strReq = new StringRequest(Request.Method.POST, AppConfig.URL_LOGIN
@@ -138,6 +145,7 @@ public class LogInActivity extends AppCompatActivity {
                         SharedPrefManager.getInstance(getApplicationContext())
                                 .userLogin(obj.getString("user_id"),
                                         obj.getString("username"),
+                                        password,
                                         obj.getString("name"),
                                         obj.getString("phone"),
                                         obj.getString("role"),
@@ -153,6 +161,8 @@ public class LogInActivity extends AppCompatActivity {
                     }
                 } catch (JSONException e) {
                     Log.e("JSONEXCEPTION: ", e.getMessage());
+                } catch (Exception e) {
+                    Log.e("ENCRYPTEXCEPTION: ", e.getMessage());
                 }
             }
         }, new Response.ErrorListener() {

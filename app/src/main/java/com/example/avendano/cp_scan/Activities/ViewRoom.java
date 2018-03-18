@@ -238,6 +238,7 @@ public class ViewRoom extends AppCompatActivity {
                         String vga = obj.getString("vga");
                         String hdd = obj.getString("hdd");
                         String comp_status = obj.getString("comp_status");
+                        String os = obj.getString("os");
 
                         if (room_id == ViewRoom.this.room_id) {
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);

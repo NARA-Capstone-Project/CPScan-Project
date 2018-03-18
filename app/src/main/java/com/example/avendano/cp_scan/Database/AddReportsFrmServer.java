@@ -45,7 +45,6 @@ public class AddReportsFrmServer {
             public void onResponse(String response) {
                 try {
                     if (response != null && response.length() > 0) {
-
                         JSONArray array = new JSONArray(response);
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject obj = array.getJSONObject(i);

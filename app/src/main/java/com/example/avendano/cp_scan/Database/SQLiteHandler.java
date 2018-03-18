@@ -40,6 +40,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     //foreign key room_id
     public static final String TABLE_COMPUTERS = "computers";
     public static final String COMP_ID = "comp_id";
+    public static final String COMP_OS = "comp_os";
     public static final String COMP_MODEL = "model";
     public static final String COMP_NAME = "pc_no";
     public static final String COMP_PR = "processor";
@@ -113,6 +114,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     String createComputers = "CREATE TABLE " + TABLE_COMPUTERS + "("
             + COMP_ID + " INTEGER, " //FOREIGN KEY
             + ROOMS_ID + " INTEGER, "
+            + COMP_OS + " VARCHAR, "
             + COMP_NAME + " INTEGER, " // pc_no
             + COMP_MODEL + " VARCHAR, "
             + COMP_MB + " VARCHAR, "
@@ -199,7 +201,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //DB DETAILS
     public static final String DB_NAME = "db_temp";
-    public static final int DB_VERSION = 4;
+    public static final int DB_VERSION = 6;
 
 
     public SQLiteHandler(Context context) {
@@ -279,7 +281,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     public Cursor getCompInARoom(int room_id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COMP_ID, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
+        String[] columns = {COMP_ID, COMP_OS,COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, ROOMS_ID};
         Cursor cursor = db.query(TABLE_COMPUTERS, columns, ROOMS_ID + " = ?", new String[]{String.valueOf(room_id)}, null, null, COMP_NAME);
         return cursor;
@@ -295,7 +297,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     public Cursor getCompDetails(int comp_id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COMP_ID, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
+        String[] columns = {COMP_ID,COMP_OS, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, ROOMS_ID};
         Cursor cursor = db.query(TABLE_COMPUTERS, columns, COMP_ID + " = ?", new String[]{String.valueOf(comp_id)}, null, null, null);
         return cursor;
@@ -307,12 +309,13 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public long addComputers(int comp_id, int room_id, int pc_name, String model, String mb, String processor,
+    public long addComputers(int comp_id, int room_id, int pc_name, String os, String model, String mb, String processor,
                              String monitor, String ram, String kboard,
                              String mouse, String status, String vga, String hdd) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COMP_ID, comp_id);
+        values.put(COMP_OS, os);
         values.put(ROOMS_ID, room_id);
         values.put(COMP_NAME, pc_name);
         values.put(COMP_MODEL, model);
@@ -474,7 +477,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //////////////////////////////////////////////////////////////////////////////////
     //ASSESSMENT REPORT DETAILS FUNCTIONS
-    public long addReportDetails(int rep_id, int comp_id, int pc_no, String model, String mb
+    public long addReportDetails(int rep_id, int comp_id, int pc_no,String model, String mb
             ,String mb_serial, String pr, String monitor,String mon_serial, String ram, String kboard, String mouse, String vga
             , String hdd, String status) {
         SQLiteDatabase db = this.getWritableDatabase();

@@ -59,9 +59,10 @@ public class AddCompFrmServer {
                         String vga = obj.getString("vga");
                         String hdd = obj.getString("hdd");
                         String comp_status = obj.getString("comp_status");
+                        String os = obj.getString("os");
 
                         Log.w("COMP: " + comp_id, " MODEL: " + model);
-                        long insert = addComputers(comp_id, room_id, pc_no, model
+                        long insert = addComputers(comp_id, room_id, pc_no, os, model
                                 , mb, pr, monitor, ram, kboard, mouse, vga, hdd, comp_status);
                     }
                 } catch (JSONException e) {
@@ -78,9 +79,9 @@ public class AddCompFrmServer {
 
     }
 
-    private long addComputers(int comp_id, int room_id, int pc_no, String model
+    private long addComputers(int comp_id, int room_id, int pc_no,String os, String model
             , String mb, String pr, String monitor, String ram, String kboard, String mouse, String vga, String hdd, String comp_status) {
-        long insert = db.addComputers(comp_id, room_id, pc_no, model, mb, pr
+        long insert = db.addComputers(comp_id, room_id, pc_no, os, model, mb, pr
                 , monitor, ram, kboard, mouse, comp_status, vga, hdd);
         Log.w("COMP INSERT TO SQLITE: ", "Status : " + insert);
         return insert;

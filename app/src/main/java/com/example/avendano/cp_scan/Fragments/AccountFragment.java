@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.avendano.cp_scan.Activities.EditProfileActivity;
 import com.example.avendano.cp_scan.Activities.LogInActivity;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
@@ -28,6 +29,11 @@ public class AccountFragment extends Fragment {
         // Required empty public constructor
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        db.close();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -42,16 +48,21 @@ public class AccountFragment extends Fragment {
         tName.setText(SharedPrefManager.getInstance(getContext()).getName());
         tRole.setText(SharedPrefManager.getInstance(getContext()).getUserRole());
 
+        db = new SQLiteHandler(getContext());
+
         final ListView listView = (ListView) view.findViewById(R.id.listview);
-        String[] strings = new String[]{"Settings","Sign Out", "Deactivate"};
+        String[] strings = new String[]{"Profile","Sign Out", "Deactivate"};
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, strings);
         listView.setAdapter(adapter);
         listView
                 .setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        switch (adapter.getItem(position)){
-                            case "Sign Out":
+                        switch (position){
+                            case 0:
+                                editProfileActivity();
+                                break;
+                            case 1:
                                 logout();
                                 break;
                         }
@@ -59,6 +70,11 @@ public class AccountFragment extends Fragment {
                 });
         return view;
     }
+
+    private void editProfileActivity() {
+        startActivity(new Intent(getContext(), EditProfileActivity.class));
+    }
+
     private void logout(){
         db = new SQLiteHandler(getContext());
         db.deleteAllComp();
