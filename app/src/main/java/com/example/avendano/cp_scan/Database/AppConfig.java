@@ -7,7 +7,7 @@ package com.example.avendano.cp_scan.Database;
 public class AppConfig {
 
     //        public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
-    public static String ROOT_URL = "http://192.168.2.107/android_api/"; // lan network
+    public static String ROOT_URL = "http://192.168.1.10/android_api/"; // lan network
 
     // Server user login url
     public static String URL_LOGIN = ROOT_URL + "cict_login.php";
@@ -19,4 +19,7 @@ public class AppConfig {
     public static String URL_SAVE_A_REPORT = ROOT_URL + "cict_tech_a_report.php";   //save assessment report
     public static String URL_SAVE_A_DETAILS = ROOT_URL + "cict_save_report_details.php"; // save assessment details then update computers
     public static String URL_ROOM_SCHED = ROOT_URL + "cict_get_sched.php"; //get sched
+    public static String URL_EDIT_PROFILE = ROOT_URL + "cict_edit_user.php"; // edit profile
+    public static String URL_REACTIVATE_ACC = ROOT_URL + "cict_reactivate_account.php";
+    public static String URL_DEACTIVATE_ACC = ROOT_URL + "cict_deactivate_user.php";
 }

@@ -68,18 +68,15 @@ public class RequestActivity extends AppCompatActivity {
                 String user_id = id.getText().toString().trim();
                 String pass = password.getText().toString().trim();
                 String user = username.getText().toString().trim();
-                if(checkInput()){
-                    submitRequest(user_id, user,pass);
+                if (checkInput()) {
+                    submitRequest(user_id, user, pass);
                 }
             }
         });
     }
 
     private void submitRequest(final String user_id, final String user, final String pass) {
-        Format formatter = new SimpleDateFormat("yyyy-MM-dd");
-        final String date_request = formatter.format(new Date());
-
-        pDialog.setMessage("Registering...");
+        pDialog.setMessage("Requesting...");
         showDialog();
 
         //add request queue
@@ -91,8 +88,12 @@ public class RequestActivity extends AppCompatActivity {
                         hideDialog();
                         try {
                             JSONObject jsonObject = new JSONObject(response);
-                            String msg = jsonObject.getString("message");
-                            openDialog(msg);
+                            if (!jsonObject.getBoolean("error")) {
+                                String msg = jsonObject.getString("message");
+                                openDialog(msg);
+                            }else{
+                                Toast.makeText(RequestActivity.this, jsonObject.getString("message"), Toast.LENGTH_SHORT).show();
+                            }
                         } catch (JSONException e) {
                             Log.e("JSON ERROR request: ", e.getMessage());
                         }
@@ -113,7 +114,6 @@ public class RequestActivity extends AppCompatActivity {
                 params.put("id", user_id);
                 params.put("username", user);
                 params.put("password", pass);
-                params.put("date_request", date_request);
                 return params;
             }
         };
@@ -142,6 +142,7 @@ public class RequestActivity extends AppCompatActivity {
             return false;
         }
     }
+
     private void openDialog(String msg) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Request Sent")
@@ -158,19 +159,23 @@ public class RequestActivity extends AppCompatActivity {
         alert.show();
 
     }
+
     private void clearFields() {
         id.setText("");
         username.setText("");
         password.setText("");
     }
+
     private void showDialog() {
         if (!pDialog.isShowing())
             pDialog.show();
     }
+
     private void hideDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();

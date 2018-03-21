@@ -238,16 +238,14 @@ public class ViewRoom extends AppCompatActivity {
                         String vga = obj.getString("vga");
                         String hdd = obj.getString("hdd");
                         String comp_status = obj.getString("comp_status");
-                        String os = obj.getString("os");
 
                         if (room_id == ViewRoom.this.room_id) {
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
                             Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
                             Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
-                            goToAssessment();
-                            break;
                         }
                     }
+                    goToAssessment();
                 } catch (JSONException e) {
                     Toast.makeText(ViewRoom.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
                 }

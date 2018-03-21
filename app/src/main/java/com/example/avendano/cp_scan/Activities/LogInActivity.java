@@ -1,7 +1,10 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.preference.DialogPreference;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -38,6 +41,9 @@ import java.util.Map;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.login.LoginException;
+
+import dmax.dialog.SpotsDialog;
 
 public class LogInActivity extends AppCompatActivity {
 
@@ -60,7 +66,7 @@ public class LogInActivity extends AppCompatActivity {
         request_acc = (TextView) findViewById(R.id.login_request);
         login = (Button) findViewById(R.id.login);
 
-        db= new SQLiteHandler(this);
+        db = new SQLiteHandler(this);
         //progress dialog
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
@@ -120,15 +126,15 @@ public class LogInActivity extends AppCompatActivity {
         return false;
     }
 
-    public void sync(){
-            AddCompFrmServer comp = new AddCompFrmServer(LogInActivity.this, db);
-            AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this,db);
-            AddReportsFrmServer reports = new AddReportsFrmServer(LogInActivity.this);
-            AddSchedFrmServer sched = new AddSchedFrmServer(LogInActivity.this,db);
-            sched.SyncFunction();
-            comp.SyncFunction();
-            rooms.SyncFunction();
-            reports.addAllReports();
+    public void sync() {
+        AddCompFrmServer comp = new AddCompFrmServer(LogInActivity.this, db);
+        AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this, db);
+        AddReportsFrmServer reports = new AddReportsFrmServer(LogInActivity.this);
+        AddSchedFrmServer sched = new AddSchedFrmServer(LogInActivity.this, db);
+        sched.SyncFunction();
+        comp.SyncFunction();
+        rooms.SyncFunction();
+        reports.addAllReports();
     }
 
     private void logUser(final String username, final String password) {
@@ -138,14 +144,12 @@ public class LogInActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 hideDialog();
-
                 try {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         SharedPrefManager.getInstance(getApplicationContext())
                                 .userLogin(obj.getString("user_id"),
                                         obj.getString("username"),
-                                        password,
                                         obj.getString("name"),
                                         obj.getString("phone"),
                                         obj.getString("role"),
@@ -157,12 +161,13 @@ public class LogInActivity extends AppCompatActivity {
                         startActivity(new Intent(getApplicationContext(), Client_Page.class));
                         finish();
                     } else {
-                        Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
+                        if (obj.getString("message").contains("deactivated"))
+                            reactivateAccount(obj.getString("user_id"));
+                        else
+                            Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     Log.e("JSONEXCEPTION: ", e.getMessage());
-                } catch (Exception e) {
-                    Log.e("ENCRYPTEXCEPTION: ", e.getMessage());
                 }
             }
         }, new Response.ErrorListener() {
@@ -184,6 +189,81 @@ public class LogInActivity extends AppCompatActivity {
         RequestQueueHandler.getInstance(this).addToRequestQueue(strReq);
     }
 
+    private void reactivateAccount(final String user_id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(LogInActivity.this);
+        builder.setMessage("Your account has been deactivated, send request to activate account?")
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        user.setText("");
+                        user.setFocusable(true);
+                        password.setText("");
+                    }
+                })
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        sendReactivateAccount(user_id);
+                    }
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void openDialog(String msg) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+                .setMessage(msg)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        user.setText("");
+                        user.setFocusable(true);
+                        password.setText("");
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void sendReactivateAccount(final String user_id) {
+        final android.app.AlertDialog requesting = new SpotsDialog(LogInActivity.this, "Requesting...");
+        requesting.show();
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_REACTIVATE_ACC
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                requesting.hide();
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    openDialog(obj.getString("message"));
+                } catch (JSONException e) {
+                    Log.e("JSONERRORLOGIN", e.getMessage());
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                requesting.hide();
+                Log.e("ERRORREQUESTING", error.getMessage());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("user_id", user_id);
+                params.put("username", user.getText().toString().trim());
+                params.put("password", password.getText().toString().trim());
+                return params;
+            }
+        };RequestQueueHandler.getInstance(LogInActivity.this).addToRequestQueue(str);
+    }
 
     private void showDialog() {
         if (!pDialog.isShowing())

@@ -1,34 +1,46 @@
 package com.example.avendano.cp_scan.Activities;
 
-import android.app.DialogFragment;
+import android.annotation.SuppressLint;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.icu.text.UnicodeSetSpanner;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Base64;
-import android.view.Menu;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
+import com.example.avendano.cp_scan.ShowDialog;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    String[] titles = {"Name","Username", "Password", "Signature"};
-    String[] userData = {SharedPrefManager.getInstance(EditProfileActivity.this).getName()
-    , SharedPrefManager.getInstance(EditProfileActivity.this).getKeyUsername(),"",""};
+    String[] titles = { "Phone","Name", "Username", "Password", "Signature"};
+    String[] userData = {SharedPrefManager.getInstance(EditProfileActivity.this).getUserPhone(),
+            SharedPrefManager.getInstance(EditProfileActivity.this).getName()
+            , SharedPrefManager.getInstance(EditProfileActivity.this).getKeyUsername(), "" ,""};
+    SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +51,23 @@ public class EditProfileActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        db = new SQLiteHandler(EditProfileActivity.this);
+
         ListView list = (ListView) findViewById(R.id.listview);
         ProfileAdapter adapter = new ProfileAdapter();
         list.setAdapter(adapter);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //check kung ung signature ung nakiclick
+                if (position == 4) {
+                    //canvas to capture signature
+                }else if(position == 3){ // update password
+                    ShowDialog dialog = new ShowDialog(titles[position], "");
+                    dialog.show(getSupportFragmentManager(), "");
+                }
+            }
+        });
     }
 
     class ProfileAdapter extends BaseAdapter {
@@ -66,48 +92,30 @@ public class EditProfileActivity extends AppCompatActivity {
             convertView = getLayoutInflater().inflate(R.layout.list_item, null);
             TextView title = (TextView) convertView.findViewById(R.id.title);
             title.setText(titles[position]);
-            EditText user = (EditText) convertView.findViewById(R.id.userData);
-            if(title.getText().toString().trim().equalsIgnoreCase("password")){
-                user.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                user.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                user.setHint(getKeyPassword());
-            }
-            else{
-                user.setHint(userData[position]);
+            final EditText user = (EditText) convertView.findViewById(R.id.userData);
+            if (title.getText().toString().equalsIgnoreCase("signature") ||
+                    title.getText().toString().trim().equalsIgnoreCase("password")) {
+                user.setVisibility(View.GONE);
+                ImageView image = convertView.findViewById(R.id.arrow);
+                image.setVisibility(View.VISIBLE);
+            } else {
+                user.setText(userData[position]);
                 user.setInputType(InputType.TYPE_CLASS_TEXT);
             }
+
             final int item = position;
             user.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String getTitle = titles[item].toString();
-                    //dialog
-                    Toast.makeText(EditProfileActivity.this, getTitle, Toast.LENGTH_SHORT).show();
+                    Log.w("EDITTEXT", "Clicked!");
+                    String title = titles[item];
+                    ShowDialog dialog = new ShowDialog(title, user.getText().toString().trim());
+                    //custom dialog
+                    dialog.show(getSupportFragmentManager(), "");
                 }
             });
             return convertView;
         }
-    }
-
-    private String getKeyPassword() {
-        String decoded = "";
-        try {
-            decoded = decrypt(SharedPrefManager.getInstance(EditProfileActivity.this).getEncrypted(), "userdataencrypted");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return decoded;
-    }
-
-    private String decrypt(String password, String Data) throws Exception{
-        String AES = "AES";
-        SecretKeySpec key = SharedPrefManager.getInstance(EditProfileActivity.this).generateKey(Data);
-        Cipher cipher = Cipher.getInstance(AES);
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] decVal = Base64.decode(password, Base64.DEFAULT);
-        byte[] decoded = cipher.doFinal(decVal);
-        String decryptedValue = new String(decoded);
-        return decryptedValue;
     }
 
     @Override
@@ -118,7 +126,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             case android.R.id.home:
                 EditProfileActivity.this.finish();
             default:
@@ -126,7 +134,11 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    public static class PopupDialog extends DialogFragment{
-
+    @Override
+    protected void onStop() {
+        super.onStop();
+        db.close();
     }
+
+
 }

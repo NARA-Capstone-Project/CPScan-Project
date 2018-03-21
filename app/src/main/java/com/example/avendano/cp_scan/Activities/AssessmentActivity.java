@@ -297,7 +297,7 @@ public class AssessmentActivity extends AppCompatActivity {
                         if(c2.moveToFirst()){
                             room_name = c2.getString(c2.getColumnIndex(db.ROOMS_NAME));
                         }
-                        msg = "PC " + pc_no + " should be in room " + room_name;
+                        msg = "This is PC " + pc_no + " of " + room_name + " room";
                     }
                 }else{
                     msg = "Computer not found in database";
