@@ -29,7 +29,7 @@ import com.example.avendano.cp_scan.Adapter.AssessAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Getter_Setter.Assess_Computers;
+import com.example.avendano.cp_scan.Model.Assess_Computers;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.google.zxing.integration.android.IntentIntegrator;

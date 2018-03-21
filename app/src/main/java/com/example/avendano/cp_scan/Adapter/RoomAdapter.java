@@ -5,16 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.example.avendano.cp_scan.Activities.ViewRoom;
-import com.example.avendano.cp_scan.Getter_Setter.Computers;
-import com.example.avendano.cp_scan.Getter_Setter.Rooms;
+import com.example.avendano.cp_scan.Model.Rooms;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;
 

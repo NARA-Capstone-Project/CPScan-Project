@@ -9,10 +9,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
-import com.example.avendano.cp_scan.Activities.ViewRoom;
-import com.example.avendano.cp_scan.Getter_Setter.Reports;
-import com.example.avendano.cp_scan.Getter_Setter.Rooms;
+import com.example.avendano.cp_scan.Activities.ViewInventoryReport;
+import com.example.avendano.cp_scan.Model.Reports;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;
 
@@ -54,6 +54,9 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
             @Override
             public void onClick(View v) {
                 //intent to ViewReport
+                Intent intent = new Intent(mCtx, ViewInventoryReport.class);
+                intent.putExtra("rep_id", reportList.get(position).getRep_id());
+                act.startActivity(intent);
             }
         });
     }

@@ -7,10 +7,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.example.avendano.cp_scan.Activities.ViewPc;
-import com.example.avendano.cp_scan.Getter_Setter.Computers;
+import com.example.avendano.cp_scan.Model.Computers;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;
 

@@ -371,6 +371,20 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         return rowInserted;
     }
 
+    public Cursor getCustName(String cust_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = new String[]{ROOMS_CUSTODIAN};
+        Cursor c = db.query(TABLE_ROOMS, cols, COLUMN_CUST_ID + " = ?", new String[]{cust_id}, null
+                , null, null, "1");
+        return c;
+    }
+    public Cursor getTechName(String tech_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = new String[]{ROOMS_TECHNICIAN};
+        Cursor c = db.query(TABLE_ROOMS, cols, COLUMN_TECH_ID + " = ?", new String[]{tech_id}, null
+                , null, null, "1");
+        return c;
+    }
     public long getRoomCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         long c = DatabaseUtils.queryNumEntries(db, TABLE_ROOMS);

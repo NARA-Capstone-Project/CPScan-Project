@@ -2,7 +2,6 @@ package com.example.avendano.cp_scan.Fragments;
 
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,7 +25,7 @@ import com.example.avendano.cp_scan.Adapter.ReportAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Getter_Setter.Reports;
+import com.example.avendano.cp_scan.Model.Reports;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -196,7 +195,8 @@ public class ReportFragment extends Fragment {
     private void saveToDetails(int rep_id, int comp_id, int pc_no, String mb, String mb_serial
             , String pr, String monitor, String mon_serial
             , String ram, String hdd, String vga, String kb, String comp_status, String model, String mouse) {
-        db.addReportDetails(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor, mon_serial, ram, kb, mouse, vga, hdd, comp_status);
+        db.addReportDetails(rep_id, comp_id, pc_no, model, mb, mb_serial, pr, monitor, mon_serial,
+                ram, kb, mouse, vga, hdd, comp_status);
         Log.w("REPORT DETAILS", "COUNT: " + db.getReportDetailsCount());
     }
 

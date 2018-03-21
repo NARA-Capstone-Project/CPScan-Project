@@ -2,7 +2,6 @@ package com.example.avendano.cp_scan.Activities;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -20,12 +19,10 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Adapter.ComputerAdapter;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Getter_Setter.Computers;
 import com.example.avendano.cp_scan.R;
 
 import org.json.JSONArray;

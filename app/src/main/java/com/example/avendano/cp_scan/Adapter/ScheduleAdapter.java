@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.avendano.cp_scan.Getter_Setter.RoomSchedule;
+import com.example.avendano.cp_scan.Model.RoomSchedule;
 import com.example.avendano.cp_scan.R;
 
 import java.util.List;

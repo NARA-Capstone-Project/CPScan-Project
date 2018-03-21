@@ -1,6 +1,4 @@
-package com.example.avendano.cp_scan.Getter_Setter;
-
-import java.sql.Blob;
+package com.example.avendano.cp_scan.Model;
 
 /**
  * Created by Avendano on 6 Mar 2018.

@@ -2,9 +2,7 @@ package com.example.avendano.cp_scan.Fragments;
 
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,20 +14,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Adapter.ReportAdapter;
 import com.example.avendano.cp_scan.Adapter.RoomAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Getter_Setter.Rooms;
+import com.example.avendano.cp_scan.Model.Rooms;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -38,9 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
@@ -177,6 +169,7 @@ public class RoomFragment extends Fragment {
                     Log.e("JSON ERROR 1", "RoomFragment: " + e.getMessage());
                     new RoomsLoader().execute(role);
                 }
+                swiper.setRefreshing(false);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -222,6 +215,7 @@ public class RoomFragment extends Fragment {
         } else {
             //empty fragment
         }
+        swiper.setRefreshing(false);
     }
 
     private void loadAllRoom() {

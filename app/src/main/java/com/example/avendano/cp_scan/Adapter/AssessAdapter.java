@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.avendano.cp_scan.Getter_Setter.Assess_Computers;
+import com.example.avendano.cp_scan.Model.Assess_Computers;
 import com.example.avendano.cp_scan.R;
 import java.util.ArrayList;
 import java.util.List;
