@@ -100,8 +100,6 @@ public class ShowDialog extends AppCompatDialogFragment {
             public void onClick(View v) {
                 if(confirmation.getText().toString().trim().length() == 0){
                     confirmation.setError("Empty Field");
-                }else if(current.isShown()){
-                    current.setError("Empty Field");
                 }else if(new_data.getText().toString().length() == 0){
                     new_data.setError("Empty Field");
                 }else if(new_data.getText().toString().equals(current_data))

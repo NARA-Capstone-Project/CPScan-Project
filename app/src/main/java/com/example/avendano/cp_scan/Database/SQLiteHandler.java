@@ -461,7 +461,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY, REPORT_ADMIN_SIGNED
                 , REPORT_HTECH_SIGNED};
         Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, COLUMN_CUST_ID + " = ? OR " +
-                COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC");
+                COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC and " + REPORT_TIME + " ASC ");
         return c;
     }
     public Cursor getAllReports() {
