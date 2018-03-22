@@ -52,7 +52,7 @@ public class ShowDialog extends AppCompatDialogFragment {
     String current_data, data_to_change;
     SQLiteHandler db;
     EditText current;
-    EditText new_data ;
+    EditText new_data;
     EditText confirmation;
     android.app.AlertDialog dialog;
 
@@ -82,9 +82,7 @@ public class ShowDialog extends AppCompatDialogFragment {
             });
         if (data_to_change.equalsIgnoreCase("password")) {
             current.setVisibility(View.GONE);
-//            current.setHint("Current Password");
-//            current.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-//            current.setTransformationMethod(PasswordTransformationMethod.getInstance());
+            current.setText("Current " + data_to_change + ":");
             new_data.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             new_data.setTransformationMethod(PasswordTransformationMethod.getInstance());
         } else {
@@ -98,15 +96,17 @@ public class ShowDialog extends AppCompatDialogFragment {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(confirmation.getText().toString().trim().length() == 0){
+                if (confirmation.getText().toString().trim().length() == 0) {
                     confirmation.setError("Empty Field");
-                }else if(new_data.getText().toString().length() == 0){
+                } else if (new_data.getText().toString().length() == 0) {
                     new_data.setError("Empty Field");
-                }else if(new_data.getText().toString().equals(current_data))
-                    Toast.makeText(getContext(), "New " + data_to_change + " is same as your current "+ data_to_change
-                            , Toast.LENGTH_SHORT).show();
+                } else if (current_data.equals(new_data.getText().toString().trim()))
+                    Toast.makeText(getContext(), "New " + data_to_change + " is same as your current " + data_to_change
+                            , Toast.LENGTH_LONG).show();
+                else if(current.isShown())
+                    Log.w("CURRENT", "ISSHOWN");
                 else
-                   validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
+                    validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
             }
         });
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -150,7 +150,7 @@ public class ShowDialog extends AppCompatDialogFragment {
             String user_id = strings[3];
             String password = strings[4];
 
-            Log.w("PARAMS", "table: " + table + " col: " + column + " new_data: "+ new_data +
+            Log.w("PARAMS", "table: " + table + " col: " + column + " new_data: " + new_data +
                     " user_id: " + user_id + " password " + password);
 
             updateUserData(table, column, new_data, user_id, password);
@@ -167,13 +167,13 @@ public class ShowDialog extends AppCompatDialogFragment {
             @Override
             public void onResponse(String response) {
                 try {
-                    Log.e("RESPONSE" , response.toString());
+                    Log.e("RESPONSE", response.toString());
                     JSONObject obj = new JSONObject(response);
                     dialog.dismiss();
                     if (!obj.getBoolean("error")) {
                         Toast.makeText(getContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
                         logout();
-                    }else{
+                    } else {
                         Toast.makeText(getContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
