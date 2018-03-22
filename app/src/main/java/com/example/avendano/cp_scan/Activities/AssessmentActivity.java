@@ -410,6 +410,7 @@ public class AssessmentActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 try {
+                    Log.e("RESPONSE", response);
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         Log.w("INSERT REPORT", "SUCCESS");

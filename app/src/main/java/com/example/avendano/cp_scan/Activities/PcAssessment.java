@@ -110,7 +110,7 @@ public class PcAssessment extends AppCompatActivity {
     }
 
     public class GetCompDetails extends AsyncTask<Void, Void, Void> {
-        String mon_serial, mb_serial, pr_type, ram_size, hdd_size;
+        String mon_serial, mb_serial, pr_type, ram_size, hdd_size, kb, mouse_attach, vga_attach;
 
         @Override
         protected void onPreExecute() {
@@ -120,17 +120,23 @@ public class PcAssessment extends AppCompatActivity {
             pr_type = "";
             ram_size = "";
             hdd_size = "";
+            vga_attach = "";
+            mouse_attach = "";
+            kb = "";
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            Cursor c = db.getCompDetails(comp_id);
+            Cursor c = db.getPcToAssess(comp_id);
             if (c.moveToFirst()) {
                 this.mon_serial = c.getString(c.getColumnIndex(db.COMP_MONITOR));
                 this.mb_serial = c.getString(c.getColumnIndex(db.COMP_MB));
                 this.pr_type = c.getString(c.getColumnIndex(db.COMP_PR));
                 this.ram_size = c.getString(c.getColumnIndex(db.COMP_RAM));
                 this.hdd_size = c.getString(c.getColumnIndex(db.COMP_HDD));
+                this.vga_attach = c.getString(c.getColumnIndex(db.COMP_VGA));
+                this.kb = c.getString(c.getColumnIndex(db.COMP_KBOARD));
+                this.mouse_attach = c.getString(c.getColumnIndex(db.COMP_MOUSE));
                 pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
             }
             toolbar.setTitle("PC " + pc_no);
@@ -139,6 +145,9 @@ public class PcAssessment extends AppCompatActivity {
             pr.setText(pr_type);
             ram.setText(ram_size);
             hdd.setText(hdd_size);
+            vga.setText(vga.getText() + "(" +vga_attach+ ")");
+            keyboard.setText(keyboard.getText() + "(" +kb+ ")");
+            mouse.setText(mouse.getText() + "(" +mouse_attach+ ")");
             return null;
         }
 
@@ -167,6 +176,7 @@ public class PcAssessment extends AppCompatActivity {
             idx = rGroup.getCheckedRadioButtonId();
             btn = rGroup.findViewById(idx);
             status = btn.getText().toString().trim();
+            String comp_status = "";
             if (status.equalsIgnoreCase("missing")) {
                 if (monitor.isChecked()) {
                     mon = "Missing";
@@ -208,6 +218,12 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = "BUILT-IN";
                 }
+                if(mb.getText().toString().trim().equalsIgnoreCase("missing") ||
+                        processor.equalsIgnoreCase("missing") ||
+                        comp_ram.equalsIgnoreCase("missing")){
+                    comp_status = "Missing Components";
+                }else
+                    comp_status = "Working";
             }else if (status.equalsIgnoreCase("defective")){
                 if (monitor.isChecked()) {
                     mon = NOT_WORKING;
@@ -249,6 +265,12 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = "BUILT-IN";
                 }
+                if(mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
+                        processor.equalsIgnoreCase(NOT_WORKING) ||
+                        comp_ram.equalsIgnoreCase(NOT_WORKING)){
+                    comp_status = "Defective";
+                }else
+                    comp_status = "Working";
             }else { //working
                 if (monitor.isChecked()) {
                     mon = WORKING;
@@ -290,10 +312,17 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = NOT_WORKING;
                 }
+                if(mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
+                        processor.equalsIgnoreCase(NOT_WORKING) ||
+                        comp_ram.equalsIgnoreCase(NOT_WORKING)){
+                    comp_status = "Defective";
+                }else
+                    comp_status = "Working";
             }
 
             long in = db.addAssessedPc(comp_id, pc_no, model, motherboard, mb.getText().toString().trim()
-                    , processor, mon, monitor.getText().toString().trim(), comp_ram, comp_kb, comp_mouse, status
+                    , processor, mon, monitor.getText().toString().trim(), comp_ram, comp_kb,
+                    comp_mouse, comp_status
                     , comp_vga, comp_hdd);
 
             db.updateScannedStatus(1, comp_id);

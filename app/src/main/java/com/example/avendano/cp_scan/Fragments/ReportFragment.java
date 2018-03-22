@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -51,6 +52,7 @@ public class ReportFragment extends Fragment {
     AlertDialog dialog;
     ReportAdapter reportAdapter;
     View view;
+    TextView no_list;
 
     public ReportFragment() {
         // Required empty public constructor
@@ -118,6 +120,8 @@ public class ReportFragment extends Fragment {
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                db.deleteReportDetails();
+                db.deleteReport();
                 try {
                     Log.w("REsP", "length : " + response.length());
                     JSONArray array = new JSONArray(response);
@@ -133,38 +137,24 @@ public class ReportFragment extends Fragment {
                         String time = obj.getString("time");
                         int signed = obj.getInt("cust_signed");
                         String remarks = obj.getString("remarks");
-                        int comp_id = obj.getInt("comp_id");
-                        String model = obj.getString("model");
-                        String mb = obj.getString("mb");
-                        String pr = obj.getString("pr");
-                        String monitor = obj.getString("monitor");
-                        String ram = obj.getString("ram");
-                        String kb = obj.getString("kb");
-                        String mouse = obj.getString("mouse");
-                        String vga = obj.getString("vga");
-                        String hdd = obj.getString("hdd");
-                        String comp_status = obj.getString("status");
-                        String mb_serial = obj.getString("mb_serial");
-                        String mon_serial = obj.getString("mon_serial");
-                        int pc_no = obj.getInt("pc_no");
                         int htech_signed = obj.getInt("htech_signed");
                         int admin_signed = obj.getInt("admin_signed");
 
                         Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
                         reportsList.add(reports);
 
-                        checkReport(cat, rep_id, room_id, signed,htech_signed, admin_signed,
+                        addReportToLocal(cat, rep_id, room_id, signed, htech_signed, admin_signed,
                                 cust_id, tech_id, date, time, remarks,
-                                room_name, comp_id, pc_no, mb, mb_serial, pr, monitor,
-                                mon_serial, ram, hdd, vga, kb, comp_status, model, mouse);
+                                room_name);
                     }
 
                     Log.w("LOADED", "Server reports");
-                    if (reportsList.size() == 0) {
+                    if (reportsList.isEmpty()) {
                         db.deleteReportDetails();
                         db.deleteReport();
-                        Toast.makeText(getContext(), "No Reports", Toast.LENGTH_SHORT).show();
+                        Log.w("NOREPORTS", "NO REPORTS");
                     } else {
+                        addDetails();
                         reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
                         recyclerView.setAdapter(reportAdapter);
                         reportAdapter.notifyDataSetChanged();
@@ -192,6 +182,16 @@ public class ReportFragment extends Fragment {
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
     }
 
+    private void addDetails() {
+        Cursor c = db.getAllReports();
+        if(c.moveToFirst()){
+            do{
+                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
+                addReportDetails(rep_id);
+            }while(c.moveToNext());
+        }
+    }
+
     private void saveToDetails(int rep_id, int comp_id, int pc_no, String mb, String mb_serial
             , String pr, String monitor, String mon_serial
             , String ram, String hdd, String vga, String kb, String comp_status, String model, String mouse) {
@@ -200,23 +200,64 @@ public class ReportFragment extends Fragment {
         Log.w("REPORT DETAILS", "COUNT: " + db.getReportDetailsCount());
     }
 
-    private void checkReport(String cat, int rep_id, int room_id,
-                             int cust_signed, int htech_signed, int admin_signed, String cust_id, String tech_id,
-                             String date, String time, String remarks, String room_name,
-                             int comp_id, int pc_no, String mb, String mb_serial, String pr, String monitor,
-                             String mon_serial, String ram, String hdd, String vga, String kb,
-                             String comp_status, String model, String mouse) {
-        Cursor c = db.getReportByRepId(rep_id);
-        Log.e("REPORT COUNT", "SQLITE: " + db.getReportCount());
-        if (c.moveToFirst()) {
-            Log.w("NEW REPORT INSERT:", "Status : 0");
-        } else {
-            long in = db.addReport(rep_id, room_id, cust_id, cat, tech_id
-                    , date, time, cust_signed, htech_signed, admin_signed, remarks, room_name);
-            Log.w("NEW REPORT INSERT:", "Status : " + in);
-            saveToDetails(rep_id, comp_id, pc_no, mb, mb_serial, pr, monitor, mon_serial, ram
-                    , hdd, vga, kb, comp_status, model, mouse);
-        }
+    private void addReportToLocal(String cat, int rep_id, int room_id,
+                                  int cust_signed, int htech_signed, int admin_signed, String cust_id, String tech_id,
+                                  String date, String time, String remarks, String room_name) {
+
+        long in = db.addReport(rep_id, room_id, cust_id, cat, tech_id
+                , date, time, cust_signed, htech_signed, admin_signed, remarks, room_name);
+        Log.w("NEW REPORT INSERT:", "Status : " + in);
+    }
+
+    private void addReportDetails(final int rep_id) {
+        StringRequest str = new StringRequest(Request.Method.POST,
+                AppConfig.URL_GET_REPORT_DETAILS,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            Log.e("RESPONSE", response);
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+
+                                int comp_id = obj.getInt("comp_id");
+                                String model = obj.getString("model");
+                                String mb = obj.getString("mb");
+                                String mb_serial = obj.getString("mb_serial");
+                                String pr = obj.getString("pr");
+                                String mon = obj.getString("mon");
+                                String mon_serial = obj.getString("mon_serial");
+                                String ram = obj.getString("ram");
+                                String kb = obj.getString("kb");
+                                String mouse = obj.getString("mouse");
+                                String vga = obj.getString("vga");
+                                String hdd = obj.getString("hdd");
+                                String comp_status = obj.getString("comp_status");
+                                int pc_no = obj.getInt("pc_no");
+
+                                saveToDetails(rep_id, comp_id, pc_no, mb, mb_serial, pr, mon, mon_serial
+                                        , ram, hdd, vga, kb, comp_status, model, mouse);
+                            }
+                        } catch (JSONException e) {
+                            Log.e("JSON DETAILS", e.getMessage());
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("RESPONSE DETAILS", error.getMessage());
+                Toast.makeText(getContext(), "Can't connect to the server, try again later", Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("rep_id", String.valueOf(rep_id));
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
     }
 
     @Override
@@ -242,7 +283,6 @@ public class ReportFragment extends Fragment {
             } while (c.moveToNext());
         } else {
             //no list
-            Toast.makeText(getContext(), "No Reports", Toast.LENGTH_SHORT).show();
         }
         dialog.dismiss();
     }

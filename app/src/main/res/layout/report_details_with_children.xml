@@ -188,6 +188,10 @@
                     android:paddingTop="5dp" />
             </LinearLayout>
         </LinearLayout>
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/darkorange"/>
     </com.github.aakira.expandablelayout.ExpandableLinearLayout>
 
 </RelativeLayout>

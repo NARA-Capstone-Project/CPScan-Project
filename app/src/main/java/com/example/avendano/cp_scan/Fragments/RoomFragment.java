@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -47,6 +48,7 @@ public class RoomFragment extends Fragment {
     AlertDialog progressDialog;
     RoomAdapter roomAdapter;
     View view;
+    TextView no_list;
 
     public RoomFragment() {
         // Required empty public constructor
@@ -119,8 +121,8 @@ public class RoomFragment extends Fragment {
             public void onResponse(String response) {
                 try {
                     hideDialog();
-                    if (response != null && response.length() > 0) {
-                        JSONArray array = new JSONArray(response);
+                    JSONArray array = new JSONArray(response);
+                    if (array.length() > 0) {
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject obj = array.getJSONObject(i);
                             int room_id = obj.getInt("room_id");
@@ -144,25 +146,23 @@ public class RoomFragment extends Fragment {
                             } else {
                                 lastAssess = obj.getString("lastAssess");
                             }
-                            Rooms rooms = new Rooms(room_id,custodian,technician,room_name,building);
+                            Rooms rooms = new Rooms(room_id, custodian, technician, room_name, building);
 
-                            if(role.equalsIgnoreCase("custodian")){
-                                if(cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId()))
+                            if (role.equalsIgnoreCase("custodian")) {
+                                if (cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId()))
                                     roomsList.add(rooms);
-                            }
-                            else
+                            } else
                                 roomsList.add(rooms);
 
                             checkRoom(room_id, room_name, custodian, cust_id, technician, tech_id,
                                     building, floor, pc_count, pc_working, lastAssess);
 
                         }
-                        Log.w("LOADED" , "Server rooms");
+                        Log.w("LOADED", "Server rooms");
                         roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
                         recyclerView.setAdapter(roomAdapter);
-                    }else{
-                        //empty list view
-                        //delete ung sqlite kung may laman
+                    } else {
+                        db.deleteRooms();
                     }
                     Log.e("ROOM RESPONSE", response);
                 } catch (JSONException e) {
@@ -232,6 +232,7 @@ public class RoomFragment extends Fragment {
                         room_building);
                 roomsList.add(rooms);
             } while (c.moveToNext());
+        }else{
         }
     }
 

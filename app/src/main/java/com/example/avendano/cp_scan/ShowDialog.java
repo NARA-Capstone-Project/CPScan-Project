@@ -171,8 +171,8 @@ public class ShowDialog extends AppCompatDialogFragment {
                 try {
                     Log.e("RESPONSE" , response.toString());
                     JSONObject obj = new JSONObject(response);
+                    dialog.dismiss();
                     if (!obj.getBoolean("error")) {
-                        dialog.dismiss();
                         Toast.makeText(getContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
                         logout();
                     }else{
@@ -180,6 +180,7 @@ public class ShowDialog extends AppCompatDialogFragment {
                     }
                 } catch (JSONException e) {
                     dialog.dismiss();
+                    Toast.makeText(getContext(), "Error occured, please try again later", Toast.LENGTH_SHORT).show();
                     Log.e("EDITERROR", e.getMessage());
                 }
             }

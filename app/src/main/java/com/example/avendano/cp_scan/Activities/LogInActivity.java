@@ -24,7 +24,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.AddCompFrmServer;
-import com.example.avendano.cp_scan.Database.AddReportsFrmServer;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.AddRoomsFrmServer;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -129,12 +128,11 @@ public class LogInActivity extends AppCompatActivity {
     public void sync() {
         AddCompFrmServer comp = new AddCompFrmServer(LogInActivity.this, db);
         AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this, db);
-        AddReportsFrmServer reports = new AddReportsFrmServer(LogInActivity.this);
+//        AddReportsFrmServer reports = new AddReportsFrmServer(LogInActivity.this);
         AddSchedFrmServer sched = new AddSchedFrmServer(LogInActivity.this, db);
         sched.SyncFunction();
         comp.SyncFunction();
         rooms.SyncFunction();
-        reports.addAllReports();
     }
 
     private void logUser(final String username, final String password) {

@@ -464,6 +464,15 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC");
         return c;
     }
+    public Cursor getAllReports() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
+                REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY, REPORT_ADMIN_SIGNED
+                , REPORT_HTECH_SIGNED};
+        Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols,
+                null, null, null, null, null);
+        return c;
+    }
 
     public Cursor getReportByRepId(int rep_id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -595,6 +604,14 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         String[] columns = {COMP_ID, COMP_MODEL,COMP_NAME, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, COLUMN_SCANNED};
         Cursor cursor = db.query(PC_TO_ASSESS, columns, null,null, null, null, null);
+        return cursor;
+    }
+    public Cursor getPcToAssess(int comp_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {COMP_ID, COMP_MODEL,COMP_NAME, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
+                COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, COLUMN_SCANNED};
+        Cursor cursor = db.query(PC_TO_ASSESS, columns, COMP_ID + " = ?", new String[]
+                {String.valueOf(comp_id)}, null, null, null);
         return cursor;
     }
     //////////////////////////////////////////////////////////////////////////////////
