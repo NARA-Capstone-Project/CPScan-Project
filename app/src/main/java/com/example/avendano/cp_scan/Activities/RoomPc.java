@@ -78,6 +78,7 @@ public class RoomPc extends AppCompatActivity {
             public void onResponse(String response) {
                 try {
                     JSONArray array = new JSONArray(response);
+                    db.deleteAllComp();
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         int comp_id = obj.getInt("comp_id");
@@ -102,14 +103,14 @@ public class RoomPc extends AppCompatActivity {
                             Computers computers = new Computers(comp_status, pc_no, model, comp_id, room_id);
                             compList.add(computers);
                         }
-                        checkComputers(comp_id, room_id, pc_no, os,model
+                        addComputersToLocal(comp_id, room_id, pc_no, os,model
                                 , mb, pr, monitor, ram, kboard, mouse, vga, hdd, comp_status);
                     }
                     adapter = new ComputerAdapter(RoomPc.this, compList, refresh);
                     recyclerView.setAdapter(adapter);
                     hideDialog();
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.e("JSONERROR", "ROOMPC: " + e.getMessage());
                 }
             }
         }, new Response.ErrorListener() {
@@ -121,15 +122,12 @@ public class RoomPc extends AppCompatActivity {
         RequestQueueHandler.getInstance(this).addToRequestQueue(str);
     }
 
-    private void checkComputers(int comp_id, int room_id, int pc_no,String os, String model
+    private void addComputersToLocal(int comp_id, int room_id, int pc_no, String os, String model
             , String mb, String pr, String monitor, String ram, String kboard, String mouse, String vga, String hdd, String comp_status) {
 
-        Cursor c = db.getCompDetails(comp_id);
-        if (!c.moveToFirst()) {
             long insert = db.addComputers(comp_id, room_id, pc_no, os, model, mb, pr
                     , monitor, ram, kboard, mouse, comp_status, vga, hdd);
             Log.w("COMP INSERT TO SQLITE: ", "Status : " + insert);
-        }
     }
 
     class CompLocalLoader extends AsyncTask<Void, Void, Void> {

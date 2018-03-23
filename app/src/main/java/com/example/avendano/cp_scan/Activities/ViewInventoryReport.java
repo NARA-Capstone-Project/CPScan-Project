@@ -66,38 +66,37 @@ public class ViewInventoryReport extends AppCompatActivity {
 
     private void setData() {
         reportDetailsList.clear();
-        Cursor c = db.getReportDetailsById(rep_id);
-        Cursor signs = db.getReportByRepId(rep_id);
-        if (c.moveToFirst()) {
+        Cursor report_details = db.getReportDetailsById(rep_id);
+        Cursor report = db.getReportByRepId(rep_id);
+        if (report_details.moveToFirst()) {
             do {
                 //COMP_ID,COMP_NAME, COMP_MODEL, COMP_MB, COMP_PR, COMP_MONITOR,
 //                COMP_RAM, COMP_KBOARD, COMP_MOUSE, COMP_VGA, COMP_HDD, COMP_STATUS, REPORT_MB_SERIAL,REPORT_MON_SERIAL
-                int pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
-                String status =c.getString(c.getColumnIndex(db.COMP_STATUS));
-                String monitor =c.getString(c.getColumnIndex(db.COMP_MONITOR));
-                String mb =c.getString(c.getColumnIndex(db.COMP_MB));
-                String model =c.getString(c.getColumnIndex(db.COMP_MODEL));
-                String pr =c.getString(c.getColumnIndex(db.COMP_PR));
-                String ram =c.getString(c.getColumnIndex(db.COMP_RAM));
-                String hdd =c.getString(c.getColumnIndex(db.COMP_HDD));
-                String vga =c.getString(c.getColumnIndex(db.COMP_VGA));
-                String mouse =c.getString(c.getColumnIndex(db.COMP_MOUSE));
-                String kb =c.getString(c.getColumnIndex(db.COMP_KBOARD));
+                int pc_no = report_details.getInt(report_details.getColumnIndex(db.COMP_NAME));
+                String status =report_details.getString(report_details.getColumnIndex(db.COMP_STATUS));
+                String monitor =report_details.getString(report_details.getColumnIndex(db.COMP_MONITOR));
+                String mb =report_details.getString(report_details.getColumnIndex(db.COMP_MB));
+                String model =report_details.getString(report_details.getColumnIndex(db.COMP_MODEL));
+                String pr =report_details.getString(report_details.getColumnIndex(db.COMP_PR));
+                String ram =report_details.getString(report_details.getColumnIndex(db.COMP_RAM));
+                String hdd =report_details.getString(report_details.getColumnIndex(db.COMP_HDD));
+                String vga =report_details.getString(report_details.getColumnIndex(db.COMP_VGA));
+                String mouse =report_details.getString(report_details.getColumnIndex(db.COMP_MOUSE));
+                String kb =report_details.getString(report_details.getColumnIndex(db.COMP_KBOARD));
 
                 ReportDetails reports = new ReportDetails(pc_no, monitor,mb, pr,ram,hdd, vga
                 ,mouse, kb, status, model,true);
                 reportDetailsList.add(reports);
-            } while (c.moveToNext());
+            } while (report_details.moveToNext());
             ReportDetailsAdapter adapter = new ReportDetailsAdapter(reportDetailsList);
             recyclerView.setAdapter(adapter);
         }
-        if(signs.moveToFirst()){
-            int cust_sign = signs.getInt(signs.getColumnIndex(db.REPORT_CUST_SIGNED));
-            int tech_sign = signs.getInt(signs.getColumnIndex(db.REPORT_HTECH_SIGNED));
-            int dean_sign = signs.getInt(signs.getColumnIndex(db.REPORT_ADMIN_SIGNED));
-            String cust_id = signs.getString(signs.getColumnIndex(db.COLUMN_CUST_ID));
-            String tech_id = signs.getString(signs.getColumnIndex(db.COLUMN_TECH_ID));
-
+        if(report.moveToFirst()){
+            int cust_sign = report.getInt(report.getColumnIndex(db.REPORT_CUST_SIGNED));
+            int tech_sign = report.getInt(report.getColumnIndex(db.REPORT_HTECH_SIGNED));
+            int dean_sign = report.getInt(report.getColumnIndex(db.REPORT_ADMIN_SIGNED));
+            String cust_id = report.getString(report.getColumnIndex(db.COLUMN_CUST_ID));
+            String tech_id = report.getString(report.getColumnIndex(db.COLUMN_TECH_ID));
             Cursor custName = db.getCustName(cust_id);
             Cursor techName = db.getTechName(tech_id);
             if(custName.moveToFirst()){

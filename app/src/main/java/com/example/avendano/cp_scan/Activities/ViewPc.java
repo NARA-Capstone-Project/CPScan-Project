@@ -112,7 +112,7 @@ public class ViewPc extends AppCompatActivity {
                 Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
                 if (connection_detector.isConnected()) {
                     if(cancel.getVisibility() == View.VISIBLE){
-                        //add report
+                        //add room_btn
                     }else {
                         instr.setVisibility(View.VISIBLE);
                         cancel.setVisibility(View.VISIBLE);

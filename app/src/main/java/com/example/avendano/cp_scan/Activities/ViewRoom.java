@@ -43,13 +43,11 @@ import java.util.Date;
 public class ViewRoom extends AppCompatActivity {
 
     ImageView room_sched, room_computers, room_image;
-    Button report;
     private int room_id;
     private SQLiteHandler db;
     //VIEWS
     private String user_role;
-    private String custodian;
-    Button btn;
+    Button room_btn;
     TextView building, room, cust, floor, pc_count, pc_working, lastAssess;
     ProgressDialog dialog;
     Connection_Detector connection_detector;
@@ -94,11 +92,13 @@ public class ViewRoom extends AppCompatActivity {
         dialog.setMessage("Loading...");
 
         user_role = SharedPrefManager.getInstance(this).getUserRole();
-        btn = (Button) findViewById(R.id.room_button);
+        room_btn = (Button) findViewById(R.id.room_button);
         if (user_role.equalsIgnoreCase("technician")) {
-            btn.setVisibility(View.VISIBLE);
+            room_btn.setVisibility(View.VISIBLE);
+        } else if (user_role.equalsIgnoreCase("custodian")) {
+            room_btn.setText("Request");
         } else {
-            btn.setVisibility(View.INVISIBLE);
+            room_btn.setVisibility(View.INVISIBLE);
         }
 
         //BUTTONS
@@ -140,69 +140,72 @@ public class ViewRoom extends AppCompatActivity {
 
             }
         });
-        report = (Button) findViewById(R.id.room_button);
-        report.setOnClickListener(new View.OnClickListener() {
+        room_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int pc = Integer.parseInt(pc_count.getText().toString().trim());
-                if (pc > 0) {
-                    if (checkDate()) {//naassess na ngayong week
-                        if (connection_detector.isConnected()) {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                            builder.setMessage("This room has been assessed this week. Reassess?")
-                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            addPcToAssessFrmServer();
-                                        }
-                                    })
-                                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    });
-                            AlertDialog alert = builder.create();
-                            alert.show();
+                if (user_role.equalsIgnoreCase("custodian")) {
+                    Toast.makeText(ViewRoom.this, "Custodian request for inventory", Toast.LENGTH_SHORT).show();
+                } else if (user_role.equalsIgnoreCase("technician")){
+                    int pc = Integer.parseInt(pc_count.getText().toString().trim());
+                    if (pc > 0) {
+                        if (checkDate()) {//naassess na ngayong week
+                            if (connection_detector.isConnected()) {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                                builder.setMessage("This room has been assessed this week. Reassess?")
+                                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                addPcToAssessFrmServer();
+                                            }
+                                        })
+                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
+                            } else {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                                builder.setMessage("No Internet Connection")
+                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
+                            }
                         } else {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                            builder.setMessage("No Internet Connection")
-                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    });
-                            AlertDialog alert = builder.create();
-                            alert.show();
+                            if (connection_detector.isConnected()) {
+                                addPcToAssessFrmServer();
+                            } else {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                                builder.setMessage("No Internet Connection")
+                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
+                            }
                         }
                     } else {
-                        if (connection_detector.isConnected()) {
-                            addPcToAssessFrmServer();
-                        } else {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                            builder.setMessage("No Internet Connection")
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    });
-                            AlertDialog alert = builder.create();
-                            alert.show();
-                        }
+                        final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                        builder.setMessage("No computers assigned in this room.")
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        AlertDialog alert = builder.create();
+                        alert.show();
                     }
-                } else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                    builder.setMessage("No computers assigned in this room.")
-                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                    AlertDialog alert = builder.create();
-                    alert.show();
                 }
             }
         });
@@ -364,14 +367,14 @@ public class ViewRoom extends AppCompatActivity {
         }
     }
 
-    private void getImage(){
+    private void getImage() {
         class GetImage extends AsyncTask<Integer, Void, Bitmap> {
 
             @Override
             protected Bitmap doInBackground(Integer... integers) {
                 int id = integers[0];
                 String get = AppConfig.ROOT_URL + "cict_getRoom_Image.php?id=" + id;
-                URL url =null;
+                URL url = null;
                 Bitmap image = null;
                 try {
                     url = new URL(get);

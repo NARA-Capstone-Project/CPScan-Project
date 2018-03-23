@@ -121,6 +121,7 @@ public class RoomFragment extends Fragment {
             public void onResponse(String response) {
                 try {
                     hideDialog();
+                    db.deleteRooms();
                     JSONArray array = new JSONArray(response);
                     if (array.length() > 0) {
                         for (int i = 0; i < array.length(); i++) {
@@ -154,7 +155,7 @@ public class RoomFragment extends Fragment {
                             } else
                                 roomsList.add(rooms);
 
-                            checkRoom(room_id, room_name, custodian, cust_id, technician, tech_id,
+                            addRoomsToLocal(room_id, room_name, custodian, cust_id, technician, tech_id,
                                     building, floor, pc_count, pc_working, lastAssess);
 
                         }
@@ -181,15 +182,12 @@ public class RoomFragment extends Fragment {
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
     }
 
-    private void checkRoom(int room_id, String room_name, String custodian, String cust_id,
-                           String technician, String tech_id, String building, int floor,
-                           int pc_count, int pc_working, String lastAssess) {
-        Cursor c = db.getRoomDetails(room_id);
-        if (!c.moveToFirst()) {
-            long in = db.addRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building
-                    , floor, pc_count, pc_working, lastAssess);
-            Log.w("NEW ROOM INSERT:", "Status : " + in);
-        }
+    private void addRoomsToLocal(int room_id, String room_name, String custodian, String cust_id,
+                                 String technician, String tech_id, String building, int floor,
+                                 int pc_count, int pc_working, String lastAssess) {
+        long in = db.addRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building
+                , floor, pc_count, pc_working, lastAssess);
+        Log.w("NEW ROOM INSERT:", "Status : " + in);
     }
 
     @Override
@@ -232,7 +230,7 @@ public class RoomFragment extends Fragment {
                         room_building);
                 roomsList.add(rooms);
             } while (c.moveToNext());
-        }else{
+        } else {
         }
     }
 

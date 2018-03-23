@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -34,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,9 +111,13 @@ public class ReportFragment extends Fragment {
             super.onPostExecute(aVoid);
             reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
             recyclerView.setAdapter(reportAdapter);
-            reportAdapter.notifyDataSetChanged();
-            swiper.setRefreshing(false);
-        }
+            reportAdapter.notifyDataSetChanged();Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    swiper.setRefreshing(false);
+                }
+            }, 5000);
+         }
     }
 
     private void loadFromServer() {
@@ -140,7 +147,7 @@ public class ReportFragment extends Fragment {
                         int htech_signed = obj.getInt("htech_signed");
                         int admin_signed = obj.getInt("admin_signed");
 
-                        Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
+                        Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
                         reportsList.add(reports);
 
                         addReportToLocal(cat, rep_id, room_id, signed, htech_signed, admin_signed,
@@ -163,7 +170,6 @@ public class ReportFragment extends Fragment {
                     new ReportsLoader().execute("Local");
                     Log.e("JSON ERROR 1", "ReportFragment: " + e.getMessage());
                 }
-                dialog.dismiss();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -183,13 +189,34 @@ public class ReportFragment extends Fragment {
     }
 
     private void addDetails() {
-        Cursor c = db.getAllReports();
-        if(c.moveToFirst()){
-            do{
-                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
-                addReportDetails(rep_id);
-            }while(c.moveToNext());
+        class addDetailsToLocal extends AsyncTask<Void,Void,Void>{
+            @Override
+            protected Void doInBackground(Void... voids) {Cursor c = db.getAllReports();
+                if(c.moveToFirst()){
+                    do{
+                        int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
+                        addReportDetails(rep_id);
+                    }while(c.moveToNext());
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                //delay (para masave sa sqlite)
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        dialog.dismiss();
+                    }
+                }, 5000);
+
+            }
         }
+
+
+        new addDetailsToLocal().execute();
     }
 
     private void saveToDetails(int rep_id, int comp_id, int pc_no, String mb, String mb_serial
@@ -268,8 +295,7 @@ public class ReportFragment extends Fragment {
 
     private void loadLocalReports() {
         Log.w("LOADED", "Local reports");
-        String user = SharedPrefManager.getInstance(getContext()).getUserId();
-        Cursor c = db.getReportByUserId(user);
+        Cursor c = db.getAllReports();
         if (c.moveToFirst()) {
             do {
                 int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
@@ -277,8 +303,9 @@ public class ReportFragment extends Fragment {
                 String cat = c.getString(c.getColumnIndex(db.REPORT_CATEGORY));
                 int room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
                 String room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
+                String time = c.getString(c.getColumnIndex(db.REPORT_TIME));
 
-                Reports reports = new Reports(date, cat, room_name, room_id, rep_id);
+                Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
                 reportsList.add(reports);
             } while (c.moveToNext());
         } else {

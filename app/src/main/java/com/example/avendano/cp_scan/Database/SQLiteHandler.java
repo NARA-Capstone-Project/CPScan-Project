@@ -455,15 +455,6 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         return rowInserted;
     }
 
-    public Cursor getReportByUserId(String user_id) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
-                REPORT_REMARKS, REPORT_CUST_SIGNED, REPORT_DATE, REPORT_TIME, REPORT_CATEGORY, REPORT_ADMIN_SIGNED
-                , REPORT_HTECH_SIGNED};
-        Cursor c = db.query(TABLE_ASSESSMENT_REPORT, cols, COLUMN_CUST_ID + " = ? OR " +
-                COLUMN_TECH_ID + " = ?", new String[]{user_id, user_id}, null, null, REPORT_DATE + " DESC and " + REPORT_TIME + " ASC ");
-        return c;
-    }
     public Cursor getAllReports() {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
