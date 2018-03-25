@@ -84,6 +84,9 @@ public class LogInActivity extends AppCompatActivity {
                     } else {
                         hideDialog();
                     }
+                }else{
+                    hideDialog();
+                    Toast.makeText(LogInActivity.this, "No internet connection", Toast.LENGTH_SHORT).show();
                 }
             }
         });

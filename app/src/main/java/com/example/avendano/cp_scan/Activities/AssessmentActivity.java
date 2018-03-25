@@ -416,6 +416,9 @@ public class AssessmentActivity extends AppCompatActivity {
                         Log.w("INSERT REPORT", "SUCCESS");
                         int rep = obj.getInt("rep_id");
                         setrep_id(rep, array);
+                    }else{
+                        dialog.dismiss();
+                        Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
@@ -425,7 +428,7 @@ public class AssessmentActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.w("INSERT REPORT", "NOT SUCCESS");
-                Toast.makeText(AssessmentActivity.this, "Report not saved", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AssessmentActivity.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
             }
         }) {
             @Override

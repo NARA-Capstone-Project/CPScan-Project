@@ -111,10 +111,12 @@ public class ReportFragment extends Fragment {
             super.onPostExecute(aVoid);
             reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
             recyclerView.setAdapter(reportAdapter);
-            reportAdapter.notifyDataSetChanged();Handler handler = new Handler();
+            reportAdapter.notifyDataSetChanged();
+            Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
                     swiper.setRefreshing(false);
+                    dialog.dismiss();
                 }
             }, 5000);
          }
@@ -127,9 +129,9 @@ public class ReportFragment extends Fragment {
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                db.deleteReportDetails();
-                db.deleteReport();
                 try {
+                    db.deleteReportDetails();
+                    db.deleteReport();
                     Log.w("REsP", "length : " + response.length());
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
@@ -310,7 +312,7 @@ public class ReportFragment extends Fragment {
             } while (c.moveToNext());
         } else {
             //no list
+            Log.e("LOCALREPORTS", " EMPTY");
         }
-        dialog.dismiss();
     }
 }

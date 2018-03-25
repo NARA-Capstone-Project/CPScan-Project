@@ -11,7 +11,12 @@ public class Assess_Computers {
         private String processor;
         private String monitor;
         private String remarks;
-        private int scanned;
+
+    public void setScanned(int scanned) {
+        this.scanned = scanned;
+    }
+
+    private int scanned;
 
         public String getRemarks() {
             return remarks;

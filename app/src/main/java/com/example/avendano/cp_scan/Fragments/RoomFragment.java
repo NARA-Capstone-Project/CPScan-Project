@@ -213,7 +213,6 @@ public class RoomFragment extends Fragment {
         } else {
             //empty fragment
         }
-        swiper.setRefreshing(false);
     }
 
     private void loadAllRoom() {

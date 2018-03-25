@@ -106,6 +106,9 @@ public class Client_Page extends AppCompatActivity {
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 Snackbar.make(findViewById(R.id.navigation), "Network " + networkStat,
                         Snackbar.LENGTH_SHORT).show();
+                if(isNetworkAvailable){
+                    //get fragment then load updated data
+                }
             }
         }, intentFilter);
     }//oncreate

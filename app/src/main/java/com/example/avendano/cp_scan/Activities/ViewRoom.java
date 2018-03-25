@@ -144,6 +144,7 @@ public class ViewRoom extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (user_role.equalsIgnoreCase("custodian")) {
+
                     Toast.makeText(ViewRoom.this, "Custodian request for inventory", Toast.LENGTH_SHORT).show();
                 } else if (user_role.equalsIgnoreCase("technician")){
                     int pc = Integer.parseInt(pc_count.getText().toString().trim());
