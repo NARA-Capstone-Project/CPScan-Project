@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -39,6 +40,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+
+import static com.example.avendano.cp_scan.R.drawable.style_button_white;
 
 public class ViewRoom extends AppCompatActivity {
 
@@ -96,7 +99,14 @@ public class ViewRoom extends AppCompatActivity {
         if (user_role.equalsIgnoreCase("technician")) {
             room_btn.setVisibility(View.VISIBLE);
         } else if (user_role.equalsIgnoreCase("custodian")) {
-            room_btn.setText("Request");
+            Cursor c = db.checkIfRequested(room_id);
+            if(c.moveToFirst()){
+                room_btn.setText("Requested");
+                room_btn.setBackgroundResource(R.drawable.style_button_white);
+            }else{
+                room_btn.setText("Request");
+                room_btn.setBackgroundResource(R.color.darkorange);
+            }
         } else {
             room_btn.setVisibility(View.INVISIBLE);
         }
@@ -144,13 +154,70 @@ public class ViewRoom extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (user_role.equalsIgnoreCase("custodian")) {
+                    //if hindi pa nagrerequest "Request"
+                    //pag nkapagrequest na "Edit Request"
+                    String request = room_btn.getText().toString().trim();
+                    if(request.equalsIgnoreCase("request")){
+                        Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
+                        intent.putExtra("room_id", room_id);
+                        startActivity(intent);
+                    }else{
+                        //popup request details
+                        //if custodian cancelled the request, alert technician
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(ViewRoom.this);
+                        LayoutInflater inflater = ViewRoom.this.getLayoutInflater();
+                        View view = inflater.inflate(R.layout.req_details, null);
+                        TextView req_date = (TextView) view.findViewById(R.id.date);
+                        TextView req_time = (TextView) view.findViewById(R.id.time);
+                        TextView req_msg = (TextView) view.findViewById(R.id.msg);
+                        TextView req_stats = (TextView) view.findViewById(R.id.status);
 
-                    Toast.makeText(ViewRoom.this, "Custodian request for inventory", Toast.LENGTH_SHORT).show();
-                } else if (user_role.equalsIgnoreCase("technician")){
+                        //settext from sqlite
+                        Cursor c = db.getLastReqInventory(room_id);
+                        if(c.moveToFirst()){
+                            String date = c.getString(c.getColumnIndex(db.REQ_DATE));
+                            String time = c.getString(c.getColumnIndex(db.REQ_TIME));
+                            String message = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
+                            String stats = c.getString(c.getColumnIndex(db.REQ_STATUS));
+                            if(message.length() == 0)
+                                message = "None";
+
+                            req_date.setText(req_date.getText() + " " + date);
+                            req_time.setText(req_time.getText() + " " + time);
+                            req_msg.setText(req_msg.getText() + " " + message);
+                            req_stats.setText(req_stats.getText() + " " + stats);
+
+                        }
+                        alertDialog.setView(view);
+                        alertDialog.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        alertDialog.setPositiveButton("Cancel Request", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //cancel request
+                            }
+                        });
+                        alertDialog.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //requestfor inventory layout
+                            }
+                        });
+                        AlertDialog alert = alertDialog.create();
+                        alert.show();
+                    }
+                } else if (user_role.equalsIgnoreCase("technician")) {
                     int pc = Integer.parseInt(pc_count.getText().toString().trim());
                     if (pc > 0) {
                         if (checkDate()) {//naassess na ngayong week
                             if (connection_detector.isConnected()) {
+                                //dropdown = assessment, request
+                                //if dropdown = request -> popup list of inventory request
+
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
                                 builder.setMessage("This room has been assessed this week. Reassess?")
                                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -181,6 +248,9 @@ public class ViewRoom extends AppCompatActivity {
                             }
                         } else {
                             if (connection_detector.isConnected()) {
+                                //dropdown = assessment, request
+                                //if dropdown = request -> popup list of inventory request
+
                                 addPcToAssessFrmServer();
                             } else {
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);

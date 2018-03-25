@@ -64,15 +64,23 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public static final String REPORT_HTECH_SIGNED = "htech_signed";
     public static final String REPORT_ADMIN_SIGNED = "admin_signed";
 
+    public static final String TABLE_REQ_INVENTORY = "request_inventory";
+    //req_id room id custodian technician date string time string reqstatus rep id;
+    public static final String REQ_ID = "request_id"; //auto inc
+    public static final String REQ_DATE = "req_date";   //string
+    public static final String REQ_TIME = "req_time";   //string
+    public static final String REQ_STATUS = "req_status";
+    public static final String REQ_MESSAGE = "req_msg";
+
+    public static final String TABLE_REQ_REPAIR = "request_repair";
+    public static final String REQ_IMAGE = "request_image";
+//req id comp_id, rep_id,message, custodian, technician, date, time,images, req_status
+
 
     //TABLE REPORT DETAILS
     public static final String TABLE_REPORT_DETAILS = "assessment_details";
     public static final String REPORT_MB_SERIAL = "mb_serial";
     public static final String REPORT_MON_SERIAL = "mon_serial";
-
-    //TABLE UNSYNC REPORT DETAILS PAG NAGLOGOUT
-    public static final String TABLE_UNSYNC_DETAILS = "unsync_details";
-    //same ng a_details
 
     //TEMPORARY TABLES
     public static final String ASSESSED_PC = "assessed_pc";
@@ -80,10 +88,34 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public static final String PC_TO_ASSESS = "pc_to_assess";
 
 
-    public static final String COLUMN_SYNC = "sync_state"; // 0 nasa sqlite plang 1 pag nasa server na 2 kapag nasign na and kailngan isync ulit
     public static final String COLUMN_SCANNED = "scanned"; // if assessed/scanned 0 n 1
     public static final String COLUMN_TECH_ID = "technician_id";
     public static final String COLUMN_CUST_ID = "custodian_id";
+
+    //req_id, rep_id, room_id, cust_id, tech_id, date, time, msg, status
+    String createRequestInventory = "CREATE TABLE " + TABLE_REQ_INVENTORY + "("
+            + REQ_ID + " INTEGER, "
+            + REPORT_ID + " INTEGER, "
+            + ROOMS_ID + " INTEGER, "
+            + COLUMN_CUST_ID + " VARCHAR, "
+            + COLUMN_TECH_ID + " VARCHAR, "
+            + REQ_DATE + " VARCHAR, "
+            + REQ_TIME + " VARCHAR, "
+            + REQ_MESSAGE + " TEXT, "
+            + REQ_STATUS + " VARCHAR)";
+
+    //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg, images,status
+    String createRequestRepair = "CREATE TABLE " + TABLE_REQ_REPAIR + "("
+            + REQ_ID + " INTEGER, "
+            + REPORT_ID + " INTEGER, "
+            + COMP_ID + " INTEGER, "
+            + COLUMN_CUST_ID + " VARCHAR, "
+            + COLUMN_TECH_ID + " VARCHAR, "
+            + REQ_DATE + " VARCHAR, "
+            + REQ_TIME + " VARCHAR, "
+            + REQ_MESSAGE + " TEXT, "
+            + REQ_IMAGE + " TEXT, "
+            + REQ_STATUS + " VARCHAR)";
 
     //CREATE QUERIES
     //ROOMS
@@ -201,7 +233,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //DB DETAILS
     public static final String DB_NAME = "db_temp";
-    public static final int DB_VERSION = 6;
+    public static final int DB_VERSION = 7;
 
 
     public SQLiteHandler(Context context) {
@@ -217,6 +249,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.execSQL(createReport);
         db.execSQL(createReportDetails);
         db.execSQL(createSched);
+        db.execSQL(createRequestInventory);
+        db.execSQL(createRequestRepair);
     }
 
     @Override
@@ -229,8 +263,128 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ASSESSMENT_REPORT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REPORT_DETAILS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ROOM_SCHED);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REQ_INVENTORY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_REQ_REPAIR);
+
         onCreate(db);
     }
+
+    //REQUEST FOR INVENTORY FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////////////
+    //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg,status
+    public long addReqInventory(int req_id, int rep_id, int room_id, String cust_id, String tech_id,
+                                String date, String time, String msg, String status){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ROOMS_ID, room_id);
+        values.put(REQ_ID, req_id);
+        values.put(REPORT_ID, rep_id);
+        values.put(COLUMN_CUST_ID, cust_id);
+        values.put(COLUMN_TECH_ID, tech_id);
+        values.put(REQ_DATE, date);
+        values.put(REQ_TIME, time);
+        values.put(REQ_MESSAGE, msg);
+        values.put(REQ_STATUS, status);
+        long insert = db.insert(TABLE_REQ_INVENTORY, null, values);
+        return insert;
+    }
+
+    public Cursor getReqInventoryDetails(int req_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                        , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols,REQ_ID + " = ?",
+                new String[]{String.valueOf(req_id)}, null,null,null);
+        return c;
+    }
+    public Cursor getLastReqInventory(int room_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols,ROOMS_ID + " = ?",
+                new String[]{String.valueOf(room_id)}, null,null,
+                REQ_DATE + " DESC and " + REQ_TIME + " DESC", "1");
+        return c;
+    }
+    public Cursor getAllReqInventory(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols, null,null
+                , null,null,null);
+        return c;
+    }
+    public Cursor getAllReqInventory(String status){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols, REQ_STATUS + " = ?",
+                new String[] {status}
+                , null,null,null);
+        return c;
+    }
+
+    public Cursor checkIfRequested(int room_id){   //available kung done na ung status or wala pang history ng request
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols, ROOMS_ID + " = ? and " + REQ_STATUS + " = ?",
+                new String[] {String.valueOf(room_id), "Pending"}
+                , null,null,null);
+        return c; //return > 0 if pending
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+
+    //REQUEST FOR INVENTORY FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////////////
+    //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg, images,status
+    public long addReqRepair(int req_id, int rep_id, int comp_id, String cust_id, String tech_id,
+                                String date, String time, String msg, String images, String status){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(REQ_ID, req_id);
+        values.put(COMP_ID, comp_id);
+        values.put(REPORT_ID, rep_id);
+        values.put(COLUMN_CUST_ID, cust_id);
+        values.put(COLUMN_TECH_ID, tech_id);
+        values.put(REQ_DATE, date);
+        values.put(REQ_TIME, time);
+        values.put(REQ_MESSAGE, msg);
+        values.put(REQ_IMAGE, images);
+        values.put(REQ_STATUS, status);
+        long insert = db.insert(TABLE_REQ_REPAIR, null, values);
+        return insert;
+    }
+
+    public Cursor getReqRepairDetails(int req_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_REPAIR, cols,REQ_ID + " = ?",
+                new String[]{String.valueOf(req_id)}, null,null,null);
+        return c;
+    }
+    public Cursor getAllReqRepair(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_IMAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_REPAIR, cols, null,null
+                , null,null,null);
+        return c;
+    }
+    public Cursor getAllReqRepair(String status){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_REPAIR, cols, REQ_STATUS + " = ?",
+                new String[] {status}
+                , null,null,null);
+        return c;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
 
     //SCHED FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////

@@ -2,29 +2,72 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:layout_margin="10dp">
+    android:orientation="vertical">
 
-    <TextClock
+    <include
+        android:id="@+id/toolbar"
+        layout ="@layout/toolbar"/>
+
+    <TextView
+        android:textSize="15sp"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        android:textColor="@color/black"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Set Date: "/>
     <Spinner
+        android:layout_margin="5dp"
+        android:id="@+id/date"
+        android:padding="5dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        >
     </Spinner>
     <TextView
+        android:textSize="12sp"
+        android:layout_margin="5dp"
+        android:focusable="false"
+        android:id="@+id/custom_date"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="yyyy-mm-dd"/>
+        android:hint="yyyy-mm-dd"
+        android:visibility="gone"/>
 
-    <TextClock
+    <TextView
+        android:textSize="15sp"
+        android:layout_margin="5dp"
+        android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set Time: "/>
+        android:text="Set Time: "
+        android:textColor="@color/black"/>
+
     <Spinner
+        android:layout_margin="5dp"
+        android:id="@+id/time"
+        android:padding="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     </Spinner>
 
+    <TextView
+        android:textSize="12sp"
+        android:layout_margin="5dp"
+        android:focusable="false"
+        android:id="@+id/custom_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HH:mm"
+        android:padding="5dp"
+        android:visibility="gone"/>
+
+    <EditText
+        android:layout_margin="5dp"
+        android:id="@+id/message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Add message..."
+        android:maxLength="120"/>
 </LinearLayout>

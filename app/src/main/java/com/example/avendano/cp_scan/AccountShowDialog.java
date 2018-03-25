@@ -2,8 +2,6 @@ package com.example.avendano.cp_scan;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,7 +10,6 @@ import android.support.v7.app.AppCompatDialogFragment;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +22,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Activities.EditProfileActivity;
 import com.example.avendano.cp_scan.Activities.LogInActivity;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
@@ -38,9 +34,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
 import dmax.dialog.SpotsDialog;
 
 /**
@@ -48,7 +41,7 @@ import dmax.dialog.SpotsDialog;
  */
 
 @SuppressLint("ValidFragment")
-public class ShowDialog extends AppCompatDialogFragment {
+public class AccountShowDialog extends AppCompatDialogFragment {
     String current_data, data_to_change;
     SQLiteHandler db;
     EditText current;
@@ -56,7 +49,7 @@ public class ShowDialog extends AppCompatDialogFragment {
     EditText confirmation;
     android.app.AlertDialog dialog;
 
-    public ShowDialog(String data_to_change, String current_data) {
+    public AccountShowDialog(String data_to_change, String current_data) {
         this.data_to_change = data_to_change;
         this.current_data = current_data;
     }
@@ -112,7 +105,7 @@ public class ShowDialog extends AppCompatDialogFragment {
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ShowDialog.this.dismiss();
+                AccountShowDialog.this.dismiss();
             }
         });
         alertDialog.setView(v);

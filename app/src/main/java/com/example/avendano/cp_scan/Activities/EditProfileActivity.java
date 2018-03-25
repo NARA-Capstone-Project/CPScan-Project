@@ -1,21 +1,10 @@
 package com.example.avendano.cp_scan.Activities;
 
-import android.annotation.SuppressLint;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.icu.text.UnicodeSetSpanner;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatDialogFragment;
 import android.support.v7.widget.Toolbar;
-import android.text.InputFilter;
 import android.text.InputType;
-import android.text.method.PasswordTransformationMethod;
-import android.util.Base64;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,10 +18,7 @@ import android.widget.TextView;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
-import com.example.avendano.cp_scan.ShowDialog;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
+import com.example.avendano.cp_scan.AccountShowDialog;
 
 public class EditProfileActivity extends AppCompatActivity {
 
@@ -63,7 +49,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (position == 4) {
                     //canvas to capture signature
                 }else if(position == 3){ // update password
-                    ShowDialog dialog = new ShowDialog(titles[position], "");
+                    AccountShowDialog dialog = new AccountShowDialog(titles[position], "");
                     dialog.show(getSupportFragmentManager(), "");
                 }
             }
@@ -109,7 +95,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     Log.w("EDITTEXT", "Clicked!");
                     String title = titles[item];
-                    ShowDialog dialog = new ShowDialog(title, user.getText().toString().trim());
+                    AccountShowDialog dialog = new AccountShowDialog(title, user.getText().toString().trim());
                     //custom dialog
                     dialog.show(getSupportFragmentManager(), "");
                 }
