@@ -1,73 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/bg"
     android:orientation="vertical">
 
     <include
         android:id="@+id/toolbar"
-        layout ="@layout/toolbar"/>
+        layout="@layout/toolbar" />
 
     <TextView
-        android:textSize="15sp"
-        android:layout_margin="5dp"
-        android:padding="5dp"
-        android:textColor="@color/black"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Set Date: "/>
-    <Spinner
-        android:layout_margin="5dp"
-        android:id="@+id/date"
-        android:padding="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        >
-    </Spinner>
-    <TextView
-        android:textSize="12sp"
-        android:layout_margin="5dp"
-        android:focusable="false"
-        android:id="@+id/custom_date"
-        android:padding="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="yyyy-mm-dd"
+        android:text="Computer Status:"
+        android:id="@+id/label"
         android:visibility="gone"/>
 
-    <TextView
-        android:textSize="15sp"
-        android:layout_margin="5dp"
-        android:padding="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Set Time: "
-        android:textColor="@color/black"/>
-
-    <Spinner
-        android:layout_margin="5dp"
-        android:id="@+id/time"
-        android:padding="5dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </Spinner>
-
-    <TextView
-        android:textSize="12sp"
-        android:layout_margin="5dp"
-        android:focusable="false"
-        android:id="@+id/custom_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="HH:mm"
-        android:padding="5dp"
-        android:visibility="gone"/>
-
-    <EditText
-        android:layout_margin="5dp"
-        android:id="@+id/message"
+    <RadioGroup
+        android:id="@+id/comp_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Add message..."
-        android:maxLength="120"/>
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Missing"
+            android:id="@+id/missing"
+            />
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Not Working"
+            android:id="@+id/not_working"/>
+    </RadioGroup>
+    <TextView
+        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/peripherals"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:text="Set Date: "
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="65dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/bg_spinner">
+
+                <Spinner
+                    android:id="@+id/date"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="5dp"></Spinner>
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/custom_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/style_edittext"
+                android:focusable="false"
+                android:padding="5dp"
+                android:text="yyyy-mm-dd"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:text="Set Time: "
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="65dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/bg_spinner">
+
+                <Spinner
+                    android:id="@+id/time"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="5dp"></Spinner>
+            </RelativeLayout>
+
+
+            <TextView
+                android:id="@+id/custom_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/style_edittext"
+                android:focusable="false"
+                android:padding="5dp"
+                android:text="HH:mm:ss"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:hint="Add message..."
+                android:maxLength="120" />
+            <!--add image for reporting of pc-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/photo1"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="@drawable/dotted_lines"
+                    android:src="@drawable/ic_addphoto"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

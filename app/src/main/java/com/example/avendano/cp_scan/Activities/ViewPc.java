@@ -2,7 +2,9 @@ package com.example.avendano.cp_scan.Activities;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +16,9 @@ import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -24,22 +28,30 @@ import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import dmax.dialog.SpotsDialog;
+
 public class ViewPc extends AppCompatActivity {
 
-    private int comp_id;
+    private int comp_id, room_id;
     SQLiteHandler db;
-    ProgressDialog progressDialog;
+    android.app.AlertDialog progressDialog;
 
     TextView pcno, room_name, comp_status, instr, pc_os;
     TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
     Button report, cancel;
     RadioGroup rGroup;
+    Connection_Detector connection_detector;
+    boolean popup = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +59,10 @@ public class ViewPc extends AppCompatActivity {
         setContentView(R.layout.activity_view_pc);
 
         comp_id = getIntent().getIntExtra("comp_id", 0);
-
+        room_id = getIntent().getIntExtra("room_id", 0);
+        connection_detector = new Connection_Detector(this);
         db = new SQLiteHandler(this);
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Loading...");
+        progressDialog = new SpotsDialog(this, "Loading...");
         pcno = (TextView) findViewById(R.id.pc_no);
         room_name = (TextView) findViewById(R.id.pc_room);
         pc_model = (TextView) findViewById(R.id.pc_model);
@@ -111,31 +123,42 @@ public class ViewPc extends AppCompatActivity {
             public void onClick(View v) {
                 Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
                 if (connection_detector.isConnected()) {
-                    if(cancel.getVisibility() == View.VISIBLE){
-                        //add room_btn
-                    }else {
-                        instr.setVisibility(View.VISIBLE);
-                        cancel.setVisibility(View.VISIBLE);
-                        monitor.setVisibility(View.VISIBLE);
-                        mb.setVisibility(View.VISIBLE);
-                        pr.setVisibility(View.VISIBLE);
-                        ram.setVisibility(View.VISIBLE);
-                        hdd.setVisibility(View.VISIBLE);
-                        keyboard.setVisibility(View.VISIBLE);
-                        mouse.setVisibility(View.VISIBLE);
-                        vga.setVisibility(View.VISIBLE);
-                        rGroup.setVisibility(View.VISIBLE);
-
-                        monitor.setChecked(false);
-                        mb.setChecked(false);
-                        pr.setChecked(false);
-                        ram.setChecked(false);
-                        hdd.setChecked(false);
-                        keyboard.setChecked(false);
-                        mouse.setChecked(false);
-                        vga.setChecked(false);
-                    }
-                }else{
+//                    if (cancel.getVisibility() == View.VISIBLE) {
+//                        if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician")) {
+//                            //check kung may nagrequest for repair tas imamark as done na automatically
+//                        } else {
+//                            Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
+//                            intent.putExtra("comp_id", comp_id);
+//                            startActivity(intent);
+//                        }
+//                    } else {
+//                        instr.setVisibility(View.VISIBLE);
+//                        cancel.setVisibility(View.VISIBLE);
+//                        monitor.setVisibility(View.VISIBLE);
+//                        mb.setVisibility(View.VISIBLE);
+//                        pr.setVisibility(View.VISIBLE);
+//                        ram.setVisibility(View.VISIBLE);
+//                        hdd.setVisibility(View.VISIBLE);
+//                        keyboard.setVisibility(View.VISIBLE);
+//                        mouse.setVisibility(View.VISIBLE);
+//                        vga.setVisibility(View.VISIBLE);
+//                        rGroup.setVisibility(View.VISIBLE);
+//
+//                        monitor.setChecked(false);
+//                        mb.setChecked(false);
+//                        pr.setChecked(false);
+//                        ram.setChecked(false);
+//                        hdd.setChecked(false);
+//                        keyboard.setChecked(false);
+//                        mouse.setChecked(false);
+//                        vga.setChecked(false);
+//                    }
+                    Intent intent= new Intent(ViewPc.this, RequestForRepair.class);
+                    intent.putExtra("comp_id", comp_id);
+                    intent.putExtra("room_id", room_id);
+                    startActivity(intent);
+                    finish();
+                } else {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                     builder.setMessage("No Internet Connection")
                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
@@ -154,6 +177,165 @@ public class ViewPc extends AppCompatActivity {
     }
 
     private void loadDetails() {
+        class loadDetails extends AsyncTask<Void,Void, Void>{
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                loadPcDetails();
+                checkLastReqRepair();
+                return null;
+            }
+        }
+        new loadDetails().execute();
+    }
+
+    private void checkLastReqRepair() {
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_CHECK_LAST_INVENTORY_REQUEST
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
+                            report.setText("Report");
+                            report.setBackgroundResource(R.color.darkorange);
+                            report.setTextColor(getResources().getColor(R.color.white));
+                        } else { //kapag na request na
+                            report.setText("Reported");
+                            report.setBackgroundResource(R.drawable.style_button_white);
+                            report.setTextColor(getResources().getColor(R.color.darkorange));
+                            int req_id = obj.getInt("req_id");
+                            int rep_id = 0;
+                            if (!obj.isNull("rep_id"))
+                                rep_id = obj.getInt("rep_id");
+                            int compid = obj.getInt("comp_id");
+                            String cust_id = obj.getString("custodian");
+                            String tech_id = obj.getString("technician");
+                            String date = obj.getString("date");
+                            String time = obj.getString("time");
+                            String msg = obj.getString("msg");
+                            String req_date = obj.getString("date_requested");
+                            String req_time = obj.getString("time_requested");
+                            String req_status = obj.getString("req_status");
+                            String req_details = obj.getString("req_details");
+
+                            if (popup)
+                                showRequestDetails(req_id, rep_id, compid, cust_id, tech_id, date, time,
+                                        msg, req_date, req_time, req_status, req_details);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+//                    checkLastRepairRequestFrmLocal(popup);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("VIEWROOM", "ERROR: " + error.getMessage());
+//                checkLastRepairRequestFrmLocal(popup);
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("comp_id", String.valueOf(comp_id));
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
+    }
+
+    private void checkLastRepairRequestFrmLocal(boolean popup) {
+        if (popup) {
+            Cursor c = db.checkIfRepairRequested(comp_id);
+            if (c.moveToFirst()) {
+                int req_id = c.getInt(c.getColumnIndex(db.REQ_ID));
+                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
+                int compid = c.getInt(c.getColumnIndex(db.COMP_ID));
+                ;
+                String cust_id = c.getString(c.getColumnIndex(db.COLUMN_CUST_ID));
+                String tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
+                String date = c.getString(c.getColumnIndex(db.REQ_DATE));
+                String time = c.getString(c.getColumnIndex(db.REQ_TIME));
+                String msg = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
+                String req_date = c.getString(c.getColumnIndex(db.DATE_OF_REQ));
+                String req_time = c.getString(c.getColumnIndex(db.TIME_OF_REQ));
+                String req_status = c.getString(c.getColumnIndex(db.REQ_STATUS));
+                String req_details = c.getString(c.getColumnIndex(db.REQ_DETAILS));
+
+                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
+                        msg, req_date, req_time, req_status, req_details);
+            }
+        } else {
+            Cursor c = db.checkIfRepairRequested(comp_id);
+            if (c.moveToFirst()) {
+                report.setText("Reported");
+                report.setBackgroundResource(R.drawable.style_button_white);
+                report.setTextColor(getResources().getColor(R.color.darkorange));
+            } else {
+                report.setText("Report");
+                report.setBackgroundResource(R.color.darkorange);
+                report.setTextColor(getResources().getColor(R.color.white));
+            }
+        }
+    }
+
+    private void showRequestDetails(final int req_id, int rep_id, final int room_id, String cust_id,
+                                    String tech_id, String date, String time, String msg,
+                                    String date_req, String time_req, String req_status, String req_details) {
+        //alertdialog
+        String msg_body = "";
+        if(msg.length() == 0){
+            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time +"\nRequest Details: "
+                    + req_details+ "\nRequest Status: " + req_status;
+        }else{
+            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time +"\nRequest Details: "
+                    + req_details+ "\nRequest Status: " + req_status
+                    + "\n\nMessage: " + msg;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Request Details");
+        builder.setMessage(msg_body);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        })
+                .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(connection_detector.isConnected()){
+                            Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
+                            intent.putExtra("type", "inventory");
+                            intent.putExtra("room_pc_id",room_id );
+                            intent.putExtra("id",req_id );
+                            ViewPc.this.startActivity(intent);
+                            finish();
+                        }else
+                            Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //cancel
+                        cancelRequestInventory(req_id);
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void cancelRequestInventory(int req_id) {
+    }
+
+    private void loadPcDetails(){
         StringRequest str = new StringRequest(Request.Method.GET
                 , AppConfig.URL_GET_ALL_PC
                 , new Response.Listener<String>() {

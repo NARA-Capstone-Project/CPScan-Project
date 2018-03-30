@@ -47,6 +47,10 @@
         <activity android:name=".Activities.ViewPc" />
         <activity android:name=".Activities.ViewInventoryReport" />
         <activity android:name=".Activities.EditProfileActivity"></activity>
+        <activity android:name=".Activities.RequestForInventory" />
+        <activity android:name=".Activities.RequestForRepair" />
+        <activity android:name=".Activities.EditRequestSchedule" />
+
     </application>
 
 </manifest>

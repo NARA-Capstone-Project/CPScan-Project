@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.AdapterView;
 
+import java.sql.Time;
+
 /**
  * Created by Avendano on 6 Mar 2018.
  */
@@ -71,9 +73,12 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public static final String REQ_TIME = "req_time";   //string
     public static final String REQ_STATUS = "req_status";
     public static final String REQ_MESSAGE = "req_msg";
+    public static final String DATE_OF_REQ = "date_of_req";
+    public static final String TIME_OF_REQ = "time_of_req";
 
     public static final String TABLE_REQ_REPAIR = "request_repair";
     public static final String REQ_IMAGE = "request_image";
+    public static final String REQ_DETAILS = "req_details";
 //req id comp_id, rep_id,message, custodian, technician, date, time,images, req_status
 
 
@@ -102,6 +107,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             + REQ_DATE + " VARCHAR, "
             + REQ_TIME + " VARCHAR, "
             + REQ_MESSAGE + " TEXT, "
+            + DATE_OF_REQ + " DATE, "
+            + TIME_OF_REQ + " TIME, "
             + REQ_STATUS + " VARCHAR)";
 
     //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg, images,status
@@ -114,7 +121,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             + REQ_DATE + " VARCHAR, "
             + REQ_TIME + " VARCHAR, "
             + REQ_MESSAGE + " TEXT, "
+            + REQ_DETAILS + " TEXT, "
             + REQ_IMAGE + " TEXT, "
+            + DATE_OF_REQ + " DATE, "
+            + TIME_OF_REQ + " TIME, "
             + REQ_STATUS + " VARCHAR)";
 
     //CREATE QUERIES
@@ -233,7 +243,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //DB DETAILS
     public static final String DB_NAME = "db_temp";
-    public static final int DB_VERSION = 7;
+    public static final int DB_VERSION = 10;
 
 
     public SQLiteHandler(Context context) {
@@ -273,7 +283,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     ////////////////////////////////////////////////////////////////////////////////////
     //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg,status
     public long addReqInventory(int req_id, int rep_id, int room_id, String cust_id, String tech_id,
-                                String date, String time, String msg, String status){
+                                String date, String time, String msg,String date_req, String time_req, String status){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ROOMS_ID, room_id);
@@ -284,15 +294,22 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put(REQ_DATE, date);
         values.put(REQ_TIME, time);
         values.put(REQ_MESSAGE, msg);
+        values.put(DATE_OF_REQ, date_req);
+        values.put(TIME_OF_REQ, time_req);
         values.put(REQ_STATUS, status);
         long insert = db.insert(TABLE_REQ_INVENTORY, null, values);
         return insert;
     }
 
+    public void deleteInventoryRequest(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM " + TABLE_REQ_INVENTORY);
+        db.close();
+    }
     public Cursor getReqInventoryDetails(int req_id){
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                        , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+                        , REQ_TIME, REQ_MESSAGE, DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_INVENTORY, cols,REQ_ID + " = ?",
                 new String[]{String.valueOf(req_id)}, null,null,null);
         return c;
@@ -300,16 +317,16 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public Cursor getLastReqInventory(int room_id){
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+                , REQ_TIME, REQ_MESSAGE, DATE_OF_REQ, TIME_OF_REQ,  REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_INVENTORY, cols,ROOMS_ID + " = ?",
                 new String[]{String.valueOf(room_id)}, null,null,
-                REQ_DATE + " DESC and " + REQ_TIME + " DESC", "1");
+                REQ_DATE + " DESC,  " + REQ_TIME + " DESC", "1");
         return c;
     }
     public Cursor getAllReqInventory(){
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+                , REQ_TIME, REQ_MESSAGE,  DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_INVENTORY, cols, null,null
                 , null,null,null);
         return c;
@@ -317,7 +334,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public Cursor getAllReqInventory(String status){
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+                , REQ_TIME, REQ_MESSAGE, DATE_OF_REQ, TIME_OF_REQ,  REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_INVENTORY, cols, REQ_STATUS + " = ?",
                 new String[] {status}
                 , null,null,null);
@@ -327,21 +344,53 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public Cursor checkIfRequested(int room_id){   //available kung done na ung status or wala pang history ng request
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+                , REQ_TIME, REQ_MESSAGE,  DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_INVENTORY, cols, ROOMS_ID + " = ? and " + REQ_STATUS + " = ?",
                 new String[] {String.valueOf(room_id), "Pending"}
                 , null,null,null);
         return c; //return > 0 if pending
     }
+    public void updateReqInvStatus(int req_id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(REQ_STATUS, "Cancel");
+        db.update(TABLE_REQ_INVENTORY, values, REQ_ID + " = " + req_id, null);
+        db.close();
+    }
+
+    public void updateReqInventoryDetails(int req_id, String date, String time, String msg){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(REQ_DATE, date);
+        values.put(REQ_TIME, time);
+        values.put(REQ_MESSAGE, msg);
+        db.update(TABLE_REQ_INVENTORY, values, REQ_ID + " = " + req_id, null);
+        db.close();
+    }
+    public void updateRequestInventory(int req_id, int rep_id, int room_id, String cust_id, String tech_id,
+                                String date, String time, String msg,String date_req, String time_req, String status){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ROOMS_ID, room_id);
+        values.put(REPORT_ID, rep_id);
+        values.put(COLUMN_CUST_ID, cust_id);
+        values.put(COLUMN_TECH_ID, tech_id);
+        values.put(REQ_DATE, date);
+        values.put(REQ_TIME, time);
+        values.put(REQ_MESSAGE, msg);
+        values.put(DATE_OF_REQ, date_req);
+        values.put(TIME_OF_REQ, time_req);
+        values.put(REQ_STATUS, status);
+        db.update(TABLE_REQ_INVENTORY, values,REQ_ID + " = " + req_id, null);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////
-
-
     //REQUEST FOR INVENTORY FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////
     //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg, images,status
     public long addReqRepair(int req_id, int rep_id, int comp_id, String cust_id, String tech_id,
-                                String date, String time, String msg, String images, String status){
+                                String date, String time, String msg,String req_details, String images,
+                             String date_req, String time_req, String status){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(REQ_ID, req_id);
@@ -352,32 +401,43 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put(REQ_DATE, date);
         values.put(REQ_TIME, time);
         values.put(REQ_MESSAGE, msg);
+        values.put(REQ_DETAILS, req_details);
         values.put(REQ_IMAGE, images);
+        values.put(DATE_OF_REQ, date_req);
+        values.put(TIME_OF_REQ, time_req);
         values.put(REQ_STATUS, status);
         long insert = db.insert(TABLE_REQ_REPAIR, null, values);
         return insert;
     }
-
+    public Cursor checkIfRepairRequested(int comp_id){   //available kung done na ung status or wala pang history ng request
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = { COMP_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE,REQ_DETAILS,  DATE_OF_REQ, TIME_OF_REQ,  REQ_STATUS};
+        Cursor c = db.query(TABLE_REQ_REPAIR, cols, COMP_ID + " = ? and " + REQ_STATUS + " = ?",
+                new String[] {String.valueOf(comp_id), "Pending"}
+                , null,null,null);
+        return c; //return > 0 if pending
+    }
     public Cursor getReqRepairDetails(int req_id){
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        String[] cols = {COMP_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE,REQ_DETAILS,  DATE_OF_REQ, TIME_OF_REQ,  REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_REPAIR, cols,REQ_ID + " = ?",
                 new String[]{String.valueOf(req_id)}, null,null,null);
         return c;
     }
     public Cursor getAllReqRepair(){
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_IMAGE, REQ_STATUS};
+        String[] cols = {COMP_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE,REQ_DETAILS, REQ_IMAGE,  DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_REPAIR, cols, null,null
                 , null,null,null);
         return c;
     }
     public Cursor getAllReqRepair(String status){
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] cols = {ROOMS_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
-                , REQ_TIME, REQ_MESSAGE, REQ_STATUS};
+        String[] cols = {COMP_ID, REQ_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE
+                , REQ_TIME, REQ_MESSAGE,REQ_DETAILS,  DATE_OF_REQ, TIME_OF_REQ,  REQ_STATUS};
         Cursor c = db.query(TABLE_REQ_REPAIR, cols, REQ_STATUS + " = ?",
                 new String[] {status}
                 , null,null,null);
@@ -486,7 +546,27 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         long rowInserted = db.insert(TABLE_COMPUTERS, null, values);
         return rowInserted;
     }
+    public void updateComputers(int comp_id, int room_id, int pc_name, String os, String model, String mb, String processor,
+                             String monitor, String ram, String kboard,
+                             String mouse, String status, String vga, String hdd) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COMP_OS, os);
+        values.put(ROOMS_ID, room_id);
+        values.put(COMP_NAME, pc_name);
+        values.put(COMP_MODEL, model);
+        values.put(COMP_MB, mb);
+        values.put(COMP_PR, processor);
+        values.put(COMP_MONITOR, monitor);
+        values.put(COMP_RAM, ram);
+        values.put(COMP_KBOARD, kboard);
+        values.put(COMP_MOUSE, mouse);
+        values.put(COMP_VGA, vga);
+        values.put(COMP_HDD, hdd);
+        values.put(COMP_STATUS, status);
 
+        db.update(TABLE_COMPUTERS, values, COMP_ID + " = " + comp_id, null);
+    }
     public long getCompCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         long c = DatabaseUtils.queryNumEntries(db, TABLE_COMPUTERS);
@@ -523,6 +603,25 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         long rowInserted = db.insert(TABLE_ROOMS, null, values);
         return rowInserted;
+    }
+
+    public void updateRooms(int room_id, String room_name, String cust, String cust_id, String tech, String tech_id, String build,
+                         int floor, int pc_count, int pc_working, String lastAssess) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(ROOMS_NAME, room_name);
+        values.put(ROOMS_CUSTODIAN, cust);
+        values.put(COLUMN_CUST_ID, cust_id);
+        values.put(ROOMS_TECHNICIAN, tech);
+        values.put(COLUMN_TECH_ID, tech_id);
+        values.put(ROOMS_BUILDING, build);
+        values.put(ROOMS_FLOOR, floor);
+        values.put(ROOMS_PC_COUNT, pc_count);
+        values.put(ROOMS_PC_WORKING, pc_working);
+        values.put(ROOMS_LAST_ASSESS, lastAssess);
+
+       db.update(TABLE_ROOMS, values, ROOMS_ID + " = " + room_id, null);
     }
 
     public Cursor getCustName(String cust_id){
@@ -609,6 +708,26 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         return rowInserted;
     }
 
+    public void updateReports(int rep_id, int room_id, String cust_id, String category, String user_id, String date, String time
+            , int cust_signed, int htech_signed, int admin_signed, String remarks, String room_name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ROOMS_ID, room_id);
+        values.put(ROOMS_NAME, room_name);
+        values.put(COLUMN_CUST_ID, cust_id);
+        values.put(REPORT_HTECH_SIGNED, htech_signed);
+        values.put(REPORT_ADMIN_SIGNED, admin_signed);
+        values.put(COLUMN_TECH_ID, user_id);
+        values.put(REPORT_CATEGORY, category);
+        values.put(REPORT_DATE, date);
+        values.put(REPORT_TIME, time);
+        values.put(REPORT_CUST_SIGNED, cust_signed);
+        values.put(REPORT_REMARKS, remarks);
+
+        db.update(TABLE_ASSESSMENT_REPORT, values, REPORT_ID + " = " + rep_id, null);
+        db.close();
+    }
+
     public Cursor getAllReports() {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = new String[]{ROOMS_NAME, COLUMN_TECH_ID, COLUMN_CUST_ID, REPORT_ID, ROOMS_ID,
@@ -671,13 +790,38 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         return rowInserted;
     }
+    public long updateReportDetails(int rep_id, int comp_id, int pc_no,String model, String mb
+            ,String mb_serial, String pr, String monitor,String mon_serial, String ram, String kboard, String mouse, String vga
+            , String hdd, String status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COMP_NAME, pc_no);
+        values.put(COMP_MODEL, model);
+        values.put(COMP_MB, mb);
+        values.put(REPORT_MB_SERIAL, mb_serial);
+        values.put(COMP_PR, pr);
+        values.put(COMP_MONITOR, monitor);
+        values.put(REPORT_MON_SERIAL, mon_serial);
+        values.put(COMP_RAM, ram);
+        values.put(COMP_KBOARD, kboard);
+        values.put(COMP_MOUSE, mouse);
+        values.put(COMP_VGA, vga);
+        values.put(COMP_HDD, hdd);
+        values.put(COMP_STATUS, status);
+
+        long rowInserted = db.update(TABLE_REPORT_DETAILS, values, REPORT_ID + " = " + rep_id
+        + " and " + COMP_ID + " = " + comp_id, null);
+
+        return rowInserted;
+    }
 
     public Cursor getReportDetailsById(int rep_id) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = new String[]{COMP_ID,COMP_NAME, COMP_MODEL, COMP_MB, COMP_PR, COMP_MONITOR,
                 COMP_RAM, COMP_KBOARD, COMP_MOUSE, COMP_VGA, COMP_HDD, COMP_STATUS, REPORT_MB_SERIAL,REPORT_MON_SERIAL};
         Cursor c = db.query(TABLE_REPORT_DETAILS, cols, REPORT_ID + " = ?", new String[]{String.valueOf(rep_id)},
-                null, null, null);
+                null, null, COMP_NAME + " ASC");
         return c;
     }
 
@@ -739,7 +883,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     public Cursor getPcToAssessAsc(){
         SQLiteDatabase db = this.getReadableDatabase();
-        String sql = "SELECT * from " + PC_TO_ASSESS + " ORDER BY " + COLUMN_SCANNED + " ASC";
+        String sql = "SELECT * from " + PC_TO_ASSESS + " ORDER BY " + COLUMN_SCANNED + " ASC, " + COMP_NAME + " ASC";
         Cursor c = db.rawQuery(sql, null);
         return c;
     }

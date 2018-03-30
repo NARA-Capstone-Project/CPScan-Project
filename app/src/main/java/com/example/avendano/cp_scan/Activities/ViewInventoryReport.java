@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -168,5 +169,11 @@ public class ViewInventoryReport extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         db.close();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        ViewInventoryReport.this.finish();
     }
 }

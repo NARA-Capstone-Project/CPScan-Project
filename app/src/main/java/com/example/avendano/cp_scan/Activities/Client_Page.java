@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 
 import com.example.avendano.cp_scan.BottomNavigationHelper;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
+import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Fragments.AccountFragment;
 import com.example.avendano.cp_scan.Fragments.ReportFragment;
@@ -59,23 +61,35 @@ public class Client_Page extends AppCompatActivity {
         navigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                SharedPreferences pref = getSharedPreferences("FRAGMENT", MODE_PRIVATE);
+                SharedPreferences.Editor edit = pref.edit();
                 switch (item.getItemId()) {
                     case R.id.navigation_report:
+                        edit.putString("SELECTED", "report");
+                        edit.apply();
                         setFragment(reportFragment);
                         return true;
                     case R.id.navigation_room:
+                        edit.putString("SELECTED", "room");
+                        edit.apply();
                         setFragment(roomFragment);
                         return true;
                     case R.id.navigation_scan:
                         scanPc();
                         return true;
                     case R.id.navigation_task:
+                        edit.putString("SELECTED", "task");
+                        edit.apply();
                         setFragment(taskFragment);
                         return true;
                     case R.id.navigation_account:
+                        edit.putString("SELECTED", "account");
+                        edit.apply();
                         setFragment(accountFragment);
                         return true;
                     default:
+                        edit.putString("SELECTED", "room");
+                        edit.apply();
                         return false;
                 }
             }
@@ -111,6 +125,8 @@ public class Client_Page extends AppCompatActivity {
                 }
             }
         }, intentFilter);
+        AddInventoryRequestFrmServer add = new AddInventoryRequestFrmServer(this, db);
+        add.getReqIventory();
     }//oncreate
 
     private void scanPc() {
@@ -158,7 +174,16 @@ public class Client_Page extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        navigationView.setSelectedItemId(R.id.navigation_room);
+        SharedPreferences pref = getSharedPreferences("FRAGMENT", MODE_PRIVATE);
+        String fragment = pref.getString("SELECTED", "room");
+        if(fragment.equalsIgnoreCase("room"))
+            navigationView.setSelectedItemId(R.id.navigation_room);
+        else if(fragment.equalsIgnoreCase("report"))
+            navigationView.setSelectedItemId(R.id.navigation_report);
+        else if(fragment.equalsIgnoreCase("account"))
+            navigationView.setSelectedItemId(R.id.navigation_account);
+        else if(fragment.equalsIgnoreCase("task"))
+            navigationView.setSelectedItemId(R.id.navigation_task);
     }
 
     private void setFragment(Fragment fragment) {

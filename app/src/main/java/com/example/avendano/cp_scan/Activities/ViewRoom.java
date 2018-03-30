@@ -1,12 +1,14 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,11 +20,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
+import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -33,15 +37,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-import static com.example.avendano.cp_scan.R.drawable.style_button_white;
+import dmax.dialog.SpotsDialog;
 
 public class ViewRoom extends AppCompatActivity {
 
@@ -52,7 +55,7 @@ public class ViewRoom extends AppCompatActivity {
     private String user_role;
     Button room_btn;
     TextView building, room, cust, floor, pc_count, pc_working, lastAssess;
-    ProgressDialog dialog;
+    android.app.AlertDialog dialog;
     Connection_Detector connection_detector;
 
     @Override
@@ -88,25 +91,13 @@ public class ViewRoom extends AppCompatActivity {
         pc_working = (TextView) findViewById(R.id.working_pc);
         pc_count = (TextView) findViewById(R.id.pc_count);
         lastAssess = (TextView) findViewById(R.id.date_assess);
-        dialog = new ProgressDialog(this);
-        dialog.setCancelable(false);
+        dialog = new SpotsDialog(this, "Loading...");
         room_image = (ImageView) findViewById(R.id.room_image);
-
-        dialog.setMessage("Loading...");
 
         user_role = SharedPrefManager.getInstance(this).getUserRole();
         room_btn = (Button) findViewById(R.id.room_button);
-        if (user_role.equalsIgnoreCase("technician")) {
+        if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("custodian")) {
             room_btn.setVisibility(View.VISIBLE);
-        } else if (user_role.equalsIgnoreCase("custodian")) {
-            Cursor c = db.checkIfRequested(room_id);
-            if(c.moveToFirst()){
-                room_btn.setText("Requested");
-                room_btn.setBackgroundResource(R.drawable.style_button_white);
-            }else{
-                room_btn.setText("Request");
-                room_btn.setBackgroundResource(R.color.darkorange);
-            }
         } else {
             room_btn.setVisibility(View.INVISIBLE);
         }
@@ -153,71 +144,36 @@ public class ViewRoom extends AppCompatActivity {
         room_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (user_role.equalsIgnoreCase("custodian")) {
-                    //if hindi pa nagrerequest "Request"
-                    //pag nkapagrequest na "Edit Request"
-                    String request = room_btn.getText().toString().trim();
-                    if(request.equalsIgnoreCase("request")){
-                        Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
-                        intent.putExtra("room_id", room_id);
-                        startActivity(intent);
-                    }else{
-                        //popup request details
-                        //if custodian cancelled the request, alert technician
-                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(ViewRoom.this);
-                        LayoutInflater inflater = ViewRoom.this.getLayoutInflater();
-                        View view = inflater.inflate(R.layout.req_details, null);
-                        TextView req_date = (TextView) view.findViewById(R.id.date);
-                        TextView req_time = (TextView) view.findViewById(R.id.time);
-                        TextView req_msg = (TextView) view.findViewById(R.id.msg);
-                        TextView req_stats = (TextView) view.findViewById(R.id.status);
-
-                        //settext from sqlite
-                        Cursor c = db.getLastReqInventory(room_id);
-                        if(c.moveToFirst()){
-                            String date = c.getString(c.getColumnIndex(db.REQ_DATE));
-                            String time = c.getString(c.getColumnIndex(db.REQ_TIME));
-                            String message = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
-                            String stats = c.getString(c.getColumnIndex(db.REQ_STATUS));
-                            if(message.length() == 0)
-                                message = "None";
-
-                            req_date.setText(req_date.getText() + " " + date);
-                            req_time.setText(req_time.getText() + " " + time);
-                            req_msg.setText(req_msg.getText() + " " + message);
-                            req_stats.setText(req_stats.getText() + " " + stats);
-
-                        }
-                        alertDialog.setView(view);
-                        alertDialog.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                        alertDialog.setPositiveButton("Cancel Request", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //cancel request
-                            }
-                        });
-                        alertDialog.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //requestfor inventory layout
-                            }
-                        });
-                        AlertDialog alert = alertDialog.create();
-                        alert.show();
-                    }
-                } else if (user_role.equalsIgnoreCase("technician")) {
-                    int pc = Integer.parseInt(pc_count.getText().toString().trim());
-                    if (pc > 0) {
-                        if (checkDate()) {//naassess na ngayong week
+                int pc = Integer.parseInt(pc_count.getText().toString().trim());
+                if (pc > 0) {
+                    if (user_role.equalsIgnoreCase("custodian")) {
+                        //if hindi pa nagrerequest "Request"
+                        //pag nkapagrequest na "Edit Request"
+                        String request = room_btn.getText().toString().trim();
+                        if (request.equalsIgnoreCase("request")) {
                             if (connection_detector.isConnected()) {
-                                //dropdown = assessment, request
-                                //if dropdown = request -> popup list of inventory request
-
+                                Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
+                                intent.putExtra("room_id", room_id);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                                builder.setMessage("No Internet Connection")
+                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
+                            }
+                        } else {
+                            checkLastInventoryRequestFrmServer(true);
+                        }
+                    } else if (user_role.equalsIgnoreCase("technician")) {
+                        if (connection_detector.isConnected()) {
+                            if (checkDate()) {//naassess na ngayong week
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
                                 builder.setMessage("This room has been assessed this week. Reassess?")
                                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -235,55 +191,293 @@ public class ViewRoom extends AppCompatActivity {
                                 AlertDialog alert = builder.create();
                                 alert.show();
                             } else {
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                                builder.setMessage("No Internet Connection")
-                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        });
-                                AlertDialog alert = builder.create();
-                                alert.show();
+                                addPcToAssessFrmServer();
                             }
                         } else {
-                            if (connection_detector.isConnected()) {
-                                //dropdown = assessment, request
-                                //if dropdown = request -> popup list of inventory request
-
-                                addPcToAssessFrmServer();
-                            } else {
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                                builder.setMessage("No Internet Connection")
-                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        });
-                                AlertDialog alert = builder.create();
-                                alert.show();
-                            }
+                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                            builder.setMessage("No Internet Connection")
+                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                            AlertDialog alert = builder.create();
+                            alert.show();
                         }
-                    } else {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                        builder.setMessage("No computers assigned in this room.")
-                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                        AlertDialog alert = builder.create();
-                        alert.show();
                     }
+                } else {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                    builder.setMessage("No computers assigned in this room.")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
                 }
             }
         });
-        clearDb();
-        showDialog();
-        roomDetails();
-//        getImage();
+        dialog.show();
+        new backgroundTasks().execute();
+    }
+
+    class backgroundTasks extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            clearDb();
+            if (user_role.equalsIgnoreCase("custodian"))
+                checkLastInventoryRequestFrmServer(false);
+            roomDetails();
+            return null;
+        }
+    }
+
+    private void checkLastInventoryRequestFrmServer(final boolean popup) {
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_CHECK_LAST_INVENTORY_REQUEST
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e("RESPONSE", response);
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
+                            room_btn.setText("Request");
+                            room_btn.setBackgroundResource(R.color.darkorange);
+                            room_btn.setTextColor(getResources().getColor(R.color.white));
+                        } else { //kapag na request na
+                            room_btn.setText("Requested");
+                            room_btn.setBackgroundResource(R.drawable.style_button_white);
+                            room_btn.setTextColor(getResources().getColor(R.color.darkorange));
+                            int req_id = obj.getInt("req_id");
+                            int rep_id = 0;
+                            if (!obj.isNull("rep_id"))
+                                rep_id = obj.getInt("rep_id");
+                            int room_id = obj.getInt("room_id");
+                            String cust_id = obj.getString("custodian");
+                            String tech_id = obj.getString("technician");
+                            String date = obj.getString("date");
+                            String time = obj.getString("time");
+                            String msg = obj.getString("msg");
+                            String req_date = obj.getString("date_requested");
+                            String req_time = obj.getString("time_requested");
+                            String req_status = obj.getString("req_status");
+
+                            if (popup)
+                                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
+                                        msg, req_date, req_time, req_status);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    checkLastInventoryRequestFrmLocal(popup);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("VIEWROOM", "ERROR: " + error.getMessage());
+                checkLastInventoryRequestFrmLocal(popup);
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("room_id", String.valueOf(room_id));
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private void checkLastInventoryRequestFrmLocal(boolean popup) {
+        if (popup) {
+            Cursor c = db.checkIfRequested(room_id);
+            if (c.moveToFirst()) {
+                int req_id = c.getInt(c.getColumnIndex(db.REQ_ID));
+                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
+                int room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
+                ;
+                String cust_id = c.getString(c.getColumnIndex(db.COLUMN_CUST_ID));
+                String tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
+                String date = c.getString(c.getColumnIndex(db.REQ_DATE));
+                String time = c.getString(c.getColumnIndex(db.REQ_TIME));
+                String msg = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
+                String req_date = c.getString(c.getColumnIndex(db.DATE_OF_REQ));
+                String req_time = c.getString(c.getColumnIndex(db.TIME_OF_REQ));
+                String req_status = c.getString(c.getColumnIndex(db.REQ_STATUS));
+
+                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
+                        msg, req_date, req_time, req_status);
+            }
+        } else {
+            Cursor c = db.checkIfRequested(room_id);
+            if (c.moveToFirst()) {
+                room_btn.setText("Requested");
+                room_btn.setBackgroundResource(R.drawable.style_button_white);
+                room_btn.setTextColor(getResources().getColor(R.color.darkorange));
+            } else {
+                room_btn.setText("Request");
+                room_btn.setBackgroundResource(R.color.darkorange);
+                room_btn.setTextColor(getResources().getColor(R.color.white));
+            }
+        }
+    }
+
+    private void showRequestDetails(final int req_id, int rep_id, final int room_id, String cust_id,
+                                    String tech_id, String date, String time, String msg,
+                                    String date_req, String time_req, String req_status) {
+        //alertdialog
+        String msg_body = "";
+        if(msg.length() == 0){
+            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Status: " + req_status;
+        }else{
+            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
+                + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Status: " + req_status
+            + "\n\nMessage: " + msg;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Request Details");
+        builder.setMessage(msg_body);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        })
+                .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(connection_detector.isConnected()){
+                            Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
+                            intent.putExtra("type", "inventory");
+                            intent.putExtra("room_pc_id",room_id );
+                            intent.putExtra("id",req_id );
+                            ViewRoom.this.startActivity(intent);
+                            finish();
+                        }else
+                            Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //cancel
+                        cancelRequestInventory(req_id);
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void cancelRequestInventory(final int req_id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Cancel Request");
+        builder.setMessage("Are you sure you want to cancel your request?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (connection_detector.isConnected())
+                            cancelRequest(req_id);
+                        else
+                            Toast.makeText(ViewRoom.this, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void cancelRequest(final int req_id) {
+        class cancel {
+            void callCancel(){
+                new cancelling().execute();
+            }
+            class cancelling extends AsyncTask<Void, Void, Void> {
+
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    dialog.show();
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    cancelRequest();
+                    return null;
+                }
+            }
+
+            private void cancelRequest() {
+
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_CANCEL_SCHEDULE
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            //update sqlite
+                            if (!obj.getBoolean("error")) {
+                                updateSQlite(req_id);
+                                new backgroundTasks().execute();
+                                Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    public void run() {
+                                        dialog.dismiss();
+                                    }
+                                }, 5000);
+                            } else {
+                                dialog.dismiss();
+                                Toast.makeText(ViewRoom.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            dialog.dismiss();
+                            Toast.makeText(ViewRoom.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            Log.e("JSONERROR", e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        dialog.dismiss();
+                        Toast.makeText(ViewRoom.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> param = new HashMap<>();
+                        param.put("id", String.valueOf(req_id));
+                        param.put("req_type", "inventory");
+                        return param;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewRoom.this).addToRequestQueue(str);
+            }
+        }
+        new cancel().callCancel();
+    }
+
+    private void updateSQlite(int req_id) {
+        db.updateReqInvStatus(req_id);
     }
 
     private void addPcToAssessFrmServer() {
@@ -368,7 +562,7 @@ public class ViewRoom extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 try {
-                    hideDialog();
+                    dialog.dismiss();
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
@@ -408,7 +602,7 @@ public class ViewRoom extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                hideDialog();
+                dialog.dismiss();
                 getLocalRoomDetails();
                 Log.w("Volleyerror 1", "ViewRoom: " + error.getMessage());
             }
@@ -438,49 +632,9 @@ public class ViewRoom extends AppCompatActivity {
         }
     }
 
-    private void getImage() {
-        class GetImage extends AsyncTask<Integer, Void, Bitmap> {
-
-            @Override
-            protected Bitmap doInBackground(Integer... integers) {
-                int id = integers[0];
-                String get = AppConfig.ROOT_URL + "cict_getRoom_Image.php?id=" + id;
-                URL url = null;
-                Bitmap image = null;
-                try {
-                    url = new URL(get);
-                    image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return image;
-            }
-
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                super.onPostExecute(bitmap);
-                room_image.setImageBitmap(bitmap);
-            }
-        }
-        GetImage gi = new GetImage();
-        gi.execute(room_id);
-    }
-
     private void clearDb() {
         db.deleteAssessedPc();
         db.deletePcToAssess();
-    }
-
-    private void showDialog() {
-        if (!dialog.isShowing())
-            dialog.show();
-    }
-
-    private void hideDialog() {
-        if (dialog.isShowing())
-            dialog.dismiss();
     }
 
     @Override
