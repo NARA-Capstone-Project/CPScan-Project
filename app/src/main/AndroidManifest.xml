@@ -17,18 +17,30 @@
         <activity
             android:name=".Activities.MainActivity"
             android:configChanges="orientation"
-            android:label="CP-Scan"
-            android:screenOrientation="portrait" />
-        <activity android:name=".Activities.RequestActivity" />
-        <activity android:name=".Activities.ViewRoom" />
-        <activity android:name=".Activities.RoomPc" />
+            android:screenOrientation="portrait"
+            android:label="CP-Scan"/>
+        <activity android:name=".Activities.RequestActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.ViewRoom"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.RoomPc"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Activities.ScheduleActivity"
             android:label="@string/title_activity_schedule"
             android:theme="@style/AppTheme" />
-        <activity android:name=".Activities.PcAssessment" />
-        <activity android:name=".Activities.AssessmentActivity" />
-        <activity android:name=".Activities.Client_Page">
+        <activity android:name=".Activities.PcAssessment"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.AssessmentActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.Client_Page"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,12 +56,24 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".Activities.ViewPc" />
-        <activity android:name=".Activities.ViewInventoryReport" />
-        <activity android:name=".Activities.EditProfileActivity"></activity>
-        <activity android:name=".Activities.RequestForInventory" />
-        <activity android:name=".Activities.RequestForRepair" />
-        <activity android:name=".Activities.EditRequestSchedule" />
+        <activity android:name=".Activities.ViewPc"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.ViewInventoryReport"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.EditProfileActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".Activities.RequestForInventory"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.RequestForRepair"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.EditRequestSchedule"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
 
     </application>
 
