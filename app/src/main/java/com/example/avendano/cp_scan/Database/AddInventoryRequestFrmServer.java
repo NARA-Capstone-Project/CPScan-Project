@@ -30,8 +30,7 @@ public class AddInventoryRequestFrmServer {
     }
 
     public void SyncFunction() {
-        if (db.getCompCount() > 0)
-            db.deleteInventoryRequest();
+        db.updateSync(0, "req_inv");
         getInventoryRequest();
     }
 
@@ -61,8 +60,8 @@ public class AddInventoryRequestFrmServer {
 
                                 addInventoryRequest(req_id, rep_id, room_id, cust_id, tech_id, date, time,
                                         msg, req_date, req_time, req_status);
-
                     }
+                    db.deleteAllUnsync("req_inv");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -77,12 +76,18 @@ public class AddInventoryRequestFrmServer {
 
     }
 
-    private long addInventoryRequest(int req_id, int rep_id, int room_id, String cust_id
+    private void addInventoryRequest(int req_id, int rep_id, int room_id, String cust_id
             , String tech_id, String date, String time, String msg, String req_date, String req_time, String status) {
-        long insert = db.addReqInventory(req_id, rep_id, room_id, cust_id, tech_id, date, time, msg,
-                req_date, req_time, status);
-        Log.w("INSERT TO SQLITE: ", "INVENTORY REQUEST : " + insert);
-        return insert;
+        Cursor c = db.getReqInventoryDetails(req_id);
+        if(c.moveToFirst()){
+            db.updateRequestInventory(req_id, rep_id,room_id,cust_id,tech_id,date, time, msg,req_date
+            ,req_time,status);
+            Log.w("UPDATE: ", "INVENTORY REQUEST");
+        }else{
+            long insert = db.addReqInventory(req_id, rep_id, room_id, cust_id, tech_id, date, time, msg,
+                    req_date, req_time, status);
+            Log.w("INSERT TO SQLITE: ", "INVENTORY REQUEST : " + insert);
+        }
     }
 
     public void getReqIventory() {

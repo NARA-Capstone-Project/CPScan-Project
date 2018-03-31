@@ -1,10 +1,10 @@
 package com.example.avendano.cp_scan.Activities;
 
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -28,7 +28,6 @@ import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
-import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -51,7 +50,6 @@ public class ViewPc extends AppCompatActivity {
     Button report, cancel;
     RadioGroup rGroup;
     Connection_Detector connection_detector;
-    boolean popup = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +61,7 @@ public class ViewPc extends AppCompatActivity {
         connection_detector = new Connection_Detector(this);
         db = new SQLiteHandler(this);
         progressDialog = new SpotsDialog(this, "Loading...");
+        progressDialog.show();
         pcno = (TextView) findViewById(R.id.pc_no);
         room_name = (TextView) findViewById(R.id.pc_room);
         pc_model = (TextView) findViewById(R.id.pc_model);
@@ -122,7 +121,6 @@ public class ViewPc extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
-                if (connection_detector.isConnected()) {
 //                    if (cancel.getVisibility() == View.VISIBLE) {
 //                        if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician")) {
 //                            //check kung may nagrequest for repair tas imamark as done na automatically
@@ -153,50 +151,56 @@ public class ViewPc extends AppCompatActivity {
 //                        mouse.setChecked(false);
 //                        vga.setChecked(false);
 //                    }
-                    Intent intent= new Intent(ViewPc.this, RequestForRepair.class);
-                    intent.putExtra("comp_id", comp_id);
-                    intent.putExtra("room_id", room_id);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
-                    builder.setMessage("No Internet Connection")
-                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                    AlertDialog alert = builder.create();
-                    alert.show();
+                if (report.getText().toString().equalsIgnoreCase("reported"))
+                    checkLastReqRepair(true);
+                else {
+                    if (connection_detector.isConnected()) {
+                        Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
+                        intent.putExtra("comp_id", comp_id);
+                        intent.putExtra("room_id", room_id);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+                        builder.setMessage("No Internet Connection")
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        AlertDialog alert = builder.create();
+                        alert.show();
+                    }
                 }
+
             }
         });
         showDialog();
-        loadDetails();
-    }
-
-    private void loadDetails() {
-        class loadDetails extends AsyncTask<Void,Void, Void>{
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                loadPcDetails();
-                checkLastReqRepair();
-                return null;
-            }
-        }
         new loadDetails().execute();
     }
 
-    private void checkLastReqRepair() {
+    class loadDetails extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            loadPcDetails();
+            checkLastReqRepair(false);
+            return null;
+        }
+    }
+
+
+    private void checkLastReqRepair(final boolean popup) {
         StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_CHECK_LAST_INVENTORY_REQUEST
+                , AppConfig.URL_CHECK_LAST_REPAIR_REQUEST
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                progressDialog.dismiss();
                 try {
                     JSONObject obj = new JSONObject(response);
+                    Log.e("RESPONSE", response);
                     if (!obj.getBoolean("error")) {
                         if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
                             report.setText("Report");
@@ -227,15 +231,19 @@ public class ViewPc extends AppCompatActivity {
                         }
                     }
                 } catch (JSONException e) {
+                    Log.e("RESPONSE", response);
+                    Toast.makeText(ViewPc.this, "An error occurred, try again later", Toast.LENGTH_SHORT).show();
+                    ViewPc.this.finish();
                     e.printStackTrace();
-//                    checkLastRepairRequestFrmLocal(popup);
+                    checkLastRepairRequestFrmLocal(popup);
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                progressDialog.dismiss();
                 Log.e("VIEWROOM", "ERROR: " + error.getMessage());
-//                checkLastRepairRequestFrmLocal(popup);
+                checkLastRepairRequestFrmLocal(popup);
             }
         }) {
             @Override
@@ -266,7 +274,7 @@ public class ViewPc extends AppCompatActivity {
                 String req_status = c.getString(c.getColumnIndex(db.REQ_STATUS));
                 String req_details = c.getString(c.getColumnIndex(db.REQ_DETAILS));
 
-                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
+                showRequestDetails(req_id, rep_id, compid, cust_id, tech_id, date, time,
                         msg, req_date, req_time, req_status, req_details);
             }
         } else {
@@ -288,18 +296,18 @@ public class ViewPc extends AppCompatActivity {
                                     String date_req, String time_req, String req_status, String req_details) {
         //alertdialog
         String msg_body = "";
-        if(msg.length() == 0){
-            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
-                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time +"\nRequest Details: "
-                    + req_details+ "\nRequest Status: " + req_status;
-        }else{
-            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
-                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time +"\nRequest Details: "
-                    + req_details+ "\nRequest Status: " + req_status
+        if (msg.length() == 0) {
+            msg_body = "Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Details: "
+                    + req_details + "\nRequest Status: " + req_status;
+        } else {
+            msg_body = "Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Details: "
+                    + req_details + "\nRequest Status: " + req_status
                     + "\n\nMessage: " + msg;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Request Details");
+        builder.setTitle("Report Details");
         builder.setMessage(msg_body);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
@@ -310,14 +318,14 @@ public class ViewPc extends AppCompatActivity {
                 .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if(connection_detector.isConnected()){
+                        if (connection_detector.isConnected()) {
                             Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
-                            intent.putExtra("type", "inventory");
-                            intent.putExtra("room_pc_id",room_id );
-                            intent.putExtra("id",req_id );
+                            intent.putExtra("type", "repair");
+                            intent.putExtra("room_pc_id", comp_id);
+                            intent.putExtra("id", req_id);
                             ViewPc.this.startActivity(intent);
                             finish();
-                        }else
+                        } else
                             Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -325,17 +333,120 @@ public class ViewPc extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //cancel
-                        cancelRequestInventory(req_id);
+                        cancelRequestRepair(req_id);
                     }
                 });
         AlertDialog alert = builder.create();
         alert.show();
     }
 
-    private void cancelRequestInventory(int req_id) {
+    private void cancelRequestRepair(final int req_id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Cancel Request");
+        builder.setMessage("Are you sure you want to cancel your request?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (connection_detector.isConnected())
+                            cancelRequest(req_id);
+                        else
+                            Toast.makeText(ViewPc.this, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
-    private void loadPcDetails(){
+    @Override
+    protected void onResume() {
+        super.onResume();
+        new loadDetails().execute();
+    }
+
+    private void cancelRequest(final int req_id) {
+        class cancel {
+            void callCancel() {
+                new cancelling().execute();
+            }
+
+            class cancelling extends AsyncTask<Void, Void, Void> {
+
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    progressDialog.show();
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    cancelRequest();
+                    return null;
+                }
+            }
+
+            private void cancelRequest() {
+
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_CANCEL_SCHEDULE
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            //update sqlite
+                            if (!obj.getBoolean("error")) {
+                                updateSQlite(req_id);
+                                new loadDetails().execute();
+                                Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                    }
+                                }, 5000);
+                            } else {
+                                progressDialog.dismiss();
+                                Toast.makeText(ViewPc.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(ViewPc.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            Log.e("JSONERROR", e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ViewPc.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> param = new HashMap<>();
+                        param.put("id", String.valueOf(req_id));
+                        param.put("req_type", "repair");
+                        return param;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+            }
+        }
+        new cancel().callCancel();
+    }
+
+    private void updateSQlite(int req_id) {
+        db.updateReqRepStatus(req_id);
+    }
+
+    private void loadPcDetails() {
         StringRequest str = new StringRequest(Request.Method.GET
                 , AppConfig.URL_GET_ALL_PC
                 , new Response.Listener<String>() {
@@ -408,6 +519,7 @@ public class ViewPc extends AppCompatActivity {
             pc_vga.setText(c.getString(c.getColumnIndex(db.COMP_VGA)));
             pc_hdd.setText(c.getString(c.getColumnIndex(db.COMP_HDD)));
             comp_status.setText(c.getString(c.getColumnIndex(db.COMP_STATUS)));
+            pc_os.setText(c.getString(c.getColumnIndex(db.COMP_OS)));
         } else {
             pcno.setText("PC --");
             pc_model.setText("--");
@@ -420,6 +532,7 @@ public class ViewPc extends AppCompatActivity {
             pc_vga.setText("--");
             pc_hdd.setText("--");
             comp_status.setText("--");
+            pc_os.setText("--");
             View v = ViewPc.this.findViewById(android.R.id.content);
             Snackbar.make(v, "No data retrieved.", Snackbar.LENGTH_SHORT).show();
         }

@@ -67,8 +67,7 @@ public class ViewRoom extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        getLocalRoomDetails();
-        clearDb();
+        new backgroundTasks().execute();
     }
 
     @Override
@@ -78,6 +77,7 @@ public class ViewRoom extends AppCompatActivity {
 
         //db
         db = new SQLiteHandler(this);
+        Log.e("REQUEST COUNT", db.getRequestCount());
 
         connection_detector = new Connection_Detector(this);
 

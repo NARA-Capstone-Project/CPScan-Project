@@ -157,6 +157,12 @@ public class AccountFragment extends Fragment {
         db.deleteReportDetails();
         db.deleteRooms();
         db.close();
+
+        SharedPreferences pref = getActivity().getSharedPreferences("FRAGMENT", MODE_PRIVATE);
+        SharedPreferences.Editor edit = pref.edit();
+        edit.putString("SELECTED", "room");
+        edit.apply();
+
         SharedPrefManager.getInstance(getContext()).logout();
         startActivity(new Intent(getActivity(), LogInActivity.class));
         getActivity().finish();

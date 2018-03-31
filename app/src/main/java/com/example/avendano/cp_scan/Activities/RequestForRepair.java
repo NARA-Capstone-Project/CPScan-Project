@@ -301,8 +301,8 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             Uri path = data.getData();
             if (requestCode == CAMERA_REQUEST) {
                 Bundle bundle = data.getExtras();
-                final Bitmap bmp = (Bitmap) bundle.get("data");
-                photo1.setImageBitmap(bmp);
+                bitmap = (Bitmap) bundle.get("data");
+                photo1.setImageBitmap(bitmap);
                 photo1.setBackgroundResource(0);
                 setImage = true;
             } else if (requestCode == IMG_REQUEST) {
@@ -482,6 +482,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
 
     private boolean checkInput() {
         progress.show();
+        progress.setCancelable(false);
         if (date_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");

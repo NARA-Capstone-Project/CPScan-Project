@@ -194,7 +194,7 @@ public class LogInActivity extends AppCompatActivity {
 
     private void reactivateAccount(final String user_id) {
         AlertDialog.Builder builder = new AlertDialog.Builder(LogInActivity.this);
-        builder.setMessage("Your account has been deactivated, send request to activate account?")
+        builder.setMessage("Your account has been deactivated or expired, send request to reactivate account?")
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

@@ -27,8 +27,7 @@ public class AddRoomsFrmServer {
     }
 
     public void SyncFunction() {
-        if(db.getRoomCount() > 0)
-            db.deleteRooms();
+        db.updateSync(0, "room");
         getRoomsFromServer();
     }
 
@@ -69,6 +68,7 @@ public class AddRoomsFrmServer {
                         addRooms(room_id,room_name,custodian,cust_id, technician, tech_id, building,
                                 floor,pc_count,pc_working, lastAssess);
                     }
+                    db.deleteAllUnsync("room");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

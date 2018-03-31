@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -28,8 +29,7 @@ public class AddCompFrmServer {
     }
 
     public void SyncFunction() {
-        if (db.getCompCount() > 0)
-            db.deleteAllComp();
+        db.updateSync(0, "computers");
         getComputersFromServer();
     }
 
@@ -62,9 +62,10 @@ public class AddCompFrmServer {
                         String os = obj.getString("os");
 
                         Log.w("COMP: " + comp_id, " MODEL: " + model);
-                        long insert = addComputers(comp_id, room_id, pc_no, os, model
+                        addComputers(comp_id, room_id, pc_no, os, model
                                 , mb, pr, monitor, ram, kboard, mouse, vga, hdd, comp_status);
                     }
+                    db.deleteAllUnsync("computers");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -79,11 +80,17 @@ public class AddCompFrmServer {
 
     }
 
-    private long addComputers(int comp_id, int room_id, int pc_no,String os, String model
+    private void addComputers(int comp_id, int room_id, int pc_no, String os, String model
             , String mb, String pr, String monitor, String ram, String kboard, String mouse, String vga, String hdd, String comp_status) {
-        long insert = db.addComputers(comp_id, room_id, pc_no, os, model, mb, pr
-                , monitor, ram, kboard, mouse, comp_status, vga, hdd);
-        Log.w("COMP INSERT TO SQLITE: ", "Status : " + insert);
-        return insert;
+        Cursor c = db.getCompDetails(comp_id);
+        if (c.moveToFirst()) {
+            db.updateComputers(comp_id, room_id, pc_no, os, model, mb, pr, monitor, ram, kboard
+                    , mouse, comp_status, vga, hdd);
+        } else {
+
+            long insert = db.addComputers(comp_id, room_id, pc_no, os, model, mb, pr
+                    , monitor, ram, kboard, mouse, comp_status, vga, hdd);
+            Log.w("COMP INSERT TO SQLITE: ", "Status : " + insert);
+        }
     }
 }

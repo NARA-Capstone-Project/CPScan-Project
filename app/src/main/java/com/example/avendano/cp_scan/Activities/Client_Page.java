@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.example.avendano.cp_scan.BottomNavigationHelper;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
 import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
+import com.example.avendano.cp_scan.Database.AddRepairRequestFrmServer;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Fragments.AccountFragment;
 import com.example.avendano.cp_scan.Fragments.ReportFragment;
@@ -41,14 +42,7 @@ public class Client_Page extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client__page);
 
-
         db = new SQLiteHandler(getApplicationContext());
-        Log.w("Room Count: ", "" + db.getRoomCount());
-        Log.w("Report Count: ", "" + db.getReportCount());
-        Log.w("Comp Count: ", "" + db.getCompCount());
-        Log.w("Details Count: ", "" + db.getReportDetailsCount());
-        Log.w("Sched Count: ", "" + db.getSchedCount());
-
         //Fragments
         final AccountFragment accountFragment = new AccountFragment();
         final RoomFragment roomFragment = new RoomFragment();
@@ -120,13 +114,13 @@ public class Client_Page extends AppCompatActivity {
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 Snackbar.make(findViewById(R.id.navigation), "Network " + networkStat,
                         Snackbar.LENGTH_SHORT).show();
-                if(isNetworkAvailable){
-                    //get fragment then load updated data
-                }
             }
         }, intentFilter);
         AddInventoryRequestFrmServer add = new AddInventoryRequestFrmServer(this, db);
-        add.getReqIventory();
+        add.SyncFunction();
+        AddRepairRequestFrmServer req = new AddRepairRequestFrmServer(this, db);
+        req.SyncFunction();
+
     }//oncreate
 
     private void scanPc() {

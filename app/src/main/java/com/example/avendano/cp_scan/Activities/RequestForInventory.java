@@ -173,6 +173,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
 
     private boolean checkSchedule() {
         progress.show();
+        progress.setCancelable(false);
         if (date_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");
@@ -226,7 +227,8 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
             public void onErrorResponse(VolleyError error) {
                 progress.dismiss();
 //                Log.e("REQUESTINVENTORY", error.getMessage());
-                Toast.makeText(RequestForInventory.this, "Can't connect to the server, please try again later", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RequestForInventory.this, "Can't connect to the server, " +
+                        "check your connection or try again later", Toast.LENGTH_SHORT).show();
             }
         }){
             @Override
