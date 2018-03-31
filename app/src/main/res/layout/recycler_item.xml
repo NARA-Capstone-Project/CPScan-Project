@@ -31,7 +31,9 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/head_txt"
                 android:layout_toLeftOf="@+id/recycler_icon"
-                android:text="Custodian" />
+                android:text="Custodian"
+                android:ellipsize="end"
+                android:maxLines="1"/>
 
             <TextView
                 android:id="@+id/subtxt"
@@ -40,7 +42,9 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/midtxt"
                 android:layout_toLeftOf="@+id/recycler_icon"
-                android:text="Name" />
+                android:text="Name"
+                android:ellipsize="end"
+                android:maxLines="1" />
 
             <ImageView
                 android:id="@+id/recycler_icon"

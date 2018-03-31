@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,10 +28,11 @@ import java.util.Set;
 public class TaskFragment extends Fragment {
     TabLayout tabLayout;
     ViewPager viewPage;
+    private ViewPagerAdapter viewPagerAdapter;
+
     public TaskFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -38,38 +40,34 @@ public class TaskFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_task, container, false);
 
+        Log.e("TASK", "oncreate");
         tabLayout = (TabLayout) view.findViewById(R.id.tablayout);
         viewPage = (ViewPager) view.findViewById(R.id.viewPage);
-
+        viewPagerAdapter = new ViewPagerAdapter(getChildFragmentManager());
+        viewPage.setAdapter(viewPagerAdapter);
         tabLayout.setupWithViewPager(viewPage);
-        SetUpWithViewPager(viewPage);
         return view;
     }
 
-    public void SetUpWithViewPager(ViewPager viewPage){
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getActivity().getSupportFragmentManager());
-        adapter.addFragment(new Schedule_Page(), "Schedule");
-        adapter.addFragment(new Request_Page(), "Request");
-
-        viewPage.setAdapter(adapter);
-    }
-
     public class ViewPagerAdapter extends FragmentPagerAdapter {
-        private List<Fragment> fragments = new ArrayList<>();
-        private List<String> titles = new ArrayList<>();
 
         public ViewPagerAdapter(FragmentManager fm) {
             super(fm);
         }
-
-        public void addFragment(Fragment fm, String title){
-            fragments.add(fm);
-            titles.add(title);
-        }
-
         @Override
         public Fragment getItem(int position) {
-            return fragments.get(position);
+            switch (position){
+                case 0:{
+                    Schedule_Page sched_page = new Schedule_Page();
+                    return sched_page;
+                }
+                case 1:{
+                    Request_Page req_page = new Request_Page();
+                    return req_page;
+                }
+            }
+
+            return null;
         }
 
         @Override
@@ -80,7 +78,13 @@ public class TaskFragment extends Fragment {
         @Nullable
         @Override
         public CharSequence getPageTitle(int position) {
-            return titles.get(position);
+            switch (position){
+                case 0:
+                        return "Task List";
+                case 1:
+                    return "Request List";
+            }
+            return null;
         }
     }
 }

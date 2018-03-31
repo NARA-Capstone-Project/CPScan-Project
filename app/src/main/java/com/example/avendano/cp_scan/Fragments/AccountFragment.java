@@ -167,7 +167,4 @@ public class AccountFragment extends Fragment {
         startActivity(new Intent(getActivity(), LogInActivity.class));
         getActivity().finish();
     }
-
-    //add oncreate here to add to list<>
-    //then adapter at oncreateview
 }
