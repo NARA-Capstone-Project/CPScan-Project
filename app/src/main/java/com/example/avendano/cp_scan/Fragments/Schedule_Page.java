@@ -2,6 +2,8 @@ package com.example.avendano.cp_scan.Fragments;
 
 
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,12 +19,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.TaskActivity;
+import com.example.avendano.cp_scan.Adapter.TaskAdapter;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
+import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Model.Task;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
@@ -31,12 +49,15 @@ import dmax.dialog.SpotsDialog;
  */
 public class Schedule_Page extends Fragment {
 
+    String TAG = "TASK";
     private FloatingActionButton add;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swiper;
     private AlertDialog progress;
     List<Task> taskList;
+    TaskAdapter taskAdapter;
     Connection_Detector connection_detector;
+
     public Schedule_Page() {
         // Required empty public constructor
     }
@@ -55,7 +76,7 @@ public class Schedule_Page extends Fragment {
             @Override
             public void onRefresh() {
                 swiper.setRefreshing(true);
-                //loadSchedule - asynctask
+                new loadSchedule().execute();
             }
         });
         add = (FloatingActionButton) view.findViewById(R.id.add_sched);
@@ -65,13 +86,20 @@ public class Schedule_Page extends Fragment {
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), "Add schedule", Toast.LENGTH_SHORT).show();
+                goToTaskActivity();
             }
         });
 
         new loadSchedule().execute();
 
         return view;
+    }
+
+    private void goToTaskActivity() {
+        Intent intent = new Intent(getContext(), TaskActivity.class);
+        intent.putExtra("sched_id", 0);
+        intent.putExtra("type", "add");
+        getActivity().startActivity(intent);
     }
 
     @Override
@@ -82,10 +110,10 @@ public class Schedule_Page extends Fragment {
         //sqqlite db
     }
 
-    private class loadSchedule extends AsyncTask<Void,Void,Void>{
+    private class loadSchedule extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... voids) {
-            if(connection_detector.isConnected())
+            if (connection_detector.isConnected())
                 loadScheduleFrmServer();
 //            else
 //                loadScheduleFrmLocal();
@@ -94,6 +122,60 @@ public class Schedule_Page extends Fragment {
     }
 
     private void loadScheduleFrmServer() {
+        taskList.clear();
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_GET_TASK
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    progress.dismiss();
+                    JSONArray array = new JSONArray(response);
+                    if (array.length() > 0) {
+                        Log.e(TAG, "Task got from server");
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            int sched_id = obj.getInt("sched_id");
+                            String title = obj.getString("category");
+                            String desc = obj.getString("desc");
+                            String date = obj.getString("date");
+                            String time = obj.getString("time");
+                            int room_pc_id = obj.getInt("id");
 
+                            Task task = new Task(date, time, desc, title, sched_id, room_pc_id);
+                            taskList.add(task);
+                        }
+                        taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, swiper);
+                        recyclerView.setAdapter(taskAdapter);
+                    } else {
+                        Toast.makeText(getContext(), "No Tasks", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                swiper.setRefreshing(false);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getContext(), "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, error.getMessage());
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("tech_id", SharedPrefManager.getInstance(getContext()).getUserId());
+
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        new loadSchedule().execute();
     }
 }

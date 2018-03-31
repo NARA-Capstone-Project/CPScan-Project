@@ -17,28 +17,34 @@
         <activity
             android:name=".Activities.MainActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"
-            android:label="CP-Scan"/>
-        <activity android:name=".Activities.RequestActivity"
+            android:label="CP-Scan"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.ViewRoom"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.ViewRoom"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.RoomPc"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RoomPc"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activities.ScheduleActivity"
             android:label="@string/title_activity_schedule"
             android:theme="@style/AppTheme" />
-        <activity android:name=".Activities.PcAssessment"
+        <activity
+            android:name=".Activities.PcAssessment"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.AssessmentActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.AssessmentActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.Client_Page"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.Client_Page"
             android:configChanges="orientation"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -56,25 +62,33 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".Activities.ViewPc"
+        <activity
+            android:name=".Activities.ViewPc"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.ViewInventoryReport"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.ViewInventoryReport"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.EditProfileActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.EditProfileActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"></activity>
-        <activity android:name=".Activities.RequestForInventory"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestForInventory"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.RequestForRepair"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestForRepair"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.EditRequestSchedule"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.EditRequestSchedule"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activities.TaskActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" ></activity>
     </application>
 
 </manifest>

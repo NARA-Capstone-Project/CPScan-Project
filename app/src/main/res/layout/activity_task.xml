@@ -1,48 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context="com.example.avendano.cp_scan.Activities.TaskActivity">
 
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Computer Status:"
-        android:id="@+id/label"
-        android:visibility="gone"/>
-
-    <RadioGroup
-        android:id="@+id/comp_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        android:visibility="gone">
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Missing"
-            android:id="@+id/missing"
-            />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Not Working"
-            android:id="@+id/not_working"/>
-    </RadioGroup>
-    <TextView
-        android:gravity="center_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/peripherals"/>
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -51,6 +18,49 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="65dp"
+                android:layout_margin="5dp"
+                android:background="@drawable/bg_spinner">
+
+                <Spinner
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="5dp"></Spinner>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/choose_layout"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:text="Choose: "/>
+
+                <TextView
+                    android:id="@+id/choose"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/style_edittext"
+                    android:focusable="false"
+                    android:padding="5dp"
+                    android:textSize="15sp"/>
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:hint="Description..."
+                android:maxLength="80" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -121,29 +131,7 @@
                 android:textSize="15sp"
                 android:visibility="gone" />
 
-            <EditText
-                android:id="@+id/message"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:hint="Add message..."
-                android:maxLength="100" />
-            <!--add image for reporting of pc-->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <ImageView
-                    android:id="@+id/photo1"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:background="@drawable/dotted_lines"
-                    android:src="@drawable/ic_addphoto"
-                    android:visibility="gone" />
-
-            </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
 </LinearLayout>
