@@ -35,4 +35,5 @@ public class AppConfig {
     public static String URL_UPDATE_REPAIR_REQUEST = ROOT_URL + "cict_update_repair.php";
     public static String URL_GET_TASK = ROOT_URL + "cict_get_task_schedule.php";
     public static String URL_SAVE_TASK = ROOT_URL + "cict_save_task_schedule.php";
+    public static String URL_SEARCH = ROOT_URL + "cict_search_database.php";
 }

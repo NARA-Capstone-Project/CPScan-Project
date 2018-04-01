@@ -86,9 +86,11 @@
             android:name=".Activities.EditRequestSchedule"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.TaskActivity"
+        <activity
+            android:name=".Activities.TaskActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait" ></activity>
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activities.SearchActivity"></activity>
     </application>
 
 </manifest>
