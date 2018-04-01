@@ -37,7 +37,6 @@
             android:orientation="horizontal">
 
             <RadioButton
-                android:id="@+id/working"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
@@ -45,7 +44,6 @@
                 android:text="Working" />
 
             <RadioButton
-                android:id="@+id/defective"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"

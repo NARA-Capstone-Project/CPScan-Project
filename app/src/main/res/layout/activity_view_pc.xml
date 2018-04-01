@@ -14,7 +14,6 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/pc_icon"
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_weight="1"
@@ -93,7 +92,6 @@
             android:orientation="horizontal">
 
             <RadioButton
-                android:id="@+id/defective"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"

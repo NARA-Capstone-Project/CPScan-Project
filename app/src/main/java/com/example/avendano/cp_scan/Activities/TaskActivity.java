@@ -80,7 +80,8 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setTitle("Select Room...");
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
 
         //intent
         type = getIntent().getStringExtra("type");

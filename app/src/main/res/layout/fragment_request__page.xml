@@ -12,7 +12,6 @@
         android:text="Request Page"/>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_task_request"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 

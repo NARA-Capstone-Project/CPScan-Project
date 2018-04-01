@@ -161,7 +161,6 @@
             android:background="@android:color/darker_gray"/>
     </RelativeLayout>
     <LinearLayout
-        android:id="@+id/room_image_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
