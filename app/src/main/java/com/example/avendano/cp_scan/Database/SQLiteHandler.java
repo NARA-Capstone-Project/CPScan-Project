@@ -600,7 +600,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     public Cursor getCompDetails(int comp_id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COMP_ID,COMP_OS, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_NAME, COMP_MB, COMP_PR,
+        String[] columns = {COMP_ID,COMP_OS, COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD,
+                COMP_NAME, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, ROOMS_ID};
         Cursor cursor = db.query(TABLE_COMPUTERS, columns, COMP_ID + " = ?", new String[]{String.valueOf(comp_id)}, null, null, null);
         return cursor;

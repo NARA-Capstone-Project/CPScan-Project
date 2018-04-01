@@ -493,14 +493,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 progress.dismiss();
                 Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("room_id", String.valueOf(room_pc_id));
-                return param;
-            }
-        };
+        });
         RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
     }
 
@@ -732,11 +725,13 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             setTime = "Anytime";
         else
             setTime = time.getText().toString();
-        final String query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
-                + setTime + "', message = '" + getMsg + "' WHERE req_id = ?";
 
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;
+
+        final String query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
+                + setTime + "', message = '" + getMsg + "' WHERE req_id = ?";
+
         StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_UPDATE_SCHEDULE
                 , new Response.Listener<String>() {

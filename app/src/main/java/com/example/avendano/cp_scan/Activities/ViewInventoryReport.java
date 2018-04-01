@@ -58,7 +58,9 @@ public class ViewInventoryReport extends AppCompatActivity {
         technician = (TextView) findViewById(R.id.reporter);
         custodian = (TextView) findViewById(R.id.custodian);
 
-        if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")){
+        if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian") ||
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("main technician") ||
+        SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")){
             sign.setVisibility(View.VISIBLE);
         }
 

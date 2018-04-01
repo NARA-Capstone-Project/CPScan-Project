@@ -289,7 +289,6 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         RequestQueueHandler.getInstance(TaskActivity.this).addToRequestQueue(str);
     }
 
-
     private void getRoom(final int id, final int pc_no, final boolean room) {
         StringRequest stringRequest = new StringRequest(Request.Method.GET
                 , AppConfig.URL_GET_ALL_ROOM

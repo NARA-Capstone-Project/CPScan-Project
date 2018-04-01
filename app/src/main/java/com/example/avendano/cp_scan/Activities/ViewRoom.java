@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -24,6 +25,7 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
@@ -57,6 +59,7 @@ public class ViewRoom extends AppCompatActivity {
     TextView building, room, cust, floor, pc_count, pc_working, lastAssess;
     android.app.AlertDialog dialog;
     Connection_Detector connection_detector;
+    String image_path;
 
     @Override
     public void onBackPressed() {
@@ -339,13 +342,13 @@ public class ViewRoom extends AppCompatActivity {
                                     String date_req, String time_req, String req_status) {
         //alertdialog
         String msg_body = "";
-        if(msg.length() == 0){
-            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
+        if (msg.length() == 0) {
+            msg_body = "Date requested: " + date_req + "\nTime Requested: " + time_req
                     + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Status: " + req_status;
-        }else{
-            msg_body ="Date requested: " + date_req + "\nTime Requested: " + time_req
-                + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Status: " + req_status
-            + "\n\nMessage: " + msg;
+        } else {
+            msg_body = "Date requested: " + date_req + "\nTime Requested: " + time_req
+                    + "\nAssigned Date: " + date + "\nAssigned Time: " + time + "\nRequest Status: " + req_status
+                    + "\n\nMessage: " + msg;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Request Details");
@@ -359,14 +362,14 @@ public class ViewRoom extends AppCompatActivity {
                 .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if(connection_detector.isConnected()){
+                        if (connection_detector.isConnected()) {
                             Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
                             intent.putExtra("type", "inventory");
-                            intent.putExtra("room_pc_id",room_id );
-                            intent.putExtra("id",req_id );
+                            intent.putExtra("room_pc_id", room_id);
+                            intent.putExtra("id", req_id);
                             ViewRoom.this.startActivity(intent);
                             finish();
-                        }else
+                        } else
                             Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -407,9 +410,10 @@ public class ViewRoom extends AppCompatActivity {
 
     private void cancelRequest(final int req_id) {
         class cancel {
-            void callCancel(){
+            void callCancel() {
                 new cancelling().execute();
             }
+
             class cancelling extends AsyncTask<Void, Void, Void> {
 
                 @Override
@@ -578,6 +582,7 @@ public class ViewRoom extends AppCompatActivity {
                         String building = obj.getString("building");
                         int pc_count = obj.getInt("pc_count");
                         int pc_working = obj.getInt("pc_working");
+                        String path = obj.getString("room_image");
 
                         String lastAssess = "";
                         if (obj.isNull("lastAssess")) {
@@ -593,6 +598,12 @@ public class ViewRoom extends AppCompatActivity {
                             ViewRoom.this.cust.setText(custodian);
                             ViewRoom.this.pc_count.setText("" + pc_count);
                             ViewRoom.this.pc_working.setText("" + pc_working);
+                            if (obj.isNull("room_image"))
+                                image_path = "";
+                            else {
+                                image_path = AppConfig.ROOT_URL + path;
+                                getImage();
+                            }
                         }
                     }
                 } catch (JSONException e) {
@@ -608,6 +619,26 @@ public class ViewRoom extends AppCompatActivity {
             }
         });
         RequestQueueHandler.getInstance(this).addToRequestQueue(stringRequest);
+    }
+
+    private void getImage() {
+        ImageRequest req = new ImageRequest(image_path, new Response.Listener<Bitmap>() {
+            @Override
+            public void onResponse(Bitmap response) {
+                room_image.setImageBitmap(response);
+                room_image.setBackgroundResource(0);
+            }
+        }, 0, 0, ImageView.ScaleType.CENTER_CROP, null,
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(ViewRoom.this, "Something went wrong " +
+                                "in loading image", Toast.LENGTH_SHORT).show();
+                        error.printStackTrace();
+                    }
+                });
+
+        RequestQueueHandler.getInstance(ViewRoom.this).addToRequestQueue(req);
     }
 
     private void getLocalRoomDetails() {
