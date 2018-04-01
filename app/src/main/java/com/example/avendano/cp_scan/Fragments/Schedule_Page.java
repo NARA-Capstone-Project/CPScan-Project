@@ -29,6 +29,7 @@ import com.example.avendano.cp_scan.Adapter.TaskAdapter;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
+import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.Task;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
@@ -57,6 +58,7 @@ public class Schedule_Page extends Fragment {
     List<Task> taskList;
     TaskAdapter taskAdapter;
     Connection_Detector connection_detector;
+    SQLiteHandler db;
 
     public Schedule_Page() {
         // Required empty public constructor
@@ -86,12 +88,14 @@ public class Schedule_Page extends Fragment {
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                goToTaskActivity();
+                if(connection_detector.isConnected())
+                    goToTaskActivity();
+                else
+                    Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
             }
         });
 
         new loadSchedule().execute();
-
         return view;
     }
 
@@ -107,10 +111,16 @@ public class Schedule_Page extends Fragment {
         super.onCreate(savedInstanceState);
         taskList = new ArrayList<>();
         connection_detector = new Connection_Detector(getContext());
-        //sqqlite db
+        db = new SQLiteHandler(getContext());
     }
 
     private class loadSchedule extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            taskList.clear();
+        }
+
         @Override
         protected Void doInBackground(Void... voids) {
             if (connection_detector.isConnected())
@@ -122,7 +132,6 @@ public class Schedule_Page extends Fragment {
     }
 
     private void loadScheduleFrmServer() {
-        taskList.clear();
         StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_GET_TASK
                 , new Response.Listener<String>() {
@@ -145,7 +154,7 @@ public class Schedule_Page extends Fragment {
                             Task task = new Task(date, time, desc, title, sched_id, room_pc_id);
                             taskList.add(task);
                         }
-                        taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, swiper);
+                        taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, swiper, db);
                         recyclerView.setAdapter(taskAdapter);
                     } else {
                         Toast.makeText(getContext(), "No Tasks", Toast.LENGTH_SHORT).show();
@@ -166,16 +175,10 @@ public class Schedule_Page extends Fragment {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> param = new HashMap<>();
                 param.put("tech_id", SharedPrefManager.getInstance(getContext()).getUserId());
-
                 return param;
             }
         };
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        new loadSchedule().execute();
-    }
 }

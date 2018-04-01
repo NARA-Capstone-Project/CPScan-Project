@@ -3,14 +3,17 @@ package com.example.avendano.cp_scan.Activities;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.database.Cursor;
 import android.graphics.Color;
-import android.speech.tts.TextToSpeech;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,17 +26,34 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Adapter.TaskAdapter;
+import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Database.RequestQueueHandler;
+import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.DatePicker;
+import com.example.avendano.cp_scan.Model.Task;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.example.avendano.cp_scan.TimePicker;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
-public class TaskActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener{
+public class TaskActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
     Toolbar toolbar;
     Spinner title;
@@ -45,10 +65,11 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
     private String TAG = "TASK";
     int sched_id;
     String type;
+    SQLiteHandler db;
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)  {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
 
@@ -60,6 +81,8 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         type = getIntent().getStringExtra("type");
         sched_id = getIntent().getIntExtra("sched_id", 0);
 
+        db = new SQLiteHandler(this);
+
         choose_layout = (LinearLayout) findViewById(R.id.choose_layout);
         choose = (TextView) findViewById(R.id.choose);
         desc = (EditText) findViewById(R.id.desc);
@@ -68,8 +91,8 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         custom_time = (TextView) findViewById(R.id.custom_time);
         date = (Spinner) findViewById(R.id.date);
         time = (Spinner) findViewById(R.id.time);
-        String[] type = new String[]{"Anytime", "Custom"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
+        String[] spinner_item = new String[]{"Anytime", "Custom"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, spinner_item);
         date.setAdapter(adapter);
         time.setAdapter(adapter);
         time.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -133,7 +156,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         //choose room or repair
         String[] items = new String[]{"Choose Title...", "Schedule Inventory", "Schedule Repair"};
         ArrayAdapter<String> cAdapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item
-        , items){
+                , items) {
             @Override
             public boolean isEnabled(int position) {
                 if (position == 0) {
@@ -165,10 +188,10 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position > 0) {
                     // Notify the selected item text
-                    if(choose_layout.getVisibility() == View.GONE)
+                    if (choose_layout.getVisibility() == View.GONE)
                         choose_layout.setVisibility(View.VISIBLE);
-                }else{
-                    if(choose_layout.getVisibility() == View.VISIBLE)
+                } else {
+                    if (choose_layout.getVisibility() == View.VISIBLE)
                         choose_layout.setVisibility(View.GONE);
                 }
             }
@@ -179,6 +202,119 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
             }
         });
 
+        if (type.equalsIgnoreCase("edit")) {
+            progress.show();
+            progress.setCancelable(false);
+            choose_layout.setVisibility(View.VISIBLE);
+            choose.setFocusable(false);
+            title.setClickable(false);
+            title.setFocusable(false);
+            title.setEnabled(false);
+            loadDetails();
+        }
+
+    }
+
+    private void loadDetails() {
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_GET_TASK
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    if (array.length() > 0) {
+                        Log.e(TAG, "Task got from server");
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            int id = obj.getInt("sched_id");
+                            final String obj_title = obj.getString("category");
+                            String obj_desc = obj.getString("desc");
+                            String obj_date = obj.getString("date");
+                            String obj_time = obj.getString("time");
+                            final int room_pc_id = obj.getInt("id");
+
+                            if (sched_id == id) {
+                                if (!obj_date.equalsIgnoreCase("anytime")) {
+                                    date.setSelection(1);
+                                    custom_date.setText(obj_date);
+                                }
+                                if (!obj_time.equalsIgnoreCase("anytime")) {
+                                    time.setSelection(1);
+                                    custom_time.setText(obj_time);
+                                }
+                                if (obj_title.equalsIgnoreCase("Schedule Repair"))
+                                    title.setSelection(2);
+                                else
+                                    title.setSelection(1);
+
+                                desc.setText(obj_desc);
+
+                                Handler h = new Handler();
+                                h.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        setValue(room_pc_id, obj_title);
+                                        progress.dismiss();
+                                    }
+                                }, 5000);
+                                break;
+                            }
+                        }
+                    } else {
+                        Toast.makeText(TaskActivity.this, "No Tasks", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    progress.dismiss();
+                    Toast.makeText(TaskActivity.this, "Error occurred", Toast.LENGTH_SHORT).show();
+                    TaskActivity.this.finish();
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                progress.dismiss();
+                Toast.makeText(TaskActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                TaskActivity.this.finish();
+                Log.e(TAG, error.getMessage());
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("tech_id", SharedPrefManager.getInstance(TaskActivity.this).getUserId());
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(TaskActivity.this).addToRequestQueue(str);
+    }
+
+    private void setValue(int room_pc_id, String cat) {
+
+        String value = "";
+        if (cat.contains("Repair")) {
+            Cursor c = db.getCompDetails(room_pc_id);
+            if(c.moveToFirst()){
+                String pc_name = "PC " + c.getString(c.getColumnIndex(db.COMP_NAME));
+                int room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
+                String room_name = "";
+                Cursor c1 = db.getRoomDetails(room_id);
+                if(c1.moveToFirst()){
+                    room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
+                }
+                value = pc_name + " of room " + room_name;
+            }
+        } else {
+            Cursor c = db.getRoomDetails(room_pc_id);
+            String room_name = "";
+            if(c.moveToFirst()){
+                room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
+            }
+            value = room_name + " Room";
+        }
+
+        choose.setText(value);
     }
 
     @Override
@@ -192,15 +328,86 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         switch (item.getItemId()) {
             case R.id.save: {
                 //check type if edit or add
+                progress.show();
+                progress.setCancelable(false);
+                if (checkInput()) {
+                    new processTask().execute();
+                } else {
+                    progress.dismiss();
+                }
                 break;
             }
-
             case R.id.cancel: {
                 TaskActivity.this.finish();
             }
         }
 
         return true;
+    }
+
+    private void editTask() {
+        String setDate = "";
+        String setTime = "";
+        final String description = desc.getText().toString().trim();
+        if (date.getSelectedItem().toString().equalsIgnoreCase("anytime"))
+            setDate = "Anytime";
+        else
+            setDate = custom_date.getText().toString();
+
+        if (time.getSelectedItem().toString().equalsIgnoreCase("anytime"))
+            setTime = "Anytime";
+        else
+            setTime = custom_time.getText().toString();
+
+        final String query = "UPDATE task_schedule SET date = '" + setDate + "', time ='"
+                + setTime + "', description = '" + description + "' WHERE sched_id = ?";
+
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_UPDATE_SCHEDULE
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e("ERROR", response);
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        //update sqlite
+//                        updateSqliteInventory(finalSetDate, finalSetTime, getMsg);
+                        Handler h = new Handler();
+                        h.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(TaskActivity.this, "Schedule Updated!", Toast.LENGTH_SHORT).show();
+                                TaskActivity.this.finish();
+                                progress.dismiss();
+                            }
+                        }, 5000);
+                    } else
+                        Toast.makeText(TaskActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                progress.dismiss();
+                Toast.makeText(TaskActivity.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("query", query);
+                params.put("id", String.valueOf(sched_id));
+                return params;
+            }
+        };
+        RequestQueueHandler.getInstance(TaskActivity.this).addToRequestQueue(str);
+    }
+
+    private void addTask() {
+
     }
 
     @Override
@@ -229,6 +436,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
         custom_time.setText(timeString);
     }
+
     private boolean checkInput() {
         progress.show();
         progress.setCancelable(false);
@@ -240,8 +448,23 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
                 custom_time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             custom_time.setError("Set date!");
             return false;
+        } else if (choose.getText().toString().length() == 0) {
+            choose.setError("Empty Field!");
+            return false;
         } else {
             return true;
+        }
+    }
+
+    private class processTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (type.equalsIgnoreCase("edit")) {
+                editTask();
+            } else {
+                addTask();
+            }
+            return null;
         }
     }
 }

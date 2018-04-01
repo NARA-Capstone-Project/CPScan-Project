@@ -82,7 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/text3"
-            android:text="Report By: "
+            android:text="Reported By: "
             android:layout_marginTop="5dp"/>
         <TextView
             android:layout_marginTop="5dp"
