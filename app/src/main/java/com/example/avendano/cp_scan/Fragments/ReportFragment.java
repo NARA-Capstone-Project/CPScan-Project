@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,7 +57,8 @@ public class ReportFragment extends Fragment {
     AlertDialog dialog;
     ReportAdapter reportAdapter;
     View view;
-    TextView no_list;
+    Spinner rep_type;
+
 
     public ReportFragment() {
         // Required empty public constructor
@@ -66,8 +69,12 @@ public class ReportFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_room, container, false);
+        rep_type = (Spinner) view.findViewById(R.id.report_type);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
+        String[] items = new String[]{"Room Inventory Report", "Request Inventory Report", "Request Repair Report"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.support_simple_spinner_dropdown_item, items);
+        rep_type.setAdapter(adapter);
         swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -95,14 +102,23 @@ public class ReportFragment extends Fragment {
     }
 
     class ReportsLoader extends AsyncTask<String, Void, Void> {
+//        select * from assessment_reports where not exists (select null from request_repair where request_repair.rep_id = assessment_reports.rep_id) and not exists (select null from request_inventory where request_inventory.rep_id = assessment_reports.rep_id);
+//        select * from assessment_reports where (rep_id in (select rep_id from request_repair as i where req_status = 'Done')) and (technician_id = '123456' or custodian_id = '123456');  // select request report
+        //ung query fr request walang param so lahat sa query na nakalagay
 
         @Override
         protected Void doInBackground(String... strings) {
             String method = strings[0];
-            if (method.equalsIgnoreCase("local"))
-                loadLocalReports();
-            else
-                loadFromServer();
+            if(rep_type.getSelectedItem().toString().equalsIgnoreCase("Room Inventory Report")){
+                if (method.equalsIgnoreCase("local"))
+                    loadLocalReports();
+                else
+                    loadFromServer();
+            }else if(rep_type.getSelectedItem().toString().equalsIgnoreCase("Request Inventory Report")){
+
+            }else{ // request repair
+
+            }
             return null;
         }
 

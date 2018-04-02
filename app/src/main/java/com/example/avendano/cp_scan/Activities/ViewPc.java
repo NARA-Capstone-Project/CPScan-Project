@@ -3,6 +3,7 @@ package com.example.avendano.cp_scan.Activities;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -22,12 +24,14 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,7 +53,11 @@ public class ViewPc extends AppCompatActivity {
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
     Button report, cancel;
     RadioGroup rGroup;
+    RadioButton defective, missing, working;
     Connection_Detector connection_detector;
+    EditText remark;
+    private static final String WORKING = "OK";
+    private static final String NOT_WORKING = "NONE/NOT WORKING";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +69,8 @@ public class ViewPc extends AppCompatActivity {
         connection_detector = new Connection_Detector(this);
         db = new SQLiteHandler(this);
         progressDialog = new SpotsDialog(this, "Loading...");
+        progressDialog.setCancelable(false);
+        remark = (EditText) findViewById(R.id.remark);
         progressDialog.show();
         pcno = (TextView) findViewById(R.id.pc_no);
         room_name = (TextView) findViewById(R.id.pc_room);
@@ -87,16 +97,56 @@ public class ViewPc extends AppCompatActivity {
         mouse = findViewById(R.id.check_mouse);
         vga = findViewById(R.id.check_vga);
         rGroup = findViewById(R.id.group);
+        missing = findViewById(R.id.missing);
+        defective = findViewById(R.id.defective);
+        working = findViewById(R.id.working);
 
         rGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 RadioButton btn = rGroup.findViewById(checkedId);
                 String stat = btn.getText().toString().trim();
-                if (stat.equalsIgnoreCase("missing"))
+                if (stat.equalsIgnoreCase("missing")) {
+                    if (instr.getVisibility() == View.GONE)
+                        instr.setVisibility(View.VISIBLE);
                     instr.setText("Check the missing peripherals");
-                else if (stat.equalsIgnoreCase("defective"))
+                    monitor.setVisibility(View.VISIBLE);
+                    mb.setVisibility(View.VISIBLE);
+                    pr.setVisibility(View.VISIBLE);
+                    ram.setVisibility(View.VISIBLE);
+                    hdd.setVisibility(View.VISIBLE);
+                    keyboard.setVisibility(View.VISIBLE);
+                    mouse.setVisibility(View.VISIBLE);
+                    vga.setVisibility(View.VISIBLE);
+                    remark.setVisibility(View.VISIBLE);
+                } else if (stat.equalsIgnoreCase("defective")) {
+                    if (instr.getVisibility() == View.GONE)
+                        instr.setVisibility(View.VISIBLE);
                     instr.setText("Check the defective peripherals");
+                    monitor.setVisibility(View.VISIBLE);
+                    mb.setVisibility(View.VISIBLE);
+                    pr.setVisibility(View.VISIBLE);
+                    ram.setVisibility(View.VISIBLE);
+                    hdd.setVisibility(View.VISIBLE);
+                    keyboard.setVisibility(View.VISIBLE);
+                    mouse.setVisibility(View.VISIBLE);
+                    vga.setVisibility(View.VISIBLE);
+                    remark.setVisibility(View.VISIBLE);
+                } else {
+                    if (instr.getVisibility() == View.VISIBLE)
+                        instr.setVisibility(View.GONE);
+                    monitor.setVisibility(View.GONE);
+                    mb.setVisibility(View.GONE);
+                    pr.setVisibility(View.GONE);
+                    ram.setVisibility(View.GONE);
+                    hdd.setVisibility(View.GONE);
+                    keyboard.setVisibility(View.GONE);
+                    mouse.setVisibility(View.GONE);
+                    vga.setVisibility(View.GONE);
+                    instr.setVisibility(View.GONE);
+                }
+
+
             }
         });
 
@@ -114,6 +164,7 @@ public class ViewPc extends AppCompatActivity {
                 vga.setVisibility(View.GONE);
                 rGroup.setVisibility(View.GONE);
                 instr.setVisibility(View.GONE);
+                remark.setVisibility(View.GONE);
             }
         });
 
@@ -121,63 +172,131 @@ public class ViewPc extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Connection_Detector connection_detector = new Connection_Detector(ViewPc.this);
-//                    if (cancel.getVisibility() == View.VISIBLE) {
-//                        if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician")) {
-//                            //check kung may nagrequest for repair tas imamark as done na automatically
-//                        } else {
-//                            Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
-//                            intent.putExtra("comp_id", comp_id);
-//                            startActivity(intent);
-//                        }
-//                    } else {
-//                        instr.setVisibility(View.VISIBLE);
-//                        cancel.setVisibility(View.VISIBLE);
-//                        monitor.setVisibility(View.VISIBLE);
-//                        mb.setVisibility(View.VISIBLE);
-//                        pr.setVisibility(View.VISIBLE);
-//                        ram.setVisibility(View.VISIBLE);
-//                        hdd.setVisibility(View.VISIBLE);
-//                        keyboard.setVisibility(View.VISIBLE);
-//                        mouse.setVisibility(View.VISIBLE);
-//                        vga.setVisibility(View.VISIBLE);
-//                        rGroup.setVisibility(View.VISIBLE);
-//
-//                        monitor.setChecked(false);
-//                        mb.setChecked(false);
-//                        pr.setChecked(false);
-//                        ram.setChecked(false);
-//                        hdd.setChecked(false);
-//                        keyboard.setChecked(false);
-//                        mouse.setChecked(false);
-//                        vga.setChecked(false);
-//                    }
-                if (report.getText().toString().equalsIgnoreCase("reported"))
-                    checkLastReqRepair(true);
-                else {
-                    if (connection_detector.isConnected()) {
-                        Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
-                        intent.putExtra("comp_id", comp_id);
-                        intent.putExtra("room_id", room_id);
-                        startActivity(intent);
-                        finish();
+                if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian")) {
+                    if (report.getText().toString().equalsIgnoreCase("reported")) {
+                        progressDialog.show();
+                        checkLastReqRepair(true);
                     } else {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
-                        builder.setMessage("No Internet Connection")
-                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                        AlertDialog alert = builder.create();
-                        alert.show();
+                        if (connection_detector.isConnected()) {
+                            Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
+                            intent.putExtra("comp_id", comp_id);
+                            intent.putExtra("room_id", room_id);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+                            builder.setMessage("No Internet Connection")
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                            AlertDialog alert = builder.create();
+                            alert.show();
+                        }
                     }
+                } else if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
+                        SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) {
+                    if (cancel.getVisibility() == View.VISIBLE) {
+                        //check if may nag request and save report
+                        //check inputs muna sa rbutn saka checkbox
+                        progressDialog.show();
+                        if (checkInput()) {
+                            if (connection_detector.isConnected())
+                                checkIfRequested();
+                            else {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+                                builder.setMessage("No Internet Connection")
+                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                AlertDialog alert = builder.create();
+                                alert.show();
+                            }
+                        } else {
+                            progressDialog.dismiss();
+                            Toast.makeText(ViewPc.this, "You haven't check any computer status/peripherals", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        cancel.setVisibility(View.VISIBLE);
+                        monitor.setVisibility(View.VISIBLE);
+                        mb.setVisibility(View.VISIBLE);
+                        pr.setVisibility(View.VISIBLE);
+                        ram.setVisibility(View.VISIBLE);
+                        hdd.setVisibility(View.VISIBLE);
+                        keyboard.setVisibility(View.VISIBLE);
+                        mouse.setVisibility(View.VISIBLE);
+                        vga.setVisibility(View.VISIBLE);
+                        rGroup.setVisibility(View.VISIBLE);
+                        remark.setVisibility(View.VISIBLE);
+
+                        monitor.setChecked(false);
+                        mb.setChecked(false);
+                        pr.setChecked(false);
+                        ram.setChecked(false);
+                        hdd.setChecked(false);
+                        keyboard.setChecked(false);
+                        mouse.setChecked(false);
+                        vga.setChecked(false);
+                    }
+                } else {
+                    report.setVisibility(View.GONE);
                 }
+
 
             }
         });
         showDialog();
         new loadDetails().execute();
+    }
+
+    private boolean checkInput() {
+        if (rGroup.getCheckedRadioButtonId() == -1) {
+            return false;
+        } else {
+            //check kung may nakacheck sa checbox
+            if (working.isChecked())
+                return true;
+            else {
+                if (!monitor.isChecked()) {
+                    if (!mb.isChecked()) {
+                        if (!pr.isChecked()) {
+                            if (!ram.isChecked()) {
+                                if (!hdd.isChecked()) {
+                                    if (!keyboard.isChecked()) {
+                                        if (!mouse.isChecked()) {
+                                            if (!vga.isChecked()) {
+                                                return false;
+                                            } else {
+                                                return true;
+                                            }
+                                        } else {
+                                            return true;
+                                        }
+                                    } else {
+                                        return true;
+                                    }
+                                } else {
+                                    return true;
+                                }
+                            } else {
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
     }
 
     class loadDetails extends AsyncTask<Void, Void, Void> {
@@ -190,6 +309,524 @@ public class ViewPc extends AppCompatActivity {
         }
     }
 
+    private void checkIfRequested() {
+        class Checker extends AsyncTask<Void, Void, Void> {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                checking();
+                return null;
+            }
+
+            private void checking() {
+                final String msg = "This computer was requested for repair, do you want to make a report for this? (Report " +
+                        "will be save even if you choose no)\n\n";
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_CHECK_LAST_REPAIR_REQUEST
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            Log.e("checking", response);
+                            if (!obj.getBoolean("error")) {
+                                //kapag may request na
+                                if (obj.getBoolean("pending")) {
+                                    if (obj.getString("technician").equals(SharedPrefManager.getInstance(ViewPc.this).getUserId())) {
+                                        int req_id = obj.getInt("req_id");
+                                        Log.e("Array", details().toString());
+                                        String details = obj.getString("req_details");
+                                        String path = obj.getString("image");
+                                        if (details.trim().isEmpty())
+                                            showAlert(req_id, msg, path);
+                                        else
+                                            showAlert(req_id, msg + " Request Details: " + obj.getString("req_details"), path);
+                                    } else {
+                                        confirmReport(0, false);
+                                    }
+                                } else {
+                                    Log.e("Array", details().toString());
+                                    //savereportc
+                                    confirmReport(0, false);
+                                }
+                            }
+                        } catch (JSONException e) {
+                            Log.e("RESPONSE", response);
+                            Toast.makeText(ViewPc.this, "An error occurred, try again later", Toast.LENGTH_SHORT).show();
+                            ViewPc.this.finish();
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ViewPc.this, "Can't connect to the server, check your internet connection and try again", Toast.LENGTH_SHORT).show();
+                        Log.e("VIEWROOM", "ERROR: " + error.getMessage());
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> param = new HashMap<>();
+                        param.put("comp_id", String.valueOf(comp_id));
+                        return param;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+            }
+
+            private String message() {
+                String msg = "";
+                //check kung may nakacheck sa checbox
+                if (working.isChecked())
+                    msg = "Confirm if computer is working and in good condition";
+                else if (defective.isChecked()) {
+                    msg = "The Following Peripherals are Defective: \n";
+                    if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
+                            monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
+                        msg = "Confirm if this computer is defective";
+                    else {
+                        if (monitor.isChecked())
+                            msg = msg + "\tMonitor\n";
+                        if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
+                            msg = msg + "\tSystem Unit\n";
+
+                        if (keyboard.isChecked())
+                            msg = msg + "\tKeyboard\n";
+
+                        if (mouse.isChecked())
+                            msg = msg + "\tMouse\n";
+                        if (vga.isChecked())
+                            msg = msg + "\nVGA";
+                    }
+                } else {
+                    msg = "The Following Peripherals are Missing: \n";
+                    if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
+                            monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
+                        msg = "Confirm if this computer is missing";
+                    else {
+                        if (monitor.isChecked())
+                            msg = msg + "\tMonitor\n";
+                        if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
+                            msg = msg + "\tSystem Unit\n";
+
+                        if (keyboard.isChecked())
+                            msg = msg + "\tKeyboard\n";
+
+                        if (mouse.isChecked())
+                            msg = msg + "\tMouse\n";
+                        if (vga.isChecked())
+                            msg = msg + "\nVGA";
+                    }
+                }
+                return msg;
+            }
+
+            private void confirmReport(final int req_id, final boolean req_save) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+
+                String msg = message();
+                builder.setTitle("Confirm Report...")
+                        .setMessage(msg)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                saveReport(req_id, req_save); //true = save din sa request_reports
+                                progressDialog.show();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+                progressDialog.dismiss();
+            }
+
+            private void showAlert(final int req_id, String msg, final String image_path) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+                builder.setTitle("Report")
+                        .setMessage(msg)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                progressDialog.show();
+                                confirmReport(req_id, true);
+                                Log.e("Array", details().toString());
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                progressDialog.show();
+                                confirmReport(req_id, false);
+                                dialog.dismiss();
+                                Log.e("Array", details().toString());
+                            }
+                        });
+
+                if(!image_path.isEmpty())
+                    builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            showImage(image_path);
+                        }
+                    });
+                AlertDialog alert = builder.create();
+                alert.show();
+                progressDialog.dismiss();
+            }
+
+            private void showImage(String path){
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT_URL + path))); /** replace with your own uri */
+            }
+
+            private void saveReport(final int req_id, final boolean req_save) {
+                final String rem = remark.getText().toString().trim();
+                final JSONArray array = details();
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_SAVE_A_REPORT
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            Log.e("RESPONSE", response);
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                Log.w("INSERT REPORT", "SUCCESS");
+                                int rep = obj.getInt("rep_id");
+                                setrep_id(rep, array, req_id, req_save);
+                            } else {
+                                progressDialog.dismiss();
+                                Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(ViewPc.this, "An error occurred, please try again later.", Toast.LENGTH_SHORT).show();
+                            Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        Log.w("INSERT REPORT", "NOT SUCCESS");
+                        Toast.makeText(ViewPc.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> params = new HashMap<>();
+                        params.put("tech_id", SharedPrefManager.getInstance(ViewPc.this).getUserId());
+                        params.put("room_id", String.valueOf(room_id));
+                        params.put("remarks", rem);
+                        return params;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+            }
+
+            private JSONArray details() {
+                int idx;
+                RadioButton btn;
+                String status;
+
+                //pag walang naka check ibig sabihin lahat working
+                JSONObject obj = new JSONObject();
+                int pc_no = Integer.parseInt(pcno.getText().toString().replace("PC", "").trim());
+                String mb = "";
+                String monitor = "";
+                String pr = pc_processor.getText().toString().trim();
+                String kb = pc_kb.getText().toString().trim();
+                String mouse = pc_mouse.getText().toString().trim();
+                String ram = pc_ram.getText().toString().trim();
+                String hdd = pc_hdd.getText().toString().trim();
+                String vga = pc_vga.getText().toString().trim();
+                String comp_status = "";
+
+                try {
+                    idx = rGroup.getCheckedRadioButtonId();
+                    btn = rGroup.findViewById(idx);
+                    status = btn.getText().toString().trim();
+                    if (status.equalsIgnoreCase("missing")) {
+                        if (ViewPc.this.monitor.isChecked()) {
+                            monitor = "Missing";
+                        } else {
+                            monitor = WORKING;
+                        }
+                        if (ViewPc.this.mb.isChecked()) {
+                            mb = "Missing";
+                        } else {
+                            mb = WORKING;
+                        }
+                        if (ViewPc.this.pr.isChecked()) {
+                            pr = "Missing";
+                        }
+                        if (ViewPc.this.ram.isChecked()) {
+                            ram = "Missing";
+                        }
+                        if (ViewPc.this.hdd.isChecked()) {
+                            hdd = "Missing";
+                        }
+                        if (ViewPc.this.keyboard.isChecked()) {
+                            kb = "Missing";
+                        }
+                        if (ViewPc.this.mouse.isChecked()) {
+                            mouse = "Missing";
+                        }
+                        if (ViewPc.this.vga.isChecked()) {
+                            vga = "Missing";
+                        }
+                        if (ViewPc.this.pc_mb.getText().toString().trim().equalsIgnoreCase("missing") ||
+                                pr.equalsIgnoreCase("missing") ||
+                                ram.equalsIgnoreCase("missing")) {
+                            comp_status = "Missing Components";
+                        } else
+                            comp_status = "Working";
+                    } else if (status.equalsIgnoreCase("defective")) {
+                        if (ViewPc.this.monitor.isChecked()) {
+                            monitor = NOT_WORKING;
+                        } else {
+                            monitor = WORKING;
+                        }
+                        if (ViewPc.this.mb.isChecked()) {
+                            mb = NOT_WORKING;
+                        }
+                        if (ViewPc.this.pr.isChecked()) {
+                            pr = NOT_WORKING;
+                        }
+                        if (ViewPc.this.ram.isChecked()) {
+                            ram = NOT_WORKING;
+                        }
+                        if (ViewPc.this.hdd.isChecked()) {
+                            hdd = NOT_WORKING;
+                        }
+                        if (ViewPc.this.keyboard.isChecked()) {
+                            kb = NOT_WORKING;
+                        } else {
+                            kb = WORKING;
+                        }
+                        if (ViewPc.this.mouse.isChecked()) {
+                            mouse = NOT_WORKING;
+                        } else {
+                            mouse = WORKING;
+                        }
+                        if (ViewPc.this.vga.isChecked()) {
+                            vga = NOT_WORKING;
+                        } else {
+                            vga = "BUILT-IN";
+                        }
+                        if (ViewPc.this.pc_mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
+                                pr.equalsIgnoreCase(NOT_WORKING) ||
+                                ram.equalsIgnoreCase(NOT_WORKING)) {
+                            comp_status = "Defective";
+                        } else
+                            comp_status = "Working";
+                    } else { //working
+                        //lahat working
+                        mb = WORKING;
+                        monitor = WORKING;
+                        comp_status = "Working";
+                    }
+
+                    obj.put("comp_id", comp_id);
+                    obj.put("pc_no", pc_no);
+                    obj.put("model", pc_model.getText().toString().trim());
+                    obj.put("mb", mb);
+                    obj.put("mb_serial", pc_mb.getText().toString().trim());
+                    obj.put("monitor", monitor);
+                    obj.put("mon_serial", pc_monitor.getText().toString().trim());
+                    obj.put("pr", pr);
+                    obj.put("kb", kb);
+                    obj.put("mouse", mouse);
+                    obj.put("ram", ram);
+                    obj.put("hdd", hdd);
+                    obj.put("vga", vga);
+                    obj.put("comp_status", comp_status);
+                } catch (JSONException e) {
+                    Log.e("JSONEXEPTION", " " + e.getMessage());
+                }
+                Log.e("OBJECTS", "Details: " + comp_id + " " + pc_no + " " + pc_model.getText().toString().trim() + " " +
+                        mb + " " + monitor + " " + pr + " " + kb + " " + mouse + " " + ram + " " + hdd + " " +
+                        vga + " " + pc_mb.getText().toString().trim() + " " + pc_monitor.getText().toString().trim());
+                JSONArray array = new JSONArray();
+                array.put(obj);
+                return array;
+            }
+
+            private void setrep_id(int rep, JSONArray array, int req_id, boolean req_save) {
+                JSONArray newArray = new JSONArray();
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        JSONObject newObj = new JSONObject();
+                        JSONObject oldObj = array.getJSONObject(i);
+                        newObj.put("comp_id", oldObj.getInt("comp_id"));
+                        newObj.put("pc_no", oldObj.getInt("pc_no"));
+                        newObj.put("model", oldObj.getString("model"));
+                        newObj.put("mb", oldObj.getString("mb"));
+                        newObj.put("mb_serial", oldObj.getString("mb_serial"));
+                        newObj.put("monitor", oldObj.getString("monitor"));
+                        newObj.put("mon_serial", oldObj.getString("mon_serial"));
+                        newObj.put("pr", oldObj.getString("pr"));
+                        newObj.put("kb", oldObj.getString("kb"));
+                        newObj.put("mouse", oldObj.getString("mouse"));
+                        newObj.put("ram", oldObj.getString("ram"));
+                        newObj.put("hdd", oldObj.getString("hdd"));
+                        newObj.put("vga", oldObj.getString("vga"));
+                        newObj.put("comp_status", oldObj.getString("comp_status"));
+                        newObj.put("rep_id", String.valueOf(rep));
+                        //add objects to new jsoon array
+                        newArray.put(newObj);
+                    } catch (JSONException e) {
+                        Log.e("JSONEXCEP", "" + e.getMessage());
+                    }
+                }
+                Log.e("NEW JSONARRAY", "" + newArray.toString());
+                saveReportDetails(rep, newArray, req_id, req_save);
+            }
+
+            private void saveReportDetails(final int rep, JSONArray newArray, final int req_id, final boolean req_save) {
+                JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
+                        , AppConfig.URL_SAVE_A_DETAILS
+                        , newArray
+                        , new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            JSONObject obj = response.getJSONObject(0);
+                            if (!obj.getBoolean("error")) {
+                                if (req_save) {
+                                    saveRequestReport(req_id, rep);
+                                } else {
+                                    activityRecreate();
+                                    progressDialog.dismiss();
+                                    Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                deleteReport(rep);
+                            }
+                        } catch (JSONException e) {
+                            Log.e("error", " " + e.getMessage());
+                            deleteReport(rep);
+                        }
+                    }
+
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        deleteReport(rep);
+                        Log.w("save details", "NOT SUCCESS: " + error.getMessage());
+                    }
+                });
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(req);
+            }
+
+            private void saveRequestReport(final int req_id, final int rep_id) {
+                Handler h = new Handler();
+                h.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        saveRequest(req_id, rep_id);
+                    }
+                }, 3000);
+            }
+
+            private void saveRequest(final int req_id, int rep_id) {
+                final String query = "UPDATE request_repair SET rep_id = " + rep_id + ", req_status = 'Done' WHERE req_id = ?";
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_UPDATE_SCHEDULE
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error"))
+                                Toast.makeText(ViewPc.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
+                        activityRecreate();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        progressDialog.dismiss();
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("714", error.getMessage());
+                        progressDialog.dismiss();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> map = new HashMap<>();
+                        map.put("query", query);
+                        map.put("id", String.valueOf(req_id));
+                        return map;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+            }
+
+            private void deleteReport(final int rep_id) {
+                Handler h = new Handler();
+                h.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        deleteReportFrmServer(rep_id);
+                    }
+                }, 3000);
+            }
+
+            private void deleteReportFrmServer(final int rep_id) {
+                final String query = "DELETE FROM assessment_report WHERE rep_id = ?";
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_DELETE_REPORT
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            progressDialog.dismiss();
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                                Log.e("DELETED", "success");
+                            } else {
+                                Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                                Log.e("DELETED", "not success");
+                            }
+                        } catch (JSONException e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                        Log.e("ERROR", error.getMessage());
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> param = new HashMap<>();
+                        param.put("query", query);
+                        param.put("rep_id", String.valueOf(rep_id));
+                        return param;
+                    }
+                };
+                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+            }
+        }
+        new Checker().execute();
+    }
+    private void activityRecreate(){
+        this.recreate();
+    }
 
     private void checkLastReqRepair(final boolean popup) {
         StringRequest str = new StringRequest(Request.Method.POST
@@ -200,16 +837,18 @@ public class ViewPc extends AppCompatActivity {
                 progressDialog.dismiss();
                 try {
                     JSONObject obj = new JSONObject(response);
-                    Log.e("RESPONSE", response);
+                    Log.e("last repair", response);
                     if (!obj.getBoolean("error")) {
                         if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
                             report.setText("Report");
                             report.setBackgroundResource(R.color.darkorange);
                             report.setTextColor(getResources().getColor(R.color.white));
                         } else { //kapag na request na
-                            report.setText("Reported");
-                            report.setBackgroundResource(R.drawable.style_button_white);
-                            report.setTextColor(getResources().getColor(R.color.darkorange));
+                            if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian")) {
+                                report.setText("Reported");
+                                report.setBackgroundResource(R.drawable.style_button_white);
+                                report.setTextColor(getResources().getColor(R.color.darkorange));
+                            }
                             int req_id = obj.getInt("req_id");
                             int rep_id = 0;
                             if (!obj.isNull("rep_id"))
@@ -533,8 +1172,6 @@ public class ViewPc extends AppCompatActivity {
             pc_hdd.setText("--");
             comp_status.setText("--");
             pc_os.setText("--");
-            View v = ViewPc.this.findViewById(android.R.id.content);
-            Snackbar.make(v, "No data retrieved.", Snackbar.LENGTH_SHORT).show();
         }
         hideDialog();
     }

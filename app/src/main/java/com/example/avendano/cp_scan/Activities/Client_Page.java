@@ -102,6 +102,8 @@ public class Client_Page extends AppCompatActivity {
             } else if (user_role.equalsIgnoreCase("custodian")) {
                 menu.removeItem(R.id.navigation_task);
                 menu.removeItem(R.id.navigation_scan);
+            }else if(user_role.equalsIgnoreCase("admin")){
+                menu.removeItem(R.id.navigation_task);
             }
         }
 

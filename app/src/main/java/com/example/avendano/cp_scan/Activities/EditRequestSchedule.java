@@ -43,6 +43,7 @@ import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.example.avendano.cp_scan.TimePicker;
 
 import org.json.JSONArray;
@@ -423,7 +424,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> param = new HashMap<>();
-                param.put("comp_id", String.valueOf(room_pc_id));
+                param.put("id", SharedPrefManager.getInstance(EditRequestSchedule.this).getUserId());
                 return param;
             }
         };
@@ -493,7 +494,14 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 progress.dismiss();
                 Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
             }
-        });
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("id", SharedPrefManager.getInstance(EditRequestSchedule.this).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
     }
 

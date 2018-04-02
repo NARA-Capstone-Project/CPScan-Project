@@ -20,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -31,13 +32,16 @@ import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Model.RequestInventory;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
@@ -111,15 +115,13 @@ public class Request_Page extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            inventoryList.clear();
-            repairList.clear();
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            if (req_type.getSelectedItem().toString().trim().contains("Repair"))
+            if (req_type.getSelectedItem().toString().trim().contains("Repair")) {
                 loadRepair();
-            else {
+            } else {
                 loadInventory();
             }
             return null;
@@ -128,12 +130,13 @@ public class Request_Page extends Fragment {
 
     private void loadInventory() {
         inventoryList.clear();
-        StringRequest str = new StringRequest(Request.Method.GET
+        StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_GET_ALL_INVENTORY_REQUEST
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
+                    Log.v("REQUEST", response);
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
@@ -153,7 +156,7 @@ public class Request_Page extends Fragment {
                                     , tech_id, date, time, msg, req_date, req_time, req_status);
                             inventoryList.add(inventory);
                         }
-
+                        Log.e("PENDING", req_status);
                     }
                     inventoryAdapter = new InventoryAdapter(inventoryList, getContext(), getActivity()
                             , refresh);
@@ -167,7 +170,7 @@ public class Request_Page extends Fragment {
                             progress.dismiss();
                             refresh.setRefreshing(false);
                         }
-                    }, 2000);
+                    }, 4000);
                 } catch (JSONException e) {
                     if (progressBar.getVisibility() == View.VISIBLE)
                         progressBar.setVisibility(View.GONE);
@@ -189,18 +192,26 @@ public class Request_Page extends Fragment {
                 Log.v("RESULT", "Error: " + error.getMessage());
                 Toast.makeText(getContext(), "Can't connect to the server, please try again later.", Toast.LENGTH_SHORT).show();
             }
-        });
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("id", SharedPrefManager.getInstance(getContext()).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
     }
 
     private void loadRepair() {
         repairList.clear();
-        StringRequest str = new StringRequest(Request.Method.GET
+        StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_GET_ALL_REPAIR_REQUEST
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
+                    Log.v("REQUEST", response);
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
@@ -221,13 +232,14 @@ public class Request_Page extends Fragment {
                         String path = obj.getString("image");
 
                         if (req_status.equalsIgnoreCase("pending")) {
-                            RequestRepair repair = new RequestRepair(req_id,comp_id,cust_id,tech_id
-                            ,date, time, msg, req_date, req_time, req_status, path, req_details);
+                            RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                    , date, time, msg, req_date, req_time, req_status, path, req_details);
                             repairList.add(repair);
                         }
+                        Log.e("PENDING", req_status);
 
                     }
-                    repairAdapter = new RepairAdapter(repairList,getContext(),getActivity(),refresh);
+                    repairAdapter = new RepairAdapter(repairList, getContext(), getActivity(), refresh);
                     recyclerView.setAdapter(repairAdapter);
                     Handler h = new Handler();
                     h.postDelayed(new Runnable() {
@@ -241,7 +253,7 @@ public class Request_Page extends Fragment {
                     }, 2000);
                 } catch (JSONException e) {
                     if (progressBar.getVisibility() == View.VISIBLE)
-                    progressBar.setVisibility(View.GONE);
+                        progressBar.setVisibility(View.GONE);
                     refresh.setRefreshing(false);
                     progress.dismiss();
                     Toast.makeText(getContext(), "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
@@ -252,13 +264,20 @@ public class Request_Page extends Fragment {
             @Override
             public void onErrorResponse(VolleyError error) {
                 if (progressBar.getVisibility() == View.VISIBLE)
-                progressBar.setVisibility(View.GONE);
+                    progressBar.setVisibility(View.GONE);
                 refresh.setRefreshing(false);
                 progress.dismiss();
                 Toast.makeText(getContext(), "Can't connect to the server, please try again later.", Toast.LENGTH_SHORT).show();
                 Log.v("RESULT", "Error: " + error.getMessage());
             }
-        });
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("id", SharedPrefManager.getInstance(getContext()).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
 
     }

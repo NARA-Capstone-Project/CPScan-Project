@@ -5,15 +5,20 @@ import android.database.Cursor;
 import android.util.Log;
 import android.view.accessibility.AccessibilityManager;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Model.ReportDetails;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Avendano on 6 Mar 2018.
@@ -71,7 +76,14 @@ public class AddInventoryRequestFrmServer {
             public void onErrorResponse(VolleyError error) {
                 Log.v("RESULT", "Error: " + error.getMessage());
             }
-        });
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("id", SharedPrefManager.getInstance(mCtx).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
 
     }
@@ -128,7 +140,14 @@ public class AddInventoryRequestFrmServer {
             public void onErrorResponse(VolleyError error) {
                 Log.v("RESULT", "Error: " + error.getMessage());
             }
-        });
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("id", SharedPrefManager.getInstance(mCtx).getUserId());
+                return param;
+            }
+        };
         RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
     }
 

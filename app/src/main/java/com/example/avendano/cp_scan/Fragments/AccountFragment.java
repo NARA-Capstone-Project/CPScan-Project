@@ -160,7 +160,7 @@ public class AccountFragment extends Fragment {
 
         SharedPreferences pref = getActivity().getSharedPreferences("FRAGMENT", MODE_PRIVATE);
         SharedPreferences.Editor edit = pref.edit();
-        edit.putString("SELECTED", "room");
+        edit.clear();
         edit.apply();
 
         SharedPrefManager.getInstance(getContext()).logout();

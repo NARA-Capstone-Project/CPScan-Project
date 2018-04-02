@@ -99,7 +99,8 @@ public class ViewRoom extends AppCompatActivity {
 
         user_role = SharedPrefManager.getInstance(this).getUserRole();
         room_btn = (Button) findViewById(R.id.room_button);
-        if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("custodian")) {
+        if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("custodian") ||
+        user_role.equalsIgnoreCase("main technician")) {
             room_btn.setVisibility(View.VISIBLE);
         } else {
             room_btn.setVisibility(View.INVISIBLE);
@@ -174,7 +175,7 @@ public class ViewRoom extends AppCompatActivity {
                         } else {
                             checkLastInventoryRequestFrmServer(true);
                         }
-                    } else if (user_role.equalsIgnoreCase("technician")) {
+                    } else if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("main technician")) {
                         if (connection_detector.isConnected()) {
                             if (checkDate()) {//naassess na ngayong week
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);

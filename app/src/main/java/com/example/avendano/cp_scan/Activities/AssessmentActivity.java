@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -57,6 +58,7 @@ public class AssessmentActivity extends AppCompatActivity {
     AssessAdapter adapter;
     int room_id;
     android.app.AlertDialog dialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +69,7 @@ public class AssessmentActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         dialog = new SpotsDialog(AssessmentActivity.this, "Saving...");
+        dialog.setCancelable(false);
 
         room_id = getIntent().getIntExtra("room_id", 0);
         scan = (Button) findViewById(R.id.scan);
@@ -163,7 +166,7 @@ public class AssessmentActivity extends AppCompatActivity {
                             intent.putExtra("room_id", room_id);
                             intent.putExtra("comp_id", comp_id);
                             intent.putExtra("model", model);
-                            if(conn.equalsIgnoreCase("online"))
+                            if (conn.equalsIgnoreCase("online"))
                                 intent.putExtra("manual", true);
                             else
                                 intent.putExtra("manual", false);
@@ -279,8 +282,8 @@ public class AssessmentActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
     }
 
-    private void searchSerial(String serial){
-        class SearchComp extends AsyncTask<String, Void, String>{
+    private void searchSerial(String serial) {
+        class SearchComp extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... strings) {
                 String serial = strings[0];
@@ -289,17 +292,17 @@ public class AssessmentActivity extends AppCompatActivity {
                 if (c.moveToFirst()) {
                     int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
                     Cursor c1 = db.getCompDetails(comp_id);
-                    if(c1.moveToFirst()){
+                    if (c1.moveToFirst()) {
                         String room_name = "";
                         int pc_no = c1.getInt(c1.getColumnIndex(db.COMP_NAME));
                         int room_id = c1.getInt(c1.getColumnIndex(db.ROOMS_ID));
                         Cursor c2 = db.getRoomDetails(room_id);
-                        if(c2.moveToFirst()){
+                        if (c2.moveToFirst()) {
                             room_name = c2.getString(c2.getColumnIndex(db.ROOMS_NAME));
                         }
                         msg = "This is PC " + pc_no + " of " + room_name + " room";
                     }
-                }else{
+                } else {
                     msg = "Computer not found in database";
                 }
                 return msg;
@@ -416,7 +419,7 @@ public class AssessmentActivity extends AppCompatActivity {
                         Log.w("INSERT REPORT", "SUCCESS");
                         int rep = obj.getInt("rep_id");
                         setrep_id(rep, array);
-                    }else{
+                    } else {
                         dialog.dismiss();
                         Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                     }
@@ -520,7 +523,7 @@ public class AssessmentActivity extends AppCompatActivity {
             }
         }
         Log.e("NEW JSONARRAY", "" + newArray.toString());
-        saveReportDetails(newArray);
+        saveReportDetails(rep,newArray);
     }
 
     public class AddReportToServer extends AsyncTask<Void, Void, Void> {
@@ -538,7 +541,7 @@ public class AssessmentActivity extends AppCompatActivity {
     }
 
     //savereportdetails
-    private void saveReportDetails(JSONArray array) {
+    private void saveReportDetails(final int rep_id, JSONArray array) {
         //request
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
                 , AppConfig.URL_SAVE_A_DETAILS
@@ -548,12 +551,14 @@ public class AssessmentActivity extends AppCompatActivity {
             public void onResponse(JSONArray response) {
                 try {
                     JSONObject obj = response.getJSONObject(0);
-                    if (!obj.getBoolean("error"))
-                    {
+                    if (!obj.getBoolean("error")) {
                         Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                         goToViewRoom();
+                    } else {
+                        deleteReport(rep_id);
                     }
                 } catch (JSONException e) {
+                    deleteReport(rep_id);
                     Log.e("error", " " + e.getMessage());
                 }
                 dialog.dismiss();
@@ -562,10 +567,56 @@ public class AssessmentActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 dialog.dismiss();
+                deleteReport(rep_id);
                 Log.w("save details", "NOT SUCCESS: " + error.getMessage());
             }
         });
         RequestQueueHandler.getInstance(this).addToRequestQueue(req);
+    }
+
+    private void deleteReport(final int rep_id) {
+        Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                deleteReportFrmServer(rep_id);
+            }
+        }, 3000);
+    }
+
+    private void deleteReportFrmServer(final int rep_id) {
+        final String query = "DELETE FROM assessment_report WHERE rep_id = ?";
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_DELETE_REPORT
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        Log.e("DELETED", "success");
+                    } else {
+                        Log.e("DELETED", "not success");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ERROR", error.getMessage());
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("query", query);
+                param.put("rep_id", String.valueOf(rep_id));
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
     }
 
     private void goToViewRoom() {

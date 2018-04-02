@@ -161,7 +161,7 @@ public class PcAssessment extends AppCompatActivity {
     public class addAssessment extends AsyncTask<Void, Void, Void> {
         int idx;
         RadioButton btn;
-        String status, mon, motherboard, processor, comp_ram, comp_hdd, comp_kb, comp_mouse, comp_vga;;
+        String status, mon, motherboard, processor, comp_ram, comp_hdd, comp_kb, comp_mouse, comp_vga;
         AlertDialog saving;
 
         @Override
