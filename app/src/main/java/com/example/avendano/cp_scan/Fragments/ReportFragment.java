@@ -180,11 +180,11 @@ public class ReportFragment extends Fragment {
         Log.e("USER", role + " " + user_id);
         if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
             query = "select * from assessment_reports where rep_id in (select rep_id from " +
-                    "request_repair as i where req_status = 'Done');";
+                    "request_repair as i where req_status = 'Done') order by date desc, time desc;";
         else
             query= "select * from assessment_reports where (rep_id in (select rep_id from " +
                     "request_repair as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
-                    "or custodian_id = '"+user_id+"');";
+                    "or custodian_id = '"+user_id+"')  order by date desc, time desc;";
         final String finalQuery = query;
         Log.e("QUERY", finalQuery);
         StringRequest str = new StringRequest(Request.Method.POST
@@ -238,11 +238,11 @@ public class ReportFragment extends Fragment {
         Log.e("USER", role + " " + user_id);
         if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
             query = "select * from assessment_reports where rep_id in (select rep_id from " +
-                    "request_inventory as i where req_status = 'Done');";
+                    "request_inventory as i where req_status = 'Done') order by date desc, time desc;";
         else
             query= "select * from assessment_reports where (rep_id in (select rep_id from " +
                     "request_inventory as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
-                    "or custodian_id = '"+user_id+"');";
+                    "or custodian_id = '"+user_id+"') order by date desc, time desc;";
 
         final String finalQuery = query;
         Log.e("QUERY", finalQuery);

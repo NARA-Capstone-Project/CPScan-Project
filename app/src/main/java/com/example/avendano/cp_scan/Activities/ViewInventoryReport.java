@@ -91,7 +91,7 @@ public class ViewInventoryReport extends AppCompatActivity {
 
         if (SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian") ||
                 SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("main technician") ||
-                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")) {
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin") || SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")) {
             sign.setVisibility(View.VISIBLE);
         }
         if (type.equalsIgnoreCase("request"))
@@ -178,7 +178,7 @@ public class ViewInventoryReport extends AppCompatActivity {
                     protected Map<String, String> getParams() throws AuthFailureError {
                         Map<String, String> param = new HashMap<>();
                         param.put("query", finalQuery);
-                        param.put("req_type", "Repair");
+                        param.put("req_type", "Inventory");
                         return param;
                     }
                 };

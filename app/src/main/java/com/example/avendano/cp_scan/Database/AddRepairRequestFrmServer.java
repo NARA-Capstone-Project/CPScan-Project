@@ -38,7 +38,7 @@ public class AddRepairRequestFrmServer {
     }
 
     private void getRepairRequest() {
-        StringRequest str = new StringRequest(Request.Method.GET
+        StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_GET_ALL_REPAIR_REQUEST
                 , new Response.Listener<String>() {
             @Override

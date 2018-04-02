@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.avendano.cp_scan.Activities.ViewInventoryReport;
+import com.example.avendano.cp_scan.Activities.ViewRepairReport;
 import com.example.avendano.cp_scan.Model.Reports;
 import com.example.avendano.cp_scan.Model.RequestReport;
 import com.example.avendano.cp_scan.R;
@@ -61,7 +62,9 @@ public class RequestAdapter extends RecyclerView.Adapter<RecyclerHolder>{
                     intent.putExtra("type", "request");
                     act.startActivity(intent);
                 }else{
-                    Toast.makeText(mCtx, "View Repair details", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(mCtx, ViewRepairReport.class);
+                    intent.putExtra("rep_id", reportList.get(position).getRep_id());
+                    act.startActivity(intent);
                 }
             }
         });
