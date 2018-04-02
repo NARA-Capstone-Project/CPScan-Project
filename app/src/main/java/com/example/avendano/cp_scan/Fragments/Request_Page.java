@@ -59,6 +59,7 @@ public class Request_Page extends Fragment {
     ProgressBar progressBar;
     InventoryAdapter inventoryAdapter;
     RepairAdapter repairAdapter;
+    int previousSelection = -1;
 
     public Request_Page() {
         // Required empty public constructor
@@ -205,7 +206,7 @@ public class Request_Page extends Fragment {
 
     private void loadRepair() {
         repairList.clear();
-        StringRequest str = new StringRequest(Request.Method.POST
+        StringRequest str = new StringRequest(Request.Method.GET
                 , AppConfig.URL_GET_ALL_REPAIR_REQUEST
                 , new Response.Listener<String>() {
             @Override
@@ -287,5 +288,6 @@ public class Request_Page extends Fragment {
         super.onCreate(savedInstanceState);
         inventoryList = new ArrayList<>();
         repairList = new ArrayList<>();
+        Log.e("ONCREATE", "crreate");
     }
 }

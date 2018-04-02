@@ -65,8 +65,8 @@
         <activity
             android:name=".Activities.ViewPc"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"
-            android:exported="true"/>
+            android:exported="true"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activities.ViewInventoryReport"
             android:configChanges="orientation"
@@ -91,7 +91,8 @@
             android:name=".Activities.TaskActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.SearchActivity"></activity>
+        <activity android:name=".Activities.SearchActivity" />
+        <activity android:name=".Activities.ViewRepairReport"></activity>
     </application>
 
 </manifest>

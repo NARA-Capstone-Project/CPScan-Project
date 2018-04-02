@@ -15,7 +15,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,10 +29,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ReportAdapter;
+import com.example.avendano.cp_scan.Adapter.RequestAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.Reports;
+import com.example.avendano.cp_scan.Model.RequestReport;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -52,12 +57,17 @@ import dmax.dialog.SpotsDialog;
 public class ReportFragment extends Fragment {
     private SQLiteHandler db;
     List<Reports> reportsList;
+    List<RequestReport> requestList;
     RecyclerView recyclerView;
     SwipeRefreshLayout swiper;
     AlertDialog dialog;
     ReportAdapter reportAdapter;
     View view;
     Spinner rep_type;
+    RequestAdapter requestAdapter;
+    ProgressBar progressBar;
+    RelativeLayout spinner;
+    int previousSelection = -1;
 
 
     public ReportFragment() {
@@ -72,9 +82,29 @@ public class ReportFragment extends Fragment {
         rep_type = (Spinner) view.findViewById(R.id.report_type);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
+        progressBar =(ProgressBar) view.findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
+        spinner = (RelativeLayout) view.findViewById(R.id.spinner);
+        spinner.setVisibility(View.VISIBLE);
         String[] items = new String[]{"Room Inventory Report", "Request Inventory Report", "Request Repair Report"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.support_simple_spinner_dropdown_item, items);
         rep_type.setAdapter(adapter);
+        rep_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(previousSelection == -1){
+                    previousSelection = 0;
+                }else{
+                    progressBar.setVisibility(View.VISIBLE);
+                    new ReportsLoader().execute("Server");
+                    previousSelection = position;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
         swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -98,7 +128,8 @@ public class ReportFragment extends Fragment {
         super.onCreate(savedInstanceState);
         db = new SQLiteHandler(getContext());
         reportsList = new ArrayList<>();
-
+        requestList = new ArrayList<>();
+        previousSelection = -1;
     }
 
     class ReportsLoader extends AsyncTask<String, Void, Void> {
@@ -115,9 +146,9 @@ public class ReportFragment extends Fragment {
                 else
                     loadFromServer();
             }else if(rep_type.getSelectedItem().toString().equalsIgnoreCase("Request Inventory Report")){
-
+                loadInventoryRequestReport();
             }else{ // request repair
-
+                loadRepairRequestReport();
             }
             return null;
         }
@@ -125,17 +156,137 @@ public class ReportFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
-            recyclerView.setAdapter(reportAdapter);
-            reportAdapter.notifyDataSetChanged();
+            if(rep_type.getSelectedItem().toString().equalsIgnoreCase("Room Inventory Report")){
+                reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
+                recyclerView.setAdapter(reportAdapter);
+//                reportAdapter.notifyDataSetChanged();
+            }
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
                     swiper.setRefreshing(false);
                     dialog.dismiss();
+                    progressBar.setVisibility(View.GONE);
                 }
-            }, 5000);
+            }, 3000);
          }
+    }
+
+    private void loadRepairRequestReport(){
+        requestList.clear();
+        String query = "";
+        String role = SharedPrefManager.getInstance(getContext()).getUserRole();
+        String user_id = SharedPrefManager.getInstance(getContext()).getUserId();
+        Log.e("USER", role + " " + user_id);
+        if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
+            query = "select * from assessment_reports where rep_id in (select rep_id from " +
+                    "request_repair as i where req_status = 'Done');";
+        else
+            query= "select * from assessment_reports where (rep_id in (select rep_id from " +
+                    "request_repair as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
+                    "or custodian_id = '"+user_id+"');";
+        final String finalQuery = query;
+        Log.e("QUERY", finalQuery);
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_GET_REQ_REPORTS
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    Log.e("RESPONSE 186", response);
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++){
+                        JSONObject obj = array.getJSONObject(i);
+                        String category = obj.getString("category");
+                        String date = obj.getString("date");
+                        String time = obj.getString("time");
+                        String name = obj.getString("name");
+                        int rep_id = obj.getInt("rep_id");
+
+                        RequestReport report = new RequestReport(rep_id,date + " " + time, category, name);
+                        requestList.add(report);
+                    }
+                    requestAdapter = new RequestAdapter(getActivity(),getContext(),requestList,swiper);
+                    recyclerView.setAdapter(requestAdapter);
+                    requestAdapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getContext(), "Can't connect to the server", Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("query", finalQuery);
+                params.put("req_type", "Repair");
+                return params;
+            }
+        };
+        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
+    }
+
+    private void loadInventoryRequestReport(){
+        requestList.clear();
+        String query = "";
+        String role = SharedPrefManager.getInstance(getContext()).getUserRole();
+        String user_id = SharedPrefManager.getInstance(getContext()).getUserId();
+        Log.e("USER", role + " " + user_id);
+        if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
+            query = "select * from assessment_reports where rep_id in (select rep_id from " +
+                    "request_inventory as i where req_status = 'Done');";
+        else
+            query= "select * from assessment_reports where (rep_id in (select rep_id from " +
+                    "request_inventory as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
+                    "or custodian_id = '"+user_id+"');";
+
+        final String finalQuery = query;
+        Log.e("QUERY", finalQuery);
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_GET_REQ_REPORTS
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    Log.e("RESPONSE 186", response);
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++){
+                        JSONObject obj = array.getJSONObject(i);
+                        String category = obj.getString("category");
+                        String date = obj.getString("date");
+                        String time = obj.getString("time");
+                        String name = obj.getString("name");
+                        int rep_id = obj.getInt("rep_id");
+
+                        RequestReport report = new RequestReport(rep_id,date + " " + time, category, name);
+                        requestList.add(report);
+                    }
+                    requestAdapter = new RequestAdapter(getActivity(),getContext(),requestList,swiper);
+                    recyclerView.setAdapter(requestAdapter);
+                    requestAdapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getContext(), "Can't connect to the server", Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("query", finalQuery);
+                params.put("req_type", "Inventory");
+                return params;
+            }
+        };
+        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(str);
     }
 
     private void loadFromServer() {
@@ -232,8 +383,6 @@ public class ReportFragment extends Fragment {
 
             }
         }
-
-
         new addDetailsToLocal().execute();
     }
 

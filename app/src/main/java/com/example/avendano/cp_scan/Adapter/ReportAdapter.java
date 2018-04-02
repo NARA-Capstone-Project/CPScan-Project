@@ -59,6 +59,7 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
                 //intent to ViewReport
                 Intent intent = new Intent(mCtx, ViewInventoryReport.class);
                 intent.putExtra("rep_id", reportList.get(position).getRep_id());
+                intent.putExtra("type", "local");
                 act.startActivity(intent);
             }
         });
