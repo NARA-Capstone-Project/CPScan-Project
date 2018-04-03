@@ -6,9 +6,9 @@ package com.example.avendano.cp_scan.Database;
 
 public class AppConfig {
 
-    //        public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
+    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
 //    public static String ROOT_URL = "http://192.168.188.2/android_api/"; // genymotion
-    public static String ROOT_URL = "http://192.168.1.5/android_api/"; //lan
+//    public static String ROOT_URL = "http://192.168.1.5/android_api/"; //lan
 
     // Server user login url
     public static String URL_LOGIN = ROOT_URL + "cict_login.php";
@@ -38,4 +38,5 @@ public class AppConfig {
     public static String URL_SEARCH = ROOT_URL + "cict_search_database.php";
     public static String URL_DELETE_REPORT = ROOT_URL + "cict_delete_assessment.php";
     public static String URL_GET_REQ_REPORTS = ROOT_URL + "cict_get_request_reports.php";
+    public static String URL_SEARCH_ROOM = ROOT_URL + "cict_search_room.php";
 }

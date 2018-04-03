@@ -129,8 +129,14 @@ public class ReportFragment extends Fragment {
         db = new SQLiteHandler(getContext());
         reportsList = new ArrayList<>();
         requestList = new ArrayList<>();
-        previousSelection = -1;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+
 
     class ReportsLoader extends AsyncTask<String, Void, Void> {
 //        select * from assessment_reports where not exists (select null from request_repair where request_repair.rep_id = assessment_reports.rep_id) and not exists (select null from request_inventory where request_inventory.rep_id = assessment_reports.rep_id);
@@ -458,6 +464,7 @@ public class ReportFragment extends Fragment {
     public void onStop() {
         super.onStop();
         db.close();
+        previousSelection = -1;
     }
 
     private void loadLocalReports() {

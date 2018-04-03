@@ -56,6 +56,7 @@ public class ViewPc extends AppCompatActivity {
     RadioButton defective, missing, working;
     Connection_Detector connection_detector;
     EditText remark;
+    int make_request_report;
     private static final String WORKING = "OK";
     private static final String NOT_WORKING = "NONE/NOT WORKING";
 
@@ -66,6 +67,7 @@ public class ViewPc extends AppCompatActivity {
 
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
+        make_request_report = getIntent().getIntExtra("request", 0);
         connection_detector = new Connection_Detector(this);
         db = new SQLiteHandler(this);
         progressDialog = new SpotsDialog(this, "Loading...");
@@ -332,23 +334,31 @@ public class ViewPc extends AppCompatActivity {
                             Log.e("checking", response);
                             if (!obj.getBoolean("error")) {
                                 //kapag may request na
-                                if (obj.getBoolean("pending")) {
-                                    if (obj.getString("technician").equals(SharedPrefManager.getInstance(ViewPc.this).getUserId())) {
+                                if (make_request_report == 1) { //galing sa request_page
+                                    if(obj.getBoolean("pending")){
                                         int req_id = obj.getInt("req_id");
                                         Log.e("Array", details().toString());
-                                        String details = obj.getString("req_details");
-                                        String path = obj.getString("image");
-                                        if (details.trim().isEmpty())
-                                            showAlert(req_id, msg, path);
-                                        else
-                                            showAlert(req_id, msg + " Request Details: " + obj.getString("req_details"), path);
-                                    } else {
-                                        confirmReport(0, false);
+                                        confirmReport(req_id, true);
                                     }
                                 } else {
-                                    Log.e("Array", details().toString());
-                                    //savereportc
-                                    confirmReport(0, false);
+                                    if (obj.getBoolean("pending")) {
+                                        if (obj.getString("technician").equals(SharedPrefManager.getInstance(ViewPc.this).getUserId())) {
+                                            int req_id = obj.getInt("req_id");
+                                            Log.e("Array", details().toString());
+                                            String details = obj.getString("req_details");
+                                            String path = obj.getString("image");
+                                            if (details.trim().isEmpty())
+                                                showAlert(req_id, msg, path);
+                                            else
+                                                showAlert(req_id, msg + " Request Details: " + obj.getString("req_details"), path);
+                                        } else {
+                                            confirmReport(0, false);
+                                        }
+                                    } else {
+                                        Log.e("Array", details().toString());
+                                        //savereportc
+                                        confirmReport(0, false);
+                                    }
                                 }
                             }
                         } catch (JSONException e) {
@@ -469,7 +479,7 @@ public class ViewPc extends AppCompatActivity {
                             }
                         });
 
-                if(!image_path.isEmpty())
+                if (!image_path.isEmpty())
                     builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -481,7 +491,7 @@ public class ViewPc extends AppCompatActivity {
                 progressDialog.dismiss();
             }
 
-            private void showImage(String path){
+            private void showImage(String path) {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT_URL + path))); /** replace with your own uri */
             }
 
@@ -746,7 +756,7 @@ public class ViewPc extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error"))
                                 Toast.makeText(ViewPc.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
-                        activityRecreate();
+                            activityRecreate();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -824,7 +834,8 @@ public class ViewPc extends AppCompatActivity {
         }
         new Checker().execute();
     }
-    private void activityRecreate(){
+
+    private void activityRecreate() {
         this.recreate();
     }
 

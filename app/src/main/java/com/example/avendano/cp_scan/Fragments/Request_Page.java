@@ -97,8 +97,13 @@ public class Request_Page extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 //load repair or inventory request
-                progressBar.setVisibility(View.VISIBLE);
-                new LoadRequests().execute();
+                if(previousSelection  < 0)
+                    previousSelection = 0;
+                else{
+                    progressBar.setVisibility(View.VISIBLE);
+                    new LoadRequests().execute();
+                    previousSelection = position;
+                }
             }
 
             @Override

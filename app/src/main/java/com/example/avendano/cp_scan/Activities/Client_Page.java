@@ -99,11 +99,9 @@ public class Client_Page extends AppCompatActivity {
                 menu.removeItem(R.id.navigation_task);
                 menu.removeItem(R.id.navigation_report);
                 menu.removeItem(R.id.navigation_scan);
-            } else if (user_role.equalsIgnoreCase("custodian")) {
+            } else if (user_role.equalsIgnoreCase("custodian") || user_role.equalsIgnoreCase("admin")) {
                 menu.removeItem(R.id.navigation_task);
                 menu.removeItem(R.id.navigation_scan);
-            }else if(user_role.equalsIgnoreCase("admin")){
-                menu.removeItem(R.id.navigation_task);
             }
         }
 

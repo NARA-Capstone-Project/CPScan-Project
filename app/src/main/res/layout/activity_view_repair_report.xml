@@ -203,6 +203,12 @@
                 android:text= "Reported By: "/>
 
             <TextView
+                android:id="@+id/datetime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text= "Date Reported: "/>
+
+            <TextView
                 android:id="@+id/status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -7,6 +7,21 @@
     tools:context="com.example.avendano.cp_scan.Fragments.RoomFragment">
 
     <!-- TODO: Update blank fragment layout -->
+    <EditText
+        android:visibility="gone"
+        android:id="@+id/search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:background="@drawable/style_edittext"
+        android:drawableRight="@drawable/drawable"
+        android:hint="Search..."
+        android:inputType="text"
+        android:paddingLeft="5dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="3dp"/>
+
     <RelativeLayout
         android:id="@+id/spinner"
         android:visibility="gone"

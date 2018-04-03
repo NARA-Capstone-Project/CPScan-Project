@@ -38,6 +38,7 @@ import dmax.dialog.SpotsDialog;
 public class ViewRepairReport extends AppCompatActivity {
     TextView pc_name, custodian, image, date_req, time_req, date, time, req_details, tech;
     TextView pc_model, pc_mon, pc_mb, pc_pr, pc_ram, pc_hdd, pc_kb, pc_mouse, pc_vga, status;
+    TextView date_reported;
     AlertDialog progress;
     String image_path;
     int rep_id;
@@ -56,7 +57,7 @@ public class ViewRepairReport extends AppCompatActivity {
         rep_id = getIntent().getIntExtra("rep_id", 0);
 
         remark = "";
-
+        date_reported = (TextView) findViewById(R.id.datetime);
         req_details = (TextView) findViewById(R.id.req_details);
         tech = (TextView) findViewById(R.id.tech);
         time = (TextView) findViewById(R.id.time);
@@ -250,10 +251,10 @@ public class ViewRepairReport extends AppCompatActivity {
             Log.e("USER", role + " " + user_id);
             if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
                 query = "select * from assessment_reports where rep_id in (select rep_id from " +
-                        "request_inventory as i where req_status = 'Done');";
+                        "request_repair as i where req_status = 'Done');";
             else
                 query= "select * from assessment_reports where (rep_id in (select rep_id from " +
-                        "request_inventory as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
+                        "request_repair as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
                         "or custodian_id = '"+user_id+"');";
             final String finalQuery = query;
             StringRequest stringRequest = new StringRequest(Request.Method.POST
@@ -268,9 +269,12 @@ public class ViewRepairReport extends AppCompatActivity {
                             JSONObject obj = array.getJSONObject(i);
                             int id = obj.getInt("rep_id");
                             String remarks = obj.getString("remarks");
+                            String reported_date = obj.getString("date");
+                            String reported_time = obj.getString("time");
 
                             if (rep_id == id) {
                                 remark = remarks;
+                                date_reported.setText("Reported Date: " + reported_date + " " + reported_time);
                                 break;
                             }
                         }
@@ -290,13 +294,12 @@ public class ViewRepairReport extends AppCompatActivity {
                 protected Map<String, String> getParams() throws AuthFailureError {
                     Map<String, String> param = new HashMap<>();
                     param.put("query", finalQuery);
-                    param.put("req_type", "Inventory");
+                    param.put("req_type", "Repair");
                     return param;
                 }
             };
             RequestQueueHandler.getInstance(ViewRepairReport.this).addToRequestQueue(stringRequest);
         }
-
     }
 
     @Override

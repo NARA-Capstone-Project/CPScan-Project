@@ -68,6 +68,8 @@ public class AddInventoryRequestFrmServer {
                     }
                     db.deleteAllUnsync("req_inv");
                 } catch (JSONException e) {
+
+                    Log.e("ADDROOM", response);
                     e.printStackTrace();
                 }
             }

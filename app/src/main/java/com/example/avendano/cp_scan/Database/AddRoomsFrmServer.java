@@ -70,6 +70,8 @@ public class AddRoomsFrmServer {
                     }
                     db.deleteAllUnsync("room");
                 } catch (JSONException e) {
+
+                    Log.e("ADDROOM", response);
                     e.printStackTrace();
                 }
             }

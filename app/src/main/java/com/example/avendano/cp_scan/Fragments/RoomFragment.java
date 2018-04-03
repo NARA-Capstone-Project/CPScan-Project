@@ -12,10 +12,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -33,7 +38,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
@@ -49,6 +56,8 @@ public class RoomFragment extends Fragment {
     RoomAdapter roomAdapter;
     View view;
     TextView no_list;
+    ProgressBar progressBar;
+    EditText search;
 
     public RoomFragment() {
         // Required empty public constructor
@@ -61,6 +70,35 @@ public class RoomFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_room, container, false);
         // Inflate the layout for this fragment
 
+        search = (EditText) view.findViewById(R.id.search);
+        search.setVisibility(View.VISIBLE);
+        search.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                final int DRAWABLE_LEFT = 0;
+                final int DRAWABLE_TOP = 1;
+                final int DRAWABLE_RIGHT = 2;
+                final int DRAWABLE_BOTTOM = 3;
+
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    if (event.getRawX() >= (search.getRight() - search.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                        // your action here
+                        String uniq = search.getText().toString().trim();
+                        if (uniq.length() > 0) {
+                            progressBar.setVisibility(View.VISIBLE);
+                            new RoomsLoader().execute(SharedPrefManager.getInstance(getContext()).getUserRole(), "yes");
+                        } else {
+                            //load all
+                            progressBar.setVisibility(View.VISIBLE);
+                            loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+        progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
 //        swiper.setColorSchemeColors(new Color(getResources(R.color.darkorange)));
@@ -68,7 +106,10 @@ public class RoomFragment extends Fragment {
             @Override
             public void onRefresh() {
                 swiper.setRefreshing(true);
-                loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
+                if(search.getText().toString().trim().isEmpty())
+                    loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
+                else
+                    new RoomsLoader().execute(SharedPrefManager.getInstance(getContext()).getUserRole(), "yes");
             }
         });
         recyclerView.setHasFixedSize(true);
@@ -80,6 +121,7 @@ public class RoomFragment extends Fragment {
 
         return view;
     }
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,12 +135,102 @@ public class RoomFragment extends Fragment {
         @Override
         protected Void doInBackground(String... strings) {
             String toLoad = strings[0];
+            String search = strings[1];
             if (toLoad.equalsIgnoreCase("custodian")) {
-                loadCustodianRooms();
+                if (search.equalsIgnoreCase("no"))
+                    loadCustodianRooms();
+                else
+                    searchRooms();
             } else {
-                loadAllRoom();
+                if (search.equalsIgnoreCase("no"))
+                    loadAllRoom();
+                else
+                    searchRooms();
             }
             return null;
+        }
+
+        private void searchRooms() {
+            roomsList.clear();
+            String string = search.getText().toString().trim();
+            Log.e("STRING", string);
+            String query = "";
+            String user_id = SharedPrefManager.getInstance(getContext()).getUserId();
+            if (SharedPrefManager.getInstance(getContext()).getUserRole().equalsIgnoreCase("custodian"))
+                query = "select * from (select r.room_id, department.dept_name, r.room_custodian_id," +
+                        " r.room_technician_id, r.room_name, r.building, users.name, " +
+                        "u.name 'technician' from room r join users on users.user_id = r.room_custodian_id " +
+                        "join users u on u.user_id = r.room_technician_id  left join department on" +
+                        " department.dept_id = r.dept_id) as rooms where (rooms.dept_name like '%" + string + "%'" +
+                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%')" +
+                        "  and (rooms.room_custodian_id = '" + user_id + "' or rooms.room_technician_id " +
+                        "= '" + user_id + "')";
+            else
+                query = "select * from (select r.room_id, department.dept_name, r.room_custodian_id," +
+                        " r.room_technician_id, r.room_name , r.building, users.name, " +
+                        "u.name 'technician' from room r join users on users.user_id = r.room_custodian_id " +
+                        "join users u on u.user_id = r.room_technician_id  left join department on" +
+                        " department.dept_id = r.dept_id) as rooms where rooms.dept_name like '%" + string + "%'" +
+                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%'";
+
+            Log.e("QUERY", query);
+            final String finalQuery = query;
+            StringRequest stringRequest = new StringRequest(Request.Method.POST
+                    , AppConfig.URL_SEARCH_ROOM
+                    , new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.e("SEARCH", response);
+                        JSONArray array = new JSONArray(response);
+                        if (array.length() > 0) {
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                int room_id = obj.getInt("id");
+                                String room_name = "";
+                                if (obj.isNull("dept_name")) {
+                                    room_name = obj.getString("room_name");
+                                } else {
+                                    room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
+                                }
+                                String custodian = obj.getString("custodian");
+                                String technician = obj.getString("technician");
+                                String building = obj.getString("building");
+
+                                Rooms rooms = new Rooms(room_id, custodian, technician, room_name, building);
+                                roomsList.add(rooms);
+
+                            }
+                            roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
+                            recyclerView.setAdapter(roomAdapter);
+                            Log.w("LOADED", "Server rooms");
+                            progressBar.setVisibility(View.GONE);
+                        } else {
+                            progressBar.setVisibility(View.GONE);
+                            Toast.makeText(getContext(), "No Result", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e("JSON ERROR 1", "RoomFragment: " + e.getMessage());
+                    }
+                    swiper.setRefreshing(false);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    progressBar.setVisibility(View.GONE);
+                    Log.e("Volleyerror 1", "Load Room: " + error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> param = new HashMap<>();
+                    param.put("query", finalQuery);
+                    return param;
+                }
+            };
+            RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
+
         }
 
         @Override
@@ -121,6 +253,7 @@ public class RoomFragment extends Fragment {
             public void onResponse(String response) {
                 try {
                     hideDialog();
+                    progressBar.setVisibility(View.GONE);
                     db.deleteRooms();
                     JSONArray array = new JSONArray(response);
                     if (array.length() > 0) {
@@ -168,7 +301,7 @@ public class RoomFragment extends Fragment {
                     Log.e("ROOM RESPONSE", response);
                 } catch (JSONException e) {
                     Log.e("JSON ERROR 1", "RoomFragment: " + e.getMessage());
-                    new RoomsLoader().execute(role);
+                    new RoomsLoader().execute(role, "no");
                 }
                 swiper.setRefreshing(false);
             }
@@ -176,7 +309,7 @@ public class RoomFragment extends Fragment {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e("Volleyerror 1", "Load RoomsLoader: " + error.getMessage());
-                new RoomsLoader().execute(role);
+                new RoomsLoader().execute(role, "no");
             }
         });
         RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
@@ -194,6 +327,7 @@ public class RoomFragment extends Fragment {
     public void onStop() {
         super.onStop();
         db.close();
+        search.setText("");
     }
 
     private void loadCustodianRooms() {
