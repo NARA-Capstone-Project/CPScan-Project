@@ -1,5 +1,6 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -71,7 +72,8 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
     SQLiteHandler db;
     int room_comp_id;
     String room_;
-
+    int SAVED = 1;
+    int NOT_SAVED = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +82,6 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Select Room...");
         getSupportActionBar().setDisplayShowTitleEnabled(true);
 
         //intent
@@ -214,6 +215,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
         });
 
         if (type.equalsIgnoreCase("edit")) {
+            getSupportActionBar().setTitle("Edit Task...");
             progress.show();
             progress.setCancelable(false);
             choose_layout.setVisibility(View.VISIBLE);
@@ -221,6 +223,8 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
             title.setFocusable(false);
             title.setEnabled(false);
             loadDetails();
+        }else{
+            getSupportActionBar().setTitle("Add Task...");
         }
 
         choose.setOnClickListener(new View.OnClickListener() {
@@ -387,7 +391,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
                 } catch (JSONException e) {
                     progress.dismiss();
                     Toast.makeText(TaskActivity.this, "Error occurred", Toast.LENGTH_SHORT).show();
-                    TaskActivity.this.finish();
+                    backToSched_Page(NOT_SAVED);
                     e.printStackTrace();
                 }
             }
@@ -396,7 +400,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
             public void onErrorResponse(VolleyError error) {
                 progress.dismiss();
                 Toast.makeText(TaskActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
-                TaskActivity.this.finish();
+                backToSched_Page(NOT_SAVED);
                 Log.e(TAG, error.getMessage());
             }
         }) {
@@ -457,7 +461,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
                 break;
             }
             case R.id.cancel: {
-                TaskActivity.this.finish();
+                backToSched_Page(NOT_SAVED);
             }
         }
 
@@ -497,7 +501,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
                             @Override
                             public void run() {
                                 Toast.makeText(TaskActivity.this, "Schedule Updated!", Toast.LENGTH_SHORT).show();
-                                TaskActivity.this.finish();
+                                backToSched_Page(SAVED);
                                 progress.dismiss();
                             }
                         }, 5000);
@@ -558,7 +562,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
                             public void run() {
                                 progress.dismiss();
                                 Toast.makeText(TaskActivity.this, "Saved Successfully!", Toast.LENGTH_SHORT).show();
-                                TaskActivity.this.finish();
+                                backToSched_Page(SAVED);
                             }
                         }, 3000);
 
@@ -601,7 +605,7 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        TaskActivity.this.finish();
+        backToSched_Page(NOT_SAVED);
     }
 
     @Override
@@ -657,5 +661,14 @@ public class TaskActivity extends AppCompatActivity implements DatePickerDialog.
             }
             return null;
         }
+    }
+
+    private void backToSched_Page(int save){
+            Intent intent = new Intent();
+            if(save == 1)
+                setResult(RESULT_OK, intent);
+            else
+                setResult(RESULT_CANCELED, intent);
+            finish();
     }
 }

@@ -21,8 +21,10 @@ import android.widget.Toast;
 
 import com.example.avendano.cp_scan.BottomNavigationHelper;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
+import com.example.avendano.cp_scan.Database.AddCompFrmServer;
 import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
 import com.example.avendano.cp_scan.Database.AddRepairRequestFrmServer;
+import com.example.avendano.cp_scan.Database.AddRoomsFrmServer;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Fragments.AccountFragment;
 import com.example.avendano.cp_scan.Fragments.ReportFragment;
@@ -120,6 +122,10 @@ public class Client_Page extends AppCompatActivity {
         add.SyncFunction();
         AddRepairRequestFrmServer req = new AddRepairRequestFrmServer(this, db);
         req.SyncFunction();
+        AddRoomsFrmServer rooms = new AddRoomsFrmServer(this, db);
+        rooms.SyncFunction();
+        AddCompFrmServer comps = new AddCompFrmServer(this, db);
+        comps.SyncFunction();
 
     }//oncreate
 

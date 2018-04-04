@@ -392,10 +392,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 , null,null,null);
         return c; //return > 0 if pending
     }
-    public void updateReqInvStatus(int req_id){
+    public void updateReqInvStatus(int req_id, String status){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(REQ_STATUS, "Cancel");
+        values.put(REQ_STATUS, status);
         db.update(TABLE_REQ_INVENTORY, values, REQ_ID + " = " + req_id, null);
         db.close();
     }
@@ -452,10 +452,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         long insert = db.insert(TABLE_REQ_REPAIR, null, values);
         return insert;
     }
-    public void updateReqRepStatus(int req_id){
+    public void updateReqRepStatus(int req_id, String status){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(REQ_STATUS, "Cancel");
+        values.put(REQ_STATUS, status);
         db.update(TABLE_REQ_REPAIR, values, REQ_ID + " = " + req_id, null);
         db.close();
     }

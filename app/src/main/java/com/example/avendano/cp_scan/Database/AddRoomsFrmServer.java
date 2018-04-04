@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -84,11 +85,18 @@ public class AddRoomsFrmServer {
         RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
 
     }
-    private long addRooms(int room_id, String room_name,String cust, String cust_id, String tech, String tech_id, String build,
+    private void addRooms(int room_id, String room_name,String cust, String cust_id, String tech, String tech_id, String build,
                           int floor, int pc_count, int pc_working, String lastAssess){
-        long insert = db.addRooms(room_id,room_name,cust,cust_id, tech, tech_id, build,
-                floor,pc_count,pc_working, lastAssess);
-        Log.w("ROOM INSERT TO SQLITE: ", "Status : " + insert);
-        return insert;
+        Cursor c = db.getRoomDetails(room_id);
+        if(c.moveToFirst()){
+             db.updateRooms(room_id,room_name,cust,cust_id, tech, tech_id, build,
+                     floor,pc_count,pc_working, lastAssess);
+            Log.w("ROOM UPDATE TO SQLITE: ", "UPDATE!");
+        }else{
+
+            long insert = db.addRooms(room_id,room_name,cust,cust_id, tech, tech_id, build,
+                    floor,pc_count,pc_working, lastAssess);
+            Log.w("ROOM INSERT TO SQLITE: ", "Status : " + insert);
+        }
     }
 }

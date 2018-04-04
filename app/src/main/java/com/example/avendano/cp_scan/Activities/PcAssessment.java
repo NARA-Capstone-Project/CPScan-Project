@@ -31,6 +31,7 @@ public class PcAssessment extends AppCompatActivity {
     RadioGroup rGroup;
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
     Button save;
+    int request_inventory;
     SQLiteHandler db;
     int comp_id, pc_no;
     TextView instr;
@@ -71,6 +72,8 @@ public class PcAssessment extends AppCompatActivity {
 
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
+        request_inventory = getIntent().getIntExtra("request" , 0);
+
         manual = getIntent().getBooleanExtra("manual", false);
         model = getIntent().getStringExtra("model");
 
@@ -87,6 +90,7 @@ public class PcAssessment extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dialog.show();
                 new addAssessment().execute();
             }
         });
@@ -95,12 +99,22 @@ public class PcAssessment extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 RadioButton btn = rGroup.findViewById(checkedId);
                 String stat = btn.getText().toString().trim();
-                if (stat.equalsIgnoreCase("working"))
+                if (stat.equalsIgnoreCase("working")) {
+                    if(instr.getVisibility() == View.GONE){
+                        instr.setVisibility(View.VISIBLE);
+                    }
                     instr.setText("Check the working peripherals");
-                else if (stat.equalsIgnoreCase("defective"))
+                } else if (stat.equalsIgnoreCase("defective")) {
+                    if(instr.getVisibility() == View.GONE){
+                        instr.setVisibility(View.VISIBLE);
+                    }
                     instr.setText("Check the defective peripherals");
-                else
+                } else {
+                    if(instr.getVisibility() == View.GONE){
+                        instr.setVisibility(View.VISIBLE);
+                    }
                     instr.setText("Check the missing peripherals");
+                }
             }
         });
     }
@@ -145,9 +159,9 @@ public class PcAssessment extends AppCompatActivity {
             pr.setText(pr_type);
             ram.setText(ram_size);
             hdd.setText(hdd_size);
-            vga.setText(vga.getText() + "(" +vga_attach+ ")");
-            keyboard.setText(keyboard.getText() + "(" +kb+ ")");
-            mouse.setText(mouse.getText() + "(" +mouse_attach+ ")");
+            vga.setText(vga.getText() + "(" + vga_attach + ")");
+            keyboard.setText(keyboard.getText() + "(" + kb + ")");
+            mouse.setText(mouse.getText() + "(" + mouse_attach + ")");
             return null;
         }
 
@@ -162,14 +176,6 @@ public class PcAssessment extends AppCompatActivity {
         int idx;
         RadioButton btn;
         String status, mon, motherboard, processor, comp_ram, comp_hdd, comp_kb, comp_mouse, comp_vga;
-        AlertDialog saving;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            saving = new SpotsDialog(PcAssessment.this, "Saving...");
-            saving.show();
-        }
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -218,13 +224,13 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = "BUILT-IN";
                 }
-                if(mb.getText().toString().trim().equalsIgnoreCase("missing") ||
+                if (mb.getText().toString().trim().equalsIgnoreCase("missing") ||
                         processor.equalsIgnoreCase("missing") ||
-                        comp_ram.equalsIgnoreCase("missing")){
+                        comp_ram.equalsIgnoreCase("missing")) {
                     comp_status = "Missing Components";
-                }else
+                } else
                     comp_status = "Working";
-            }else if (status.equalsIgnoreCase("defective")){
+            } else if (status.equalsIgnoreCase("defective")) {
                 if (monitor.isChecked()) {
                     mon = NOT_WORKING;
                 } else {
@@ -265,13 +271,13 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = "BUILT-IN";
                 }
-                if(mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
+                if (mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
                         processor.equalsIgnoreCase(NOT_WORKING) ||
-                        comp_ram.equalsIgnoreCase(NOT_WORKING)){
+                        comp_ram.equalsIgnoreCase(NOT_WORKING)) {
                     comp_status = "Defective";
-                }else
+                } else
                     comp_status = "Working";
-            }else { //working
+            } else { //working
                 if (monitor.isChecked()) {
                     mon = WORKING;
                 } else {
@@ -312,11 +318,11 @@ public class PcAssessment extends AppCompatActivity {
                 } else {
                     comp_vga = NOT_WORKING;
                 }
-                if(mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
+                if (mb.getText().toString().trim().equalsIgnoreCase(NOT_WORKING) ||
                         processor.equalsIgnoreCase(NOT_WORKING) ||
-                        comp_ram.equalsIgnoreCase(NOT_WORKING)){
+                        comp_ram.equalsIgnoreCase(NOT_WORKING)) {
                     comp_status = "Defective";
-                }else
+                } else
                     comp_status = "Working";
             }
 
@@ -334,9 +340,10 @@ public class PcAssessment extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            saving.dismiss();
+            dialog.dismiss();
             Intent intent = new Intent(getApplicationContext(), AssessmentActivity.class);
             intent.putExtra("room_id", room_id);
+            intent.putExtra("request", request_inventory);
             startActivity(intent);
             finish();
         }
@@ -348,6 +355,7 @@ public class PcAssessment extends AppCompatActivity {
             case android.R.id.home:
                 Intent intent = new Intent(getApplicationContext(), AssessmentActivity.class);
                 intent.putExtra("room_id", room_id);
+                intent.putExtra("request", request_inventory);
                 startActivity(intent);
                 finish();
                 return true;
@@ -355,6 +363,16 @@ public class PcAssessment extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(getApplicationContext(), AssessmentActivity.class);
+        intent.putExtra("room_id", room_id);
+        intent.putExtra("request", request_inventory);
+        startActivity(intent);
+        finish();
     }
 
     @Override

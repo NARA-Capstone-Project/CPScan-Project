@@ -92,7 +92,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle("Edit Request");
 
         progress = new SpotsDialog(this, "Loading...");
         progress.show();

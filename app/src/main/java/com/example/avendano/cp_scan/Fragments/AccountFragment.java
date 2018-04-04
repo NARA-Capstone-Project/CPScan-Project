@@ -109,6 +109,8 @@ public class AccountFragment extends Fragment {
                 deactivateAccount();
             }
         });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     private void deactivateAccount() {

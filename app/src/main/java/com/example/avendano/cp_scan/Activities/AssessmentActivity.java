@@ -56,7 +56,7 @@ public class AssessmentActivity extends AppCompatActivity {
     List<Assess_Computers> pcList;
     SQLiteHandler db;
     AssessAdapter adapter;
-    int room_id;
+    int room_id, request_inventory;
     android.app.AlertDialog dialog;
 
     @Override
@@ -72,6 +72,8 @@ public class AssessmentActivity extends AppCompatActivity {
         dialog.setCancelable(false);
 
         room_id = getIntent().getIntExtra("room_id", 0);
+        request_inventory = getIntent().getIntExtra("request", 0);
+
         scan = (Button) findViewById(R.id.scan);
         serial_edttxt = (EditText) findViewById(R.id.serial_number);
         recyclerView = (RecyclerView) findViewById(R.id.scan_recycler);
@@ -106,6 +108,7 @@ public class AssessmentActivity extends AppCompatActivity {
                                         intent.putExtra("comp_id", comp_id);
                                         intent.putExtra("model", model);
                                         intent.putExtra("manual", false);
+                                        intent.putExtra("request", request_inventory);
                                         startActivity(intent);
                                         finish();
                                     }
@@ -166,6 +169,7 @@ public class AssessmentActivity extends AppCompatActivity {
                             intent.putExtra("room_id", room_id);
                             intent.putExtra("comp_id", comp_id);
                             intent.putExtra("model", model);
+                            intent.putExtra("request", request_inventory);
                             if (conn.equalsIgnoreCase("online"))
                                 intent.putExtra("manual", true);
                             else
@@ -355,7 +359,10 @@ public class AssessmentActivity extends AppCompatActivity {
                         .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                goToViewRoom();
+                                if (request_inventory == 0)
+                                    goToViewRoom();
+                                else
+                                    AssessmentActivity.this.finish();
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -385,7 +392,10 @@ public class AssessmentActivity extends AppCompatActivity {
                     .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            goToViewRoom();
+                            if (request_inventory == 0)
+                                goToViewRoom();
+                            else
+                                AssessmentActivity.this.finish();
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -404,128 +414,6 @@ public class AssessmentActivity extends AppCompatActivity {
 
     }
 
-    private void saveReport() {
-        final String rem = remark.getText().toString().trim();
-        final JSONArray array = details();
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_SAVE_A_REPORT
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    Log.e("RESPONSE", response);
-                    JSONObject obj = new JSONObject(response);
-                    if (!obj.getBoolean("error")) {
-                        Log.w("INSERT REPORT", "SUCCESS");
-                        int rep = obj.getInt("rep_id");
-                        setrep_id(rep, array);
-                    } else {
-                        dialog.dismiss();
-                        Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("INSERT REPORT", "NOT SUCCESS");
-                Toast.makeText(AssessmentActivity.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("tech_id", SharedPrefManager.getInstance(AssessmentActivity.this).getUserId());
-                params.put("room_id", String.valueOf(room_id));
-                params.put("remarks", rem);
-                return params;
-            }
-        };
-        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
-    }
-
-    private JSONArray details() {
-        Cursor c = db.getAssessedPc();
-        JSONArray array = new JSONArray();
-        if (c.moveToFirst()) {
-            Log.w("Get Assessed PC", "Ok");
-            do {
-                JSONObject obj = new JSONObject();
-                int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
-                int pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
-                String model = c.getString(c.getColumnIndex(db.COMP_MODEL));
-                String mb = c.getString(c.getColumnIndex(db.COMP_MB));
-                String mb_serial = c.getString(c.getColumnIndex(db.REPORT_MB_SERIAL));
-                String monitor = c.getString(c.getColumnIndex(db.COMP_MONITOR));
-                String mon_serial = c.getString(c.getColumnIndex(db.REPORT_MON_SERIAL));
-                String pr = c.getString(c.getColumnIndex(db.COMP_PR));
-                String kb = c.getString(c.getColumnIndex(db.COMP_KBOARD));
-                String mouse = c.getString(c.getColumnIndex(db.COMP_MOUSE));
-                String ram = c.getString(c.getColumnIndex(db.COMP_RAM));
-                String hdd = c.getString(c.getColumnIndex(db.COMP_HDD));
-                String vga = c.getString(c.getColumnIndex(db.COMP_VGA));
-                String comp_status = c.getString(c.getColumnIndex(db.COMP_STATUS));
-
-                try {
-                    obj.put("comp_id", comp_id);
-                    obj.put("pc_no", pc_no);
-                    obj.put("model", model);
-                    obj.put("mb", mb);
-                    obj.put("mb_serial", mb_serial);
-                    obj.put("monitor", monitor);
-                    obj.put("mon_serial", mon_serial);
-                    obj.put("pr", pr);
-                    obj.put("kb", kb);
-                    obj.put("mouse", mouse);
-                    obj.put("ram", ram);
-                    obj.put("hdd", hdd);
-                    obj.put("vga", vga);
-                    obj.put("comp_status", comp_status);
-                } catch (JSONException e) {
-                    Log.e("JSONEXEPTION", " " + e.getMessage());
-                }
-                array.put(obj);
-            } while (c.moveToNext());
-        }
-        return array;
-    }
-
-    private void setrep_id(int rep, JSONArray array) {
-        Log.e("JSONARRAY", "" + array.toString());
-        Log.e("REP_ID", "" + rep);
-        //for new array
-        JSONArray newArray = new JSONArray();
-        for (int i = 0; i < array.length(); i++) {
-            try {
-                JSONObject newObj = new JSONObject();
-                JSONObject oldObj = array.getJSONObject(i);
-                newObj.put("comp_id", oldObj.getInt("comp_id"));
-                newObj.put("pc_no", oldObj.getInt("pc_no"));
-                newObj.put("model", oldObj.getString("model"));
-                newObj.put("mb", oldObj.getString("mb"));
-                newObj.put("mb_serial", oldObj.getString("mb_serial"));
-                newObj.put("monitor", oldObj.getString("monitor"));
-                newObj.put("mon_serial", oldObj.getString("mon_serial"));
-                newObj.put("pr", oldObj.getString("pr"));
-                newObj.put("kb", oldObj.getString("kb"));
-                newObj.put("mouse", oldObj.getString("mouse"));
-                newObj.put("ram", oldObj.getString("ram"));
-                newObj.put("hdd", oldObj.getString("hdd"));
-                newObj.put("vga", oldObj.getString("vga"));
-                newObj.put("comp_status", oldObj.getString("comp_status"));
-                newObj.put("rep_id", String.valueOf(rep));
-                //add objects to new jsoon array
-                newArray.put(newObj);
-            } catch (JSONException e) {
-                Log.e("JSONEXCEP", "" + e.getMessage());
-            }
-        }
-        Log.e("NEW JSONARRAY", "" + newArray.toString());
-        saveReportDetails(rep,newArray);
-    }
-
     public class AddReportToServer extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -535,88 +423,351 @@ public class AssessmentActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            saveReport();
+            //check kung may nagpaparequest
+            checkRequestInventory();
             return null;
         }
-    }
 
-    //savereportdetails
-    private void saveReportDetails(final int rep_id, JSONArray array) {
-        //request
-        JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
-                , AppConfig.URL_SAVE_A_DETAILS
-                , array
-                , new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
+
+        private void saveReport(final int req_id, final boolean req_save) {
+            final String rem = remark.getText().toString().trim();
+            final JSONArray array = details();
+            StringRequest str = new StringRequest(Request.Method.POST
+                    , AppConfig.URL_SAVE_A_REPORT
+                    , new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.e("RESPONSE", response);
+                        JSONObject obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            Log.w("INSERT REPORT", "SUCCESS");
+                            int rep = obj.getInt("rep_id");
+                            setrep_id(rep, array, req_id, req_save);
+                        } else {
+                            dialog.dismiss();
+                            Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.w("INSERT REPORT", "NOT SUCCESS");
+                    Toast.makeText(AssessmentActivity.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("tech_id", SharedPrefManager.getInstance(AssessmentActivity.this).getUserId());
+                    params.put("room_id", String.valueOf(room_id));
+                    params.put("remarks", rem);
+                    params.put("category", "Inventory Report");
+                    return params;
+                }
+            };
+            RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
+        }
+
+        private JSONArray details() {
+            Cursor c = db.getAssessedPc();
+            JSONArray array = new JSONArray();
+            if (c.moveToFirst()) {
+                Log.w("Get Assessed PC", "Ok");
+                do {
+                    JSONObject obj = new JSONObject();
+                    int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
+                    int pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
+                    String model = c.getString(c.getColumnIndex(db.COMP_MODEL));
+                    String mb = c.getString(c.getColumnIndex(db.COMP_MB));
+                    String mb_serial = c.getString(c.getColumnIndex(db.REPORT_MB_SERIAL));
+                    String monitor = c.getString(c.getColumnIndex(db.COMP_MONITOR));
+                    String mon_serial = c.getString(c.getColumnIndex(db.REPORT_MON_SERIAL));
+                    String pr = c.getString(c.getColumnIndex(db.COMP_PR));
+                    String kb = c.getString(c.getColumnIndex(db.COMP_KBOARD));
+                    String mouse = c.getString(c.getColumnIndex(db.COMP_MOUSE));
+                    String ram = c.getString(c.getColumnIndex(db.COMP_RAM));
+                    String hdd = c.getString(c.getColumnIndex(db.COMP_HDD));
+                    String vga = c.getString(c.getColumnIndex(db.COMP_VGA));
+                    String comp_status = c.getString(c.getColumnIndex(db.COMP_STATUS));
+
+                    try {
+                        obj.put("comp_id", comp_id);
+                        obj.put("pc_no", pc_no);
+                        obj.put("model", model);
+                        obj.put("mb", mb);
+                        obj.put("mb_serial", mb_serial);
+                        obj.put("monitor", monitor);
+                        obj.put("mon_serial", mon_serial);
+                        obj.put("pr", pr);
+                        obj.put("kb", kb);
+                        obj.put("mouse", mouse);
+                        obj.put("ram", ram);
+                        obj.put("hdd", hdd);
+                        obj.put("vga", vga);
+                        obj.put("comp_status", comp_status);
+                    } catch (JSONException e) {
+                        Log.e("JSONEXEPTION", " " + e.getMessage());
+                    }
+                    array.put(obj);
+                } while (c.moveToNext());
+            }
+            return array;
+        }
+
+        private void setrep_id(int rep, JSONArray array, int req_id, boolean req_save) {
+            Log.e("JSONARRAY", "" + array.toString());
+            Log.e("REP_ID", "" + rep);
+            //for new array
+            JSONArray newArray = new JSONArray();
+            for (int i = 0; i < array.length(); i++) {
                 try {
-                    JSONObject obj = response.getJSONObject(0);
-                    if (!obj.getBoolean("error")) {
-                        Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
-                        goToViewRoom();
-                    } else {
+                    JSONObject newObj = new JSONObject();
+                    JSONObject oldObj = array.getJSONObject(i);
+                    newObj.put("comp_id", oldObj.getInt("comp_id"));
+                    newObj.put("pc_no", oldObj.getInt("pc_no"));
+                    newObj.put("model", oldObj.getString("model"));
+                    newObj.put("mb", oldObj.getString("mb"));
+                    newObj.put("mb_serial", oldObj.getString("mb_serial"));
+                    newObj.put("monitor", oldObj.getString("monitor"));
+                    newObj.put("mon_serial", oldObj.getString("mon_serial"));
+                    newObj.put("pr", oldObj.getString("pr"));
+                    newObj.put("kb", oldObj.getString("kb"));
+                    newObj.put("mouse", oldObj.getString("mouse"));
+                    newObj.put("ram", oldObj.getString("ram"));
+                    newObj.put("hdd", oldObj.getString("hdd"));
+                    newObj.put("vga", oldObj.getString("vga"));
+                    newObj.put("comp_status", oldObj.getString("comp_status"));
+                    newObj.put("rep_id", String.valueOf(rep));
+                    //add objects to new jsoon array
+                    newArray.put(newObj);
+                } catch (JSONException e) {
+                    Log.e("JSONEXCEP", "" + e.getMessage());
+                }
+            }
+            Log.e("NEW JSONARRAY", "" + newArray.toString());
+            saveReportDetails(rep, newArray, req_id, req_save);
+        }
+
+        private void checkRequestInventory() {
+            StringRequest str = new StringRequest(Request.Method.POST
+                    , AppConfig.URL_CHECK_LAST_INVENTORY_REQUEST
+                    , new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.e("RESPONSE", response);
+                        JSONObject obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            if (obj.getBoolean("pending")) {
+                                int req_id = obj.getInt("req_id");
+                                String date = obj.getString("date_requested");
+                                String msg = obj.getString("msg");
+                                String req_date = obj.getString("date");
+                                String time = obj.getString("time");
+                                String message = "On " + date + " this room's Custodian requested for " +
+                                        "inventory, do you want to make a report for this?" +
+                                        "\n\nRequest Details:\nSchedule: " + req_date
+                                        + " " + time;
+                                if (msg.trim().isEmpty()) {
+
+                                } else
+                                    message = message + "\nMessage From Custodian: \n" + msg;
+                                dialog.dismiss();
+                                if (request_inventory == 0)
+                                    alertForRequest(message, req_id);
+                                else
+                                    saveReport(req_id, true);
+                            } else {
+                                saveReport(0, false);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        dialog.dismiss();
+                        Log.e("RESPONSE", response);
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("ASSESSMENT", error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("room_id", String.valueOf(room_id));
+                    return map;
+                }
+            };
+            RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
+        }
+
+        private void alertForRequest(String message, final int req_id) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(AssessmentActivity.this);
+            builder.setTitle("Inventory Request...")
+                    .setMessage(message)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            AssessmentActivity.this.dialog.show();
+                            saveReport(req_id, true); //true = save din sa request_reports
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            AssessmentActivity.this.dialog.show();
+                            saveReport(req_id, false); //true = save din sa request_reports
+                            dialog.dismiss();
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
+
+        private void saveReportDetails(final int rep_id, JSONArray array, final int req_id, final boolean req_save) {
+            //request
+            Log.e("REQUEST", "STATUS " + request_inventory);
+            Log.e("ROOMID", "ID " + room_id);
+            JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
+                    , AppConfig.URL_SAVE_A_DETAILS
+                    , array
+                    , new Response.Listener<JSONArray>() {
+                @Override
+                public void onResponse(JSONArray response) {
+                    try {
+                        JSONObject obj = response.getJSONObject(0);
+                        if (!obj.getBoolean("error")) {
+                            Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                            if (request_inventory == 0) {
+                                if (req_save) { // true kapag isesave ung req
+                                    saveRequest(rep_id, req_id);
+                                } else {
+                                    dialog.dismiss();
+                                    goToViewRoom();
+                                }
+                            } else
+                                saveRequest(rep_id, req_id);
+                        } else {
+                            deleteReport(rep_id);
+                        }
+                    } catch (JSONException e) {
                         deleteReport(rep_id);
+                        Log.e("error", " " + e.getMessage());
                     }
-                } catch (JSONException e) {
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
                     deleteReport(rep_id);
-                    Log.e("error", " " + e.getMessage());
+                    Log.w("save details", "NOT SUCCESS: " + error.getMessage());
                 }
-                dialog.dismiss();
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                dialog.dismiss();
-                deleteReport(rep_id);
-                Log.w("save details", "NOT SUCCESS: " + error.getMessage());
-            }
-        });
-        RequestQueueHandler.getInstance(this).addToRequestQueue(req);
-    }
+            });
+            RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(req);
+        }
 
-    private void deleteReport(final int rep_id) {
-        Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                deleteReportFrmServer(rep_id);
-            }
-        }, 3000);
-    }
+        private void saveRequest(final int rep_id, final int req_id) {
+            Handler h = new Handler();
+            h.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    saveInventoryRequest(rep_id, req_id);
+                }
+            }, 3000);
+        }
 
-    private void deleteReportFrmServer(final int rep_id) {
-        final String query = "DELETE FROM assessment_report WHERE rep_id = ?";
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_DELETE_REPORT
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject obj = new JSONObject(response);
-                    if (!obj.getBoolean("error")) {
-                        Log.e("DELETED", "success");
-                    } else {
-                        Log.e("DELETED", "not success");
+        private void saveInventoryRequest(int rep_id, final int req_id) {
+            final String query = "UPDATE request_inventory SET rep_id = " + rep_id + ", req_status = 'Done' WHERE req_id = ?";
+            StringRequest str = new StringRequest(Request.Method.POST
+                    , AppConfig.URL_UPDATE_SCHEDULE
+                    , new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        dialog.dismiss();
+                        JSONObject obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            updateReqInvStatus(req_id, "Done");
+                            AssessmentActivity.this.finish();
+                        }
+                    } catch (JSONException e) {
+                        dialog.dismiss();
+                        Log.e("REQUEST", "NOT SAVEd");
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ERROR", error.getMessage());
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("query", query);
-                param.put("rep_id", String.valueOf(rep_id));
-                return param;
-            }
-        };
-        RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("ASSESSMENT", error.getMessage());
+                    dialog.dismiss();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("query", query);
+                    map.put("id", String.valueOf(req_id));
+                    return map;
+                }
+            };
+            RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
+        }
+
+        private void updateReqInvStatus(int req_id, String status) {
+            db.updateReqInvStatus(req_id, status);
+        }
+
+        private void deleteReport(final int rep_id) {
+            Handler h = new Handler();
+            h.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    dialog.dismiss();
+                    deleteReportFrmServer(rep_id);
+                }
+            }, 3000);
+        }
+
+        private void deleteReportFrmServer(final int rep_id) {
+            final String query = "DELETE FROM assessment_report WHERE rep_id = ?";
+            StringRequest str = new StringRequest(Request.Method.POST
+                    , AppConfig.URL_DELETE_REPORT
+                    , new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject obj = new JSONObject(response);
+                        if (!obj.getBoolean("error")) {
+                            Log.e("DELETED", "success");
+                        } else {
+                            Log.e("DELETED", "not success");
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("ERROR", error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> param = new HashMap<>();
+                    param.put("query", query);
+                    param.put("rep_id", String.valueOf(rep_id));
+                    return param;
+                }
+            };
+            RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
+        }
     }
 
     private void goToViewRoom() {

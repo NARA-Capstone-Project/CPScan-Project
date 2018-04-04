@@ -25,6 +25,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.ViewPc;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
@@ -32,6 +33,7 @@ import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,9 +78,11 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         holder.done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDialog(repair.getReq_id(), "done", position);
+           //     updateDialog(repair.getReq_id(), "done", position);
+                pcDetails(repair.getComp_id(), position);
             }
         });
+        holder.done.setText("Report");
         holder.ignore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,6 +107,61 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                 showDetails(msg_body, repair.getImage_path());
             }
         });
+    }
+
+    private void pcDetails(final int compid, final int position){
+        class pcDetails extends AsyncTask<Void,Void,Void>{
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                getPc();
+                return null;
+            }
+
+            private void getPc() {
+                StringRequest str = new StringRequest(Request.Method.GET
+                        , AppConfig.URL_GET_ALL_PC
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++){
+                                JSONObject obj = array.getJSONObject(i);
+                                int comp_id = obj.getInt("comp_id");
+                                int room_id = 0;
+                                if (!obj.isNull("room_id")) {
+                                    room_id = obj.getInt("room_id");
+                                }
+
+                                if(comp_id == compid){
+                                    gotoViewPc(room_id, position);
+                                    break;
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("ERROR", "repair adapter: " + error.getMessage());
+                    }
+                });
+                RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
+            }
+
+            private void gotoViewPc(int room_id, int position) {
+                Intent intent = new Intent(mCtx, ViewPc.class);
+                intent.putExtra("comp_id", repairList.get(position).getComp_id());
+                intent.putExtra("room_id", room_id);
+                intent.putExtra("request", 1);
+                mCtx.startActivity(intent);
+            }
+        }
+
+        new pcDetails().execute();
     }
 
     private void updateDialog(final int req_id, final String button, final int position) {

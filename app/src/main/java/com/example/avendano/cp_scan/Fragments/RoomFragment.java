@@ -159,19 +159,23 @@ public class RoomFragment extends Fragment {
             if (SharedPrefManager.getInstance(getContext()).getUserRole().equalsIgnoreCase("custodian"))
                 query = "select * from (select r.room_id, department.dept_name, r.room_custodian_id," +
                         " r.room_technician_id, r.room_name, r.building, users.name, " +
-                        "u.name 'technician' from room r join users on users.user_id = r.room_custodian_id " +
+                        "u.name 'technician',CONCAT(department.dept_name,' ',r.room_name) as 'dept_room'" +
+                        " from room r join users on users.user_id = r.room_custodian_id " +
                         "join users u on u.user_id = r.room_technician_id  left join department on" +
                         " department.dept_id = r.dept_id) as rooms where (rooms.dept_name like '%" + string + "%'" +
-                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%')" +
+                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%' " +
+                        " or rooms.dept_room = '" + string + "')" +
                         "  and (rooms.room_custodian_id = '" + user_id + "' or rooms.room_technician_id " +
                         "= '" + user_id + "')";
             else
                 query = "select * from (select r.room_id, department.dept_name, r.room_custodian_id," +
                         " r.room_technician_id, r.room_name , r.building, users.name, " +
-                        "u.name 'technician' from room r join users on users.user_id = r.room_custodian_id " +
+                        "u.name 'technician', CONCAT(department.dept_name,' ',r.room_name) as 'dept_room' from room r join users on users.user_id = r.room_custodian_id " +
                         "join users u on u.user_id = r.room_technician_id  left join department on" +
                         " department.dept_id = r.dept_id) as rooms where rooms.dept_name like '%" + string + "%'" +
-                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%'";
+                        " or rooms.room_name like '%" + string + "%' or rooms.building like '%" + string + "%'" +
+                        " or rooms.dept_room = '" + string + "'" +
+                        " or rooms.building ='" + string + "'";
 
             Log.e("QUERY", query);
             final String finalQuery = query;

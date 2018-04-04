@@ -52,6 +52,7 @@ public class ComputerAdapter extends RecyclerView.Adapter<RecyclerHolder> {
                 Intent intent = new Intent(mCtx, ViewPc.class);
                 intent.putExtra("comp_id", computersList.get(position).getComp_id());
                 intent.putExtra("room_id", computersList.get(position).getRoom_id());
+                intent.putExtra("request", 0);
                 mCtx.startActivity(intent);
             }
         });

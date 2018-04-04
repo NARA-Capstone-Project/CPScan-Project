@@ -59,7 +59,7 @@ public class SearchActivity extends AppCompatActivity {
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setTitle("Select Room...");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         type = getIntent().getStringExtra("type");
@@ -140,9 +140,11 @@ public class SearchActivity extends AppCompatActivity {
         String string = search.getText().toString().trim();
         Log.e("STRING", string);
         final String query = "select rooms.room_id,rooms.dept_name, rooms.room_name" +
-                " from (select department.dept_name, r.room_id, r.room_name from " +
+                " from (select department.dept_name, r.room_id, r.room_name, " +
+                "CONCAT(department.dept_name,' ',r.room_name) as 'dept_room' from " +
                 "room r left join department on department.dept_id = r.dept_id) as rooms where " +
-                "rooms.dept_name like '%" + string + "%' or rooms.room_name like '%" + string + "%'";
+                "rooms.dept_name like '%" + string + "%' or rooms.room_name like '%" + string + "%'" +
+                " or rooms.dept_room = '" + string + "'";
         StringRequest stringRequest = new StringRequest(Request.Method.POST
                 , AppConfig.URL_SEARCH
                 , new Response.Listener<String>() {
@@ -212,8 +214,11 @@ public class SearchActivity extends AppCompatActivity {
                             } else {
                                 room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
                             }
-                            Search search = new Search(room_name, room_id);
-                            searchResult.add(search);
+                            int pc_count = obj.getInt("pc_count");
+                            if(pc_count> 0){
+                                Search search = new Search(room_name, room_id);
+                                searchResult.add(search);
+                            }
                         }
                         progressBar.setVisibility(View.GONE);
                         Log.w("LOADED", "Server rooms");

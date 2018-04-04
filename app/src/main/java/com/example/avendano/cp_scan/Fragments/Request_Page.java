@@ -116,6 +116,11 @@ public class Request_Page extends Fragment {
         return v;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
     class LoadRequests extends AsyncTask<Void, Void, Void> {
 
         @Override

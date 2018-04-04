@@ -321,8 +321,7 @@ public class ViewPc extends AppCompatActivity {
             }
 
             private void checking() {
-                final String msg = "This computer was requested for repair, do you want to make a report for this? (Report " +
-                        "will be save even if you choose no)\n\n";
+                final String msg = "This computer was requested for repair, do you want to make a report for this?";
                 StringRequest str = new StringRequest(Request.Method.POST
                         , AppConfig.URL_CHECK_LAST_REPAIR_REQUEST
                         , new Response.Listener<String>() {
@@ -335,7 +334,7 @@ public class ViewPc extends AppCompatActivity {
                             if (!obj.getBoolean("error")) {
                                 //kapag may request na
                                 if (make_request_report == 1) { //galing sa request_page
-                                    if(obj.getBoolean("pending")){
+                                    if (obj.getBoolean("pending")) {
                                         int req_id = obj.getInt("req_id");
                                         Log.e("Array", details().toString());
                                         confirmReport(req_id, true);
@@ -347,6 +346,8 @@ public class ViewPc extends AppCompatActivity {
                                             Log.e("Array", details().toString());
                                             String details = obj.getString("req_details");
                                             String path = obj.getString("image");
+                                            if (obj.isNull("image"))
+                                                path = "";
                                             if (details.trim().isEmpty())
                                                 showAlert(req_id, msg, path);
                                             else
@@ -435,7 +436,6 @@ public class ViewPc extends AppCompatActivity {
 
             private void confirmReport(final int req_id, final boolean req_save) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
-
                 String msg = message();
                 builder.setTitle("Confirm Report...")
                         .setMessage(msg)
@@ -479,7 +479,9 @@ public class ViewPc extends AppCompatActivity {
                             }
                         });
 
-                if (!image_path.isEmpty())
+                if (image_path.isEmpty()) {
+
+                } else
                     builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -534,6 +536,7 @@ public class ViewPc extends AppCompatActivity {
                         params.put("tech_id", SharedPrefManager.getInstance(ViewPc.this).getUserId());
                         params.put("room_id", String.valueOf(room_id));
                         params.put("remarks", rem);
+                        params.put("category", "Repair Report");
                         return params;
                     }
                 };
@@ -640,6 +643,9 @@ public class ViewPc extends AppCompatActivity {
                         //lahat working
                         mb = WORKING;
                         monitor = WORKING;
+                        kb = WORKING;
+                        vga = WORKING;
+                        mouse = WORKING;
                         comp_status = "Working";
                     }
 
@@ -754,8 +760,10 @@ public class ViewPc extends AppCompatActivity {
                     public void onResponse(String response) {
                         try {
                             JSONObject obj = new JSONObject(response);
-                            if (!obj.getBoolean("error"))
+                            if (!obj.getBoolean("error")) {
                                 Toast.makeText(ViewPc.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
+                                updateSQlite(req_id, "Done");
+                            }
                             activityRecreate();
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -1052,7 +1060,7 @@ public class ViewPc extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             //update sqlite
                             if (!obj.getBoolean("error")) {
-                                updateSQlite(req_id);
+                                updateSQlite(req_id, "Cancel");
                                 new loadDetails().execute();
                                 Handler handler = new Handler();
                                 handler.postDelayed(new Runnable() {
@@ -1092,8 +1100,8 @@ public class ViewPc extends AppCompatActivity {
         new cancel().callCancel();
     }
 
-    private void updateSQlite(int req_id) {
-        db.updateReqRepStatus(req_id);
+    private void updateSQlite(int req_id, String status) {
+        db.updateReqRepStatus(req_id, status);
     }
 
     private void loadPcDetails() {

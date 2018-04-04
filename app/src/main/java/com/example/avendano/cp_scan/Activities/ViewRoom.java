@@ -482,7 +482,7 @@ public class ViewRoom extends AppCompatActivity {
     }
 
     private void updateSQlite(int req_id) {
-        db.updateReqInvStatus(req_id);
+        db.updateReqInvStatus(req_id, "Cancel");
     }
 
     private void addPcToAssessFrmServer() {
@@ -535,6 +535,7 @@ public class ViewRoom extends AppCompatActivity {
     private void goToAssessment() {
         Intent intent = new Intent(ViewRoom.this, AssessmentActivity.class);
         intent.putExtra("room_id", room_id);
+        intent.putExtra("request", 0);
         startActivity(intent);
         finish();
     }

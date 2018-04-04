@@ -45,6 +45,8 @@ import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
 
+import static android.app.Activity.RESULT_OK;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -88,7 +90,7 @@ public class Schedule_Page extends Fragment {
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(connection_detector.isConnected())
+                if (connection_detector.isConnected())
                     goToTaskActivity();
                 else
                     Toast.makeText(getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
@@ -96,6 +98,7 @@ public class Schedule_Page extends Fragment {
         });
 
         new loadSchedule().execute();
+        Log.e("CREATE", "create");
         return view;
     }
 
@@ -103,7 +106,16 @@ public class Schedule_Page extends Fragment {
         Intent intent = new Intent(getContext(), TaskActivity.class);
         intent.putExtra("sched_id", 0);
         intent.putExtra("type", "add");
-        getActivity().startActivity(intent);
+        getActivity().startActivityForResult(intent, 1);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                new loadSchedule().execute();
+            }
+        }
     }
 
     @Override

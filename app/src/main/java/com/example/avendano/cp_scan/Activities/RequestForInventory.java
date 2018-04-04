@@ -67,7 +67,8 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle("Request Inventory");
 
         progress = new SpotsDialog(this, "Requesting...");
         db = new SQLiteHandler(this);

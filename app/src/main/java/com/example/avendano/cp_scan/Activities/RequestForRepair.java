@@ -87,8 +87,8 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle("Request Repair");
 
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);

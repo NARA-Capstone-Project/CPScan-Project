@@ -3,6 +3,7 @@ package com.example.avendano.cp_scan.Adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -23,6 +24,8 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.AssessmentActivity;
+import com.example.avendano.cp_scan.Activities.ViewRoom;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
@@ -30,6 +33,7 @@ import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.RequestInventory;
 import com.example.avendano.cp_scan.R;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -74,9 +78,12 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         holder.done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDialog(inventory.getReq_id(), "done", position);
+//                updateDialog(inventory.getReq_id(), "done", position);
+                int id = inventory.getRoom_id();
+                addPcToAssessFrmServer(id);
             }
         });
+        holder.done.setText("Report");
         holder.ignore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,6 +107,64 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
                 showDetails(msg_body);
             }
         });
+    }
+    private void clearDb() {
+        db.deleteAssessedPc();
+        db.deletePcToAssess();
+    }
+    private void addPcToAssessFrmServer(final int room_id) {
+        clearDb();
+        StringRequest str = new StringRequest(Request.Method.GET
+                , AppConfig.URL_GET_ALL_PC
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        int comp_id = obj.getInt("comp_id");
+                        int id = 0;
+                        if (!obj.isNull("room_id")) {
+                            id = obj.getInt("room_id");
+                        }
+                        int pc_no = obj.getInt("pc_no");
+                        String model = obj.getString("model");
+                        String mb = obj.getString("mb");
+                        String pr = obj.getString("pr");
+                        String monitor = obj.getString("monitor");
+                        String ram = obj.getString("ram");
+                        String kboard = obj.getString("kboard");
+                        String mouse = obj.getString("mouse");
+                        String vga = obj.getString("vga");
+                        String hdd = obj.getString("hdd");
+                        String comp_status = obj.getString("comp_status");
+
+                        if (room_id == id) {
+                            long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
+                            Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
+                            Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
+                        }
+                    }
+                    goToAssessment(room_id);
+                } catch (JSONException e) {
+                    Toast.makeText(mCtx, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.v("RESULT", "Error: " + error.getMessage());
+            }
+        });
+        RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
+    }
+
+    private void goToAssessment(int id) {
+        Intent intent = new Intent(mCtx, AssessmentActivity.class);
+        intent.putExtra("room_id", id);
+        intent.putExtra("request", 1);
+        mCtx.startActivity(intent);
     }
 
     private void updateDialog(final int req_id, final String button, final int position) {

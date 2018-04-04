@@ -329,6 +329,7 @@ public class ViewInventoryReport extends AppCompatActivity {
 
     private void showRemark() {
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewInventoryReport.this);
+        builder.setTitle("Technician Remarks");
         builder.setMessage("" + remark);
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override

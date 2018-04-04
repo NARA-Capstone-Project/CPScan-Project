@@ -86,6 +86,7 @@ public class AddCompFrmServer {
         if (c.moveToFirst()) {
             db.updateComputers(comp_id, room_id, pc_no, os, model, mb, pr, monitor, ram, kboard
                     , mouse, comp_status, vga, hdd);
+            Log.w("COMP UPDATE TO SQLITE: ", "UPDATE!");
         } else {
 
             long insert = db.addComputers(comp_id, room_id, pc_no, os, model, mb, pr
