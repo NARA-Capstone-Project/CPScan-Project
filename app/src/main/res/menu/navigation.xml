@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/navigation_room"
-        android:icon="@drawable/ic_room"
+        android:icon="@drawable/ic_room_image_nav"
         android:title="Rooms" />
 
     <item
@@ -13,7 +13,7 @@
     <item
         android:id="@+id/navigation_scan"
         android:icon="@drawable/ic_camera"
-        android:title="Scan" />
+        android:title="Scan QR" />
 
     <item
         android:id="@+id/navigation_task"

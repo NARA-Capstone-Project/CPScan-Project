@@ -169,7 +169,14 @@ public class ViewPc extends AppCompatActivity {
                 remark.setVisibility(View.GONE);
             }
         });
-
+        if(SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian"))
+            report.setVisibility(View.VISIBLE);
+        else if ((SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
+                SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) &&
+                make_request_report == 1)
+            report.setVisibility(View.VISIBLE);
+        else
+            report.setVisibility(View.GONE);
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -198,8 +205,9 @@ public class ViewPc extends AppCompatActivity {
                             alert.show();
                         }
                     }
-                } else if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
-                        SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) {
+                } else if ((SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
+                        SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) &&
+                        make_request_report == 1){
                     if (cancel.getVisibility() == View.VISIBLE) {
                         //check if may nag request and save report
                         //check inputs muna sa rbutn saka checkbox
@@ -245,10 +253,7 @@ public class ViewPc extends AppCompatActivity {
                         mouse.setChecked(false);
                         vga.setChecked(false);
                     }
-                } else {
-                    report.setVisibility(View.GONE);
                 }
-
 
             }
         });

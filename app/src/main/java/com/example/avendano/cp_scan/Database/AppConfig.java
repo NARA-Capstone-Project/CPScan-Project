@@ -7,8 +7,8 @@ package com.example.avendano.cp_scan.Database;
 public class AppConfig {
 
 //    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
-    public static String ROOT_URL = "http://192.168.188.2/android_api/"; // genymotion
-//    public static String ROOT_URL = "http://192.168.1.5/android_api/"; //lan
+//    public static String ROOT_URL = "http://192.168.188.2/android_api/"; // genymotion
+    public static String ROOT_URL = "http://192.168.0.11/android_api/"; //lan
 
     // Server user login url
     public static String URL_LOGIN = ROOT_URL + "cict_login.php";

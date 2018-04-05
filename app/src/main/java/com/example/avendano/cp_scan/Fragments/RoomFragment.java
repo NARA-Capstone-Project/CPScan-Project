@@ -106,7 +106,7 @@ public class RoomFragment extends Fragment {
             @Override
             public void onRefresh() {
                 swiper.setRefreshing(true);
-                if(search.getText().toString().trim().isEmpty())
+                if (search.getText().toString().trim().isEmpty())
                     loadFromServer(SharedPrefManager.getInstance(getContext()).getUserRole());
                 else
                     new RoomsLoader().execute(SharedPrefManager.getInstance(getContext()).getUserRole(), "yes");
@@ -258,50 +258,47 @@ public class RoomFragment extends Fragment {
                 try {
                     hideDialog();
                     progressBar.setVisibility(View.GONE);
-                    db.deleteRooms();
                     JSONArray array = new JSONArray(response);
-                    if (array.length() > 0) {
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject obj = array.getJSONObject(i);
-                            int room_id = obj.getInt("room_id");
-                            int floor = obj.getInt("floor");
-                            String room_name = "";
-                            if (obj.isNull("dept_name")) {
-                                room_name = obj.getString("room_name");
-                            } else {
-                                room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
-                            }
-                            String custodian = obj.getString("room_custodian");
-                            String cust_id = obj.getString("cust_id");
-                            String technician = obj.getString("room_technician");
-                            String tech_id = obj.getString("tech_id");
-                            String building = obj.getString("building");
-                            int pc_count = obj.getInt("pc_count");
-                            int pc_working = obj.getInt("pc_working");
-                            String lastAssess = "";
-                            if (obj.isNull("lastAssess")) {
-                                lastAssess = "--";
-                            } else {
-                                lastAssess = obj.getString("lastAssess");
-                            }
-                            Rooms rooms = new Rooms(room_id, custodian, technician, room_name, building);
-
-                            if (role.equalsIgnoreCase("custodian")) {
-                                if (cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId()))
-                                    roomsList.add(rooms);
-                            } else
-                                roomsList.add(rooms);
-
-                            addRoomsToLocal(room_id, room_name, custodian, cust_id, technician, tech_id,
-                                    building, floor, pc_count, pc_working, lastAssess);
-
+                    db.updateSync(0, "room");
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        int room_id = obj.getInt("room_id");
+                        int floor = obj.getInt("floor");
+                        String room_name = "";
+                        if (obj.isNull("dept_name")) {
+                            room_name = obj.getString("room_name");
+                        } else {
+                            room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
                         }
-                        Log.w("LOADED", "Server rooms");
-                        roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
-                        recyclerView.setAdapter(roomAdapter);
-                    } else {
-                        db.deleteRooms();
-                    }
+                        String custodian = obj.getString("room_custodian");
+                        String cust_id = obj.getString("cust_id");
+                        String technician = obj.getString("room_technician");
+                        String tech_id = obj.getString("tech_id");
+                        String building = obj.getString("building");
+                        int pc_count = obj.getInt("pc_count");
+                        int pc_working = obj.getInt("pc_working");
+                        String lastAssess = "";
+                        if (obj.isNull("lastAssess")) {
+                            lastAssess = "--";
+                        } else {
+                            lastAssess = obj.getString("lastAssess");
+                        }
+                        Rooms rooms = new Rooms(room_id, custodian, technician, room_name, building);
+
+                        if (role.equalsIgnoreCase("custodian")) {
+                            if (cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getContext()).getUserId()))
+                                roomsList.add(rooms);
+                        } else
+                            roomsList.add(rooms);
+
+                        addRoomsToLocal(room_id, room_name, custodian, cust_id, technician, tech_id,
+                                building, floor, pc_count, pc_working, lastAssess);
+                    }//for loop
+                    //check here arraylist size
+                    Log.w("LOADED", "Server rooms");
+                    db.deleteAllUnsync("room");
+                    roomAdapter = new RoomAdapter(getActivity(), getContext(), roomsList, swiper);
+                    recyclerView.setAdapter(roomAdapter);
                     Log.e("ROOM RESPONSE", response);
                 } catch (JSONException e) {
                     Log.e("JSON ERROR 1", "RoomFragment: " + e.getMessage());
@@ -322,9 +319,16 @@ public class RoomFragment extends Fragment {
     private void addRoomsToLocal(int room_id, String room_name, String custodian, String cust_id,
                                  String technician, String tech_id, String building, int floor,
                                  int pc_count, int pc_working, String lastAssess) {
-        long in = db.addRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building
-                , floor, pc_count, pc_working, lastAssess);
-        Log.w("NEW ROOM INSERT:", "Status : " + in);
+        Cursor c = db.getRoomDetails(room_id);
+        if (c.moveToFirst()) {
+            db.updateRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building,
+                    floor, pc_count, pc_working, lastAssess);
+            Log.w("ROOM UPDATE TO SQLITE: ", "UPDATE!");
+        } else {
+            long insert = db.addRooms(room_id, room_name, custodian, cust_id, technician, tech_id, building,
+                    floor, pc_count, pc_working, lastAssess);
+            Log.w("ROOM INSERT TO SQLITE: ", "Status : " + insert);
+        }
     }
 
     @Override

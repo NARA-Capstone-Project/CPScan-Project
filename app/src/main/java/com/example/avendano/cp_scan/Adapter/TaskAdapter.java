@@ -215,7 +215,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
                 String room_name = "";
                 Cursor c1 = db.getRoomDetails(room_id);
                 if(c1.moveToFirst()){
-                    room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
+                    room_name = c1.getString(c1.getColumnIndex(db.ROOMS_NAME));
                 }
                 value = pc_name + " of room " + room_name;
             }

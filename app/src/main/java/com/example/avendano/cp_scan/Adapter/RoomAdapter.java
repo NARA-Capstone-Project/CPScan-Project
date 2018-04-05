@@ -51,7 +51,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RecyclerHolder>{
         holder.headTxt.setText(roomList.get(position).getRoom_name());
         holder.midTxt.setText("Room Custodian: " + roomList.get(position).getRoom_custodian());
         holder.subTxt.setText("Location: " + roomList.get(position).getRoom_building());
-        holder.img.setBackgroundResource(R.drawable.ic_room_orange);
+        holder.img.setBackgroundResource(R.drawable.ic_room_image);
         holder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

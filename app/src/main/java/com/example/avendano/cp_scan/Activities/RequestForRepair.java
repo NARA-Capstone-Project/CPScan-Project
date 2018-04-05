@@ -395,18 +395,9 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 try {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
-                        Log.e("IMAGE", obj.getString("image"));
-                        Log.e("SMS", obj.getString("message"));
-                        Log.e("MSG_BODY", obj.getString("body"));
-                        Handler h = new Handler();
-                        h.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                progress.dismiss();
-                                Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                                gotoViewPc();
-                            }
-                        }, 5000);
+                        Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
+                        handlerTime();
+
                     } else {
                         Toast.makeText(RequestForRepair.this, "An error occured", Toast.LENGTH_SHORT).show();
                     }
@@ -443,6 +434,17 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
                 ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(RequestForRepair.this).addToRequestQueue(str);
+    }
+
+    private void handlerTime(){
+        Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                progress.dismiss();
+                gotoViewPc();
+            }
+        }, 3000);
     }
 
     private String imageToString() {

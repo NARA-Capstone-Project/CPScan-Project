@@ -67,7 +67,6 @@ public class AssessmentActivity extends AppCompatActivity {
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         dialog = new SpotsDialog(AssessmentActivity.this, "Saving...");
         dialog.setCancelable(false);
