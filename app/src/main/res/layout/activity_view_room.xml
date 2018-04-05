@@ -13,24 +13,49 @@
         android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/calendar"
+        <LinearLayout
             android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_calendar"/>
+            android:orientation="vertical"
+            android:id="@+id/sched_container"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/calendar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_calendar"/>
 
-        <ImageView
-            android:layout_marginRight="15dp"
-            android:id="@+id/computers"
-            android:layout_toLeftOf="@+id/calendar"
+            <TextView
+                android:textSize="9sp"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Class\nSchedule"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/pc_container"
+            android:layout_marginRight="9dp"
+            android:layout_toLeftOf="@+id/sched_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_computer"/>
+            android:orientation="vertical"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/computers"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_computer"/>
+            <TextView
+                android:textSize="10sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Computers"/>
+        </LinearLayout>
 
         <TextView
-            android:layout_below="@+id/calendar"
             android:id="@+id/lbl_building"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,7 +63,6 @@
         <TextView
             android:id="@+id/building"
             android:layout_toRightOf="@+id/lbl_building"
-            android:layout_below="@id/calendar"
             android:paddingLeft="5dp"
             android:text="--"
             android:layout_width="wrap_content"

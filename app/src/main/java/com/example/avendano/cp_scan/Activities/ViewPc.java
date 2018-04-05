@@ -511,12 +511,17 @@ public class ViewPc extends AppCompatActivity {
                             if (!obj.getBoolean("error")) {
                                 Log.w("INSERT REPORT", "SUCCESS");
                                 int rep = obj.getInt("rep_id");
+                                String message = obj.getString("message");
+                                String msg_body = obj.getString("body");
+                                Log.e("MESSAGE", message);
+                                Log.e("BODY", msg_body);
                                 setrep_id(rep, array, req_id, req_save);
                             } else {
                                 progressDialog.dismiss();
                                 Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
+                            Log.e("RESPONSE", response);
                             progressDialog.dismiss();
                             Toast.makeText(ViewPc.this, "An error occurred, please try again later.", Toast.LENGTH_SHORT).show();
                             Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());

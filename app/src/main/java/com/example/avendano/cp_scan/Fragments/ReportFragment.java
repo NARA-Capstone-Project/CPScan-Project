@@ -334,83 +334,6 @@ public class ReportFragment extends Fragment {
                         Log.w("NOREPORTS", "NO REPORTS");
                     } else {
                         addDetails();
-                        pauseTime();
-                    }
-                } catch (JSONException e) {
-                    new ReportsLoader().execute("Local");
-                    Log.e("RESPONSE", response);
-                    Log.e("JSON ERROR 1", "ReportFragment: " + e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("Volleyerror 1", "Load ReportsLoader: " + error.getMessage());
-                new ReportsLoader().execute("Local");
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("user_id", SharedPrefManager.getInstance(getContext()).getUserId());
-                param.put("category", "Inventory Report");
-                return param;
-            }
-        };
-        RequestQueueHandler.getInstance(getContext()).addToRequestQueue(stringRequest);
-    }
-
-    private void pauseTime(){
-        Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                loadRepairReports();
-            }
-        }, 3000);
-    }
-
-    private void loadRepairReports() {
-        StringRequest stringRequest = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_REPORT
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    db.deleteReportDetails();
-                    db.deleteReport();
-                    Log.w("REsP", "length : " + response.length());
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        int rep_id = obj.getInt("rep_id");
-                        String cat = obj.getString("category");
-                        int room_id = obj.getInt("room_id");
-                        String date = obj.getString("date");
-                        String room_name = obj.getString("room_name");
-                        String cust_id = obj.getString("cust_id");
-                        String tech_id = obj.getString("tech_id");
-                        String time = obj.getString("time");
-                        int signed = obj.getInt("cust_signed");
-                        String remarks = obj.getString("remarks");
-                        int htech_signed = obj.getInt("htech_signed");
-                        int admin_signed = obj.getInt("admin_signed");
-
-                        Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
-                        reportsList.add(reports);
-
-                        addReportToLocal(cat, rep_id, room_id, signed, htech_signed, admin_signed,
-                                cust_id, tech_id, date, time, remarks,
-                                room_name);
-                    }
-
-                    Log.w("LOADED", "Server reports");
-                    if (reportsList.isEmpty()) {
-                        db.deleteReportDetails();
-                        db.deleteReport();
-                        Log.w("NOREPORTS", "NO REPORTS");
-                    } else {
-                        addDetails();
                         reportAdapter = new ReportAdapter(getActivity(), getContext(), reportsList, swiper);
                         recyclerView.setAdapter(reportAdapter);
                         reportAdapter.notifyDataSetChanged();
@@ -432,7 +355,6 @@ public class ReportFragment extends Fragment {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> param = new HashMap<>();
                 param.put("user_id", SharedPrefManager.getInstance(getContext()).getUserId());
-                param.put("category", "Repair Report");
                 return param;
             }
         };

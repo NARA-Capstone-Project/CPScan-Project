@@ -58,6 +58,7 @@ public class AssessmentActivity extends AppCompatActivity {
     AssessAdapter adapter;
     int room_id, request_inventory;
     android.app.AlertDialog dialog;
+    String room_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,9 @@ public class AssessmentActivity extends AppCompatActivity {
         db = new SQLiteHandler(this);
         pcList = new ArrayList<>();
         remark = (EditText) findViewById(R.id.remark);
+
+        room_name = getRoomName();
+        getSupportActionBar().setTitle(room_name);
 
         //serial
         serial_edttxt.setOnTouchListener(new View.OnTouchListener() {
@@ -144,6 +148,15 @@ public class AssessmentActivity extends AppCompatActivity {
 
         //inflate pc
         loadPc();
+    }
+
+    private String getRoomName(){
+        Cursor c = db.getRoomDetails(room_id);
+        String name = "";
+        if(c.moveToFirst()){
+             name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
+        }
+        return name;
     }
 
     //scan
@@ -355,6 +368,7 @@ public class AssessmentActivity extends AppCompatActivity {
                 break;
             case R.id.cancel:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(room_name);
                 builder.setMessage("Assessed computers will be discarded once you exit. Continue?")
                         .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                             @Override
@@ -388,6 +402,7 @@ public class AssessmentActivity extends AppCompatActivity {
         long allPc = db.getAssessPcCount();
         if (unscanned < allPc) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(room_name);
             builder.setMessage("Some computer has not been assessed, continue to exit?")
                     .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
                         @Override
@@ -442,6 +457,10 @@ public class AssessmentActivity extends AppCompatActivity {
                         JSONObject obj = new JSONObject(response);
                         if (!obj.getBoolean("error")) {
                             Log.w("INSERT REPORT", "SUCCESS");
+                            String message = obj.getString("message");
+                            String msg_body = obj.getString("body");
+                            Log.e("MESSAGE", message);
+                            Log.e("BODY", msg_body);
                             int rep = obj.getInt("rep_id");
                             setrep_id(rep, array, req_id, req_save);
                         } else {
@@ -449,6 +468,7 @@ public class AssessmentActivity extends AppCompatActivity {
                             Toast.makeText(AssessmentActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                         }
                     } catch (JSONException e) {
+                        Log.e("RESPONSE", response);
                         Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
                     }
                 }
@@ -572,14 +592,18 @@ public class AssessmentActivity extends AppCompatActivity {
                                         "inventory, do you want to make a report for this?" +
                                         "\n\nRequest Details:\nSchedule: " + req_date
                                         + " " + time;
+                                String tech_id = obj.getString("technician");
                                 if (msg.trim().isEmpty()) {
 
                                 } else
                                     message = message + "\nMessage From Custodian: \n" + msg;
                                 dialog.dismiss();
-                                if (request_inventory == 0)
-                                    alertForRequest(message, req_id);
-                                else
+                                if (request_inventory == 0) {
+                                    if(tech_id.equals(SharedPrefManager.getInstance(AssessmentActivity.this).getUserId()))
+                                        alertForRequest(message, req_id);
+                                    else
+                                        saveReport(0, false);
+                                } else
                                     saveReport(req_id, true);
                             } else {
                                 saveReport(0, false);
@@ -604,6 +628,7 @@ public class AssessmentActivity extends AppCompatActivity {
                     return map;
                 }
             };
+
             RequestQueueHandler.getInstance(AssessmentActivity.this).addToRequestQueue(str);
         }
 

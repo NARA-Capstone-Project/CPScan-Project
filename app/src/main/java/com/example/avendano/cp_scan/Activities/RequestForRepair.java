@@ -33,6 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -395,6 +396,8 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         Log.e("IMAGE", obj.getString("image"));
+                        Log.e("SMS", obj.getString("message"));
+                        Log.e("MSG_BODY", obj.getString("body"));
                         Handler h = new Handler();
                         h.postDelayed(new Runnable() {
                             @Override
@@ -409,6 +412,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                     }
                 } catch (JSONException e) {
                     progress.dismiss();
+                    Log.e("RESPONSE", response);
                     e.printStackTrace();
                 }
 
@@ -434,6 +438,10 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 return params;
             }
         };
+
+        str.setRetryPolicy(new DefaultRetryPolicy(0
+                , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
+                ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(RequestForRepair.this).addToRequestQueue(str);
     }
 

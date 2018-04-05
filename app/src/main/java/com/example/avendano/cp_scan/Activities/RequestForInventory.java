@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -214,12 +215,14 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                     JSONObject obj = new JSONObject(response);
                     if(!obj.getBoolean("error")){
                         Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                        Log.e("REQ", "SMS: " + obj.getString("message"));
+                        Log.e("SMS", obj.getString("message"));
+                        Log.e("MSG_BODY", obj.getString("body"));
                         goToViewRoom();
                     }else{
                         Toast.makeText(RequestForInventory.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
+                    Log.e("RESPONSE", response);
                     Log.e("REQUESTINVENTORY", "JSON " + e.getMessage());
                 }
             }
@@ -245,6 +248,9 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 return params;
             }
         };
+        str.setRetryPolicy(new DefaultRetryPolicy(0
+                        , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
+                        ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(RequestForInventory.this).addToRequestQueue(str);
     }
 
