@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -33,6 +34,7 @@ import java.util.Map;
 
 public class RequestActivity extends AppCompatActivity {
 
+    Toolbar toolbar;
     private Button submit, cancel;
     private EditText id, username, password;
     private ProgressDialog pDialog;
@@ -43,6 +45,10 @@ public class RequestActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request);
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Request Account");
         //widgets
         submit = (Button) findViewById(R.id.submit_action);
         cancel = (Button) findViewById(R.id.cancel_action);
