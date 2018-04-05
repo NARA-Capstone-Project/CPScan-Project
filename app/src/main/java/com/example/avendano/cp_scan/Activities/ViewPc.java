@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -169,7 +168,7 @@ public class ViewPc extends AppCompatActivity {
                 remark.setVisibility(View.GONE);
             }
         });
-        if(SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian"))
+        if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian"))
             report.setVisibility(View.VISIBLE);
         else if ((SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
                 SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) &&
@@ -207,14 +206,14 @@ public class ViewPc extends AppCompatActivity {
                     }
                 } else if ((SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("technician") ||
                         SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("main technician")) &&
-                        make_request_report == 1){
+                        make_request_report == 1) {
                     if (cancel.getVisibility() == View.VISIBLE) {
                         //check if may nag request and save report
                         //check inputs muna sa rbutn saka checkbox
                         progressDialog.show();
                         if (checkInput()) {
                             if (connection_detector.isConnected())
-                                checkIfRequested();
+                                saveRequestReport();
                             else {
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                                 builder.setMessage("No Internet Connection")
@@ -316,17 +315,16 @@ public class ViewPc extends AppCompatActivity {
         }
     }
 
-    private void checkIfRequested() {
-        class Checker extends AsyncTask<Void, Void, Void> {
+    private void saveRequestReport() {
+        class Getter extends AsyncTask<Void, Void, Void> {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                checking();
+                getRequestId();
                 return null;
             }
 
-            private void checking() {
-                final String msg = "This computer was requested for repair, do you want to make a report for this?";
+            private void getRequestId() {
                 StringRequest str = new StringRequest(Request.Method.POST
                         , AppConfig.URL_CHECK_LAST_REPAIR_REQUEST
                         , new Response.Listener<String>() {
@@ -335,36 +333,12 @@ public class ViewPc extends AppCompatActivity {
                         progressDialog.dismiss();
                         try {
                             JSONObject obj = new JSONObject(response);
-                            Log.e("checking", response);
+                            Log.e("getRequestId", response);
                             if (!obj.getBoolean("error")) {
-                                //kapag may request na
-                                if (make_request_report == 1) { //galing sa request_page
-                                    if (obj.getBoolean("pending")) {
-                                        int req_id = obj.getInt("req_id");
-                                        Log.e("Array", details().toString());
-                                        confirmReport(req_id, true);
-                                    }
-                                } else {
-                                    if (obj.getBoolean("pending")) {
-                                        if (obj.getString("technician").equals(SharedPrefManager.getInstance(ViewPc.this).getUserId())) {
-                                            int req_id = obj.getInt("req_id");
-                                            Log.e("Array", details().toString());
-                                            String details = obj.getString("req_details");
-                                            String path = obj.getString("image");
-                                            if (obj.isNull("image"))
-                                                path = "";
-                                            if (details.trim().isEmpty())
-                                                showAlert(req_id, msg, path);
-                                            else
-                                                showAlert(req_id, msg + " Request Details: " + obj.getString("req_details"), path);
-                                        } else {
-                                            confirmReport(0, false);
-                                        }
-                                    } else {
-                                        Log.e("Array", details().toString());
-                                        //savereportc
-                                        confirmReport(0, false);
-                                    }
+                                if (obj.getBoolean("pending")) {
+                                    int req_id = obj.getInt("req_id");
+                                    Log.e("Array", details().toString());
+                                    confirmReport(req_id, true);
                                 }
                             }
                         } catch (JSONException e) {
@@ -850,7 +824,7 @@ public class ViewPc extends AppCompatActivity {
                 RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
             }
         }
-        new Checker().execute();
+        new Getter().execute();
     }
 
     private void activityRecreate() {

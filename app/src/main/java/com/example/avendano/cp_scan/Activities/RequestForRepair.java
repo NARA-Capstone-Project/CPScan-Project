@@ -68,7 +68,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
     SQLiteHandler db;
     EditText message;
     TextView date, time, peripherals, label;
-    Spinner date_type, time_type;
+    Spinner date_type;
     int comp_id, room_id;
     Toolbar toolbar;
     ImageView photo1;
@@ -102,7 +102,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         photo1 = (ImageView) findViewById(R.id.photo1);
         photo1.setVisibility(View.VISIBLE);
         date_type = (Spinner) findViewById(R.id.date);
-        time_type = (Spinner) findViewById(R.id.time);
         status = (RadioGroup) findViewById(R.id.comp_status);
         peripherals = (TextView) findViewById(R.id.peripherals);
         label = (TextView) findViewById(R.id.label);
@@ -126,27 +125,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         String[] type = new String[]{"Anytime", "Custom"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
         date_type.setAdapter(adapter);
-        time_type.setAdapter(adapter);
-        time_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0: {
-                        time.setVisibility(View.GONE);
-                        break;
-                    }
-                    case 1: {
-                        time.setVisibility(View.VISIBLE);
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
         date_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -357,10 +335,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         else
             setDate = date.getText().toString();
 
-        if (time_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
-            setTime = "Anytime";
-        else
-            setTime = time.getText().toString();
+        setTime = time.getText().toString();
 
         final String add_msg = message.getText().toString().trim();
         String rep_msg = "";
@@ -396,8 +371,8 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                        handlerTime();
-
+                        progress.dismiss();
+                        gotoViewPc();
                     } else {
                         Toast.makeText(RequestForRepair.this, "An error occured", Toast.LENGTH_SHORT).show();
                     }
@@ -434,17 +409,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
                 ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(RequestForRepair.this).addToRequestQueue(str);
-    }
-
-    private void handlerTime(){
-        Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                progress.dismiss();
-                gotoViewPc();
-            }
-        }, 3000);
     }
 
     private String imageToString() {
@@ -497,8 +461,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");
             return false;
-        } else if (time_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
-                time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
+        } else if (time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             time.setError("Set date!");
             return false;
         } else if (peripherals.getText().toString().equalsIgnoreCase("")) {

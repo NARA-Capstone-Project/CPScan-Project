@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -26,6 +27,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ReportAdapter;
 import com.example.avendano.cp_scan.Adapter.ReportDetailsAdapter;
+import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -58,6 +60,7 @@ public class ViewInventoryReport extends AppCompatActivity {
     String type;
     String remark;
     android.app.AlertDialog progress;
+    Connection_Detector connection_detector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,7 @@ public class ViewInventoryReport extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        connection_detector = new Connection_Detector(this);
         reportDetailsList = new ArrayList<>();
         remark = "";
         recyclerView = (RecyclerView) findViewById(R.id.inventory_details);
@@ -98,6 +102,86 @@ public class ViewInventoryReport extends AppCompatActivity {
             setDataFrmServer();
         else
             setData();
+
+        sign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (connection_detector.isConnected()) {
+                    progress.show();
+                    checkSignature();
+                } else
+                    Toast.makeText(ViewInventoryReport.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void checkSignature() {
+        final String username = SharedPrefManager.getInstance(ViewInventoryReport.this).getKeyUsername();
+        StringRequest str = new StringRequest(Request.Method.POST
+                , AppConfig.URL_GET_SIGNATURE
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    Log.e("SIGN", response);
+                    JSONObject obj = new JSONObject(response);
+                    if (!obj.getBoolean("error")) {
+                        if (obj.isNull("signature")) {
+                            alertUser();
+                        } else {
+//                            updateSignedStatus();
+                            progress.dismiss();
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.e("SIGN", response);
+                    e.printStackTrace();
+                    progress.dismiss();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("SIGN", error.getMessage());
+                progress.dismiss();
+                Toast.makeText(ViewInventoryReport.this, "Can't connect to the server, please try again later", Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<>();
+                param.put("username", username);
+                return param;
+            }
+        };
+        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
+    }
+
+    private void alertUser() {
+        progress.dismiss();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("No Signature...")
+                .setMessage("Seems you don't have " +
+                        "digital signature yet, press continue to create one now.")
+                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(ViewInventoryReport.this, SignatureActivity.class);
+                        intent.putExtra("from", "inventory");
+                        intent.putExtra("type", type);
+                        intent.putExtra("rep_id", rep_id);
+                        startActivity(intent);
+                        finish();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     private void setDataFrmServer() {
@@ -115,13 +199,13 @@ public class ViewInventoryReport extends AppCompatActivity {
                 String role = SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole();
                 String user_id = SharedPrefManager.getInstance(ViewInventoryReport.this).getUserId();
                 Log.e("USER", role + " " + user_id);
-                if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
+                if (role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
                     query = "select * from assessment_reports where rep_id in (select rep_id from " +
                             "request_inventory as i where req_status = 'Done');";
                 else
-                    query= "select * from assessment_reports where (rep_id in (select rep_id from " +
-                            "request_inventory as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
-                            "or custodian_id = '"+user_id+"');";
+                    query = "select * from assessment_reports where (rep_id in (select rep_id from " +
+                            "request_inventory as i where req_status = 'Done')) and (technician_id = '" + user_id + "' " +
+                            "or custodian_id = '" + user_id + "');";
                 final String finalQuery = query;
                 StringRequest stringRequest = new StringRequest(Request.Method.POST
                         , AppConfig.URL_GET_REQ_REPORTS

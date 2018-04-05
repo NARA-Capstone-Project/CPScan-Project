@@ -70,7 +70,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     SQLiteHandler db;
     EditText message;
     TextView date, time, peripherals, label;
-    Spinner date_type, time_type;
+    Spinner date_type;
     Toolbar toolbar;
     AlertDialog progress;
     ImageView photo1;
@@ -102,31 +102,9 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         date = (TextView) findViewById(R.id.custom_date);
         time = (TextView) findViewById(R.id.custom_time);
         date_type = (Spinner) findViewById(R.id.date);
-        time_type = (Spinner) findViewById(R.id.time);
         String[] type = new String[]{"Anytime", "Custom"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
         date_type.setAdapter(adapter);
-        time_type.setAdapter(adapter);
-        time_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0: {
-                        time.setVisibility(View.GONE);
-                        break;
-                    }
-                    case 1: {
-                        time.setVisibility(View.VISIBLE);
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
         date_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -373,10 +351,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                                 date_type.setSelection(1);
                                 EditRequestSchedule.this.date.setText(date);
                             }
-                            if (!time.equalsIgnoreCase("anytime")) {
-                                time_type.setSelection(1);
-                                EditRequestSchedule.this.time.setText(time);
-                            }
                             message.setText(msg);
                             String new_details = "";
                             if (req_details.contains("Missing")) {
@@ -403,7 +377,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                     h.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Log.e("IMAGE" , image_path);
+                            Log.e("IMAGE", image_path);
                             if (image_path.length() != 0)
                                 getImage();
                             progress.dismiss();
@@ -473,10 +447,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                                 date_type.setSelection(1);
                                 EditRequestSchedule.this.date.setText(date);
                             }
-                            if (!time.equalsIgnoreCase("anytime")) {
-                                time_type.setSelection(1);
-                                EditRequestSchedule.this.time.setText(time);
-                            }
                             message.setText(msg);
                             break;
                         }
@@ -495,7 +465,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 progress.dismiss();
                 Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
             }
-        }){
+        }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> param = new HashMap<>();
@@ -511,8 +481,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");
             return false;
-        } else if (time_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
-                time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
+        } else if (time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             time.setError("Set date!");
             return false;
         } else {
@@ -639,10 +608,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         else
             setDate = date.getText().toString();
 
-        if (time_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
-            setTime = "Anytime";
-        else
-            setTime = time.getText().toString();
+        setTime = time.getText().toString();
 
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;
@@ -710,7 +676,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     }
 
     private void updateReqRepDetails(int id, String finalSetDate, String finalSetTime, String getMsg, String finalRep_msg) {
-        db.updateReqRepairDetails(id, finalSetDate,finalSetTime, getMsg,finalRep_msg);
+        db.updateReqRepairDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
     }
 
 
@@ -721,6 +687,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         return Base64.encodeToString(imgBytes, Base64.DEFAULT);
     }
+
     private void editRequestInventory() {
         String setDate = "";
         String setTime = "";
@@ -730,10 +697,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         else
             setDate = date.getText().toString();
 
-        if (time_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
-            setTime = "Anytime";
-        else
-            setTime = time.getText().toString();
+        setTime = time.getText().toString();
 
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;

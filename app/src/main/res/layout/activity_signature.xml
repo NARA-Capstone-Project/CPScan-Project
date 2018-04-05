@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.avendano.cp_scan.Activities.SignatureActivity">
+
+    <LinearLayout
+        android:background="@color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:layout_marginRight="1dp"
+            android:id="@+id/cancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="bottom"
+            android:text="Cancel"
+            tools:ignore="ButtonStyle"
+            android:background="@color/darkorange"
+            android:textColor="@android:color/white" />
+        <Button
+            android:layout_marginRight="1dp"
+            android:id="@+id/clear"
+            android:background="@color/darkorange"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Clear"
+            tools:ignore="ButtonStyle"
+            android:textColor="@android:color/white" />
+        <Button
+            android:background="@color/darkorange"
+            android:id="@+id/getsign"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Save"
+            tools:ignore="ButtonStyle"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/canvasLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical" />
+</LinearLayout>

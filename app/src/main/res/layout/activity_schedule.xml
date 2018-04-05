@@ -8,30 +8,19 @@
     android:orientation="vertical"
     tools:context="com.example.avendano.cp_scan.Activities.ScheduleActivity">
 
-    <android.support.design.widget.AppBarLayout
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"/>
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="@dimen/appbar_padding_top"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        android:layout_height="65dp"
+        android:layout_margin="5dp"
+        android:background="@drawable/bg_spinner">
+        <Spinner
+            android:id="@+id/spinner"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_weight="1"
-            android:background="?attr/colorPrimary"
-            app:layout_scrollFlags="scroll|enterAlways"
-            app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:title="@string/app_name">
-
-            <Spinner
-                android:id="@+id/spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:popupTheme="@style/AppTheme.PopupOverlay" />
-        </android.support.v7.widget.Toolbar>
-
-    </android.support.design.widget.AppBarLayout>
+            android:layout_height="match_parent"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/container"

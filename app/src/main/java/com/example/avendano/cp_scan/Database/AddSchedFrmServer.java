@@ -32,7 +32,6 @@ public class AddSchedFrmServer {
     }
 
     private void getSchedFromServer(){
-
         StringRequest str = new StringRequest(Request.Method.GET
                 , AppConfig.URL_ROOM_SCHED
                 , new Response.Listener<String>() {

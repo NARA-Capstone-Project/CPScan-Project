@@ -2,6 +2,7 @@ package com.example.avendano.cp_scan.Activities;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,10 +19,20 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ScheduleAdapter;
+import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.RoomSchedule;
 import com.example.avendano.cp_scan.R;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +53,7 @@ public class ScheduleActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setTitle("Schedule");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         db = new SQLiteHandler(this);
@@ -67,31 +78,31 @@ public class ScheduleActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0: {
-                        loadSchedule("Sunday");
+                        new LoadSchedule().execute("server", "Sunday");
                         break;
                     }
                     case 1: {
-                        loadSchedule("Monday");
+                        new LoadSchedule().execute("server", "Monday");
                         break;
                     }
                     case 2: {
-                        loadSchedule("Tuesday");
+                        new LoadSchedule().execute("server", "Tuesday");
                         break;
                     }
                     case 3: {
-                        loadSchedule("Wednesday");
+                        new LoadSchedule().execute("server", "Wednesday");
                         break;
                     }
                     case 4: {
-                        loadSchedule("Thursday");
+                        new LoadSchedule().execute("server", "Thursday");
                         break;
                     }
                     case 5: {
-                        loadSchedule("Friday");
+                        new LoadSchedule().execute("server", "Friday");
                         break;
                     }
                     case 6: {
-                        loadSchedule("Saturday");
+                        new LoadSchedule().execute("server", "Saturday");
                         break;
                     }
 
@@ -112,7 +123,21 @@ public class ScheduleActivity extends AppCompatActivity {
         db.close();
     }
 
-    private void loadSchedule(String day) {
+    class LoadSchedule extends AsyncTask<String, Void, Void>{
+
+        @Override
+        protected Void doInBackground(String... voids) {
+            String method = voids[0];
+            String day = voids[1];
+            if(method.equals("server"))
+                LoadFromServer(day);
+            else
+                loadScheduleFromLocal(day);
+            return null;
+        }
+    }
+
+    private void loadScheduleFromLocal(String day) {
         scheduleList.clear();
         Cursor c = db.getRoomSched(room_id);
         if (c.moveToFirst()) {
@@ -138,6 +163,49 @@ public class ScheduleActivity extends AppCompatActivity {
         }else{
             Toast.makeText(this, "No Schedule", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void LoadFromServer(final String spinner_day){
+        StringRequest str = new StringRequest(Request.Method.GET
+                , AppConfig.URL_ROOM_SCHED
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    for(int i=0; i< array.length();i++){
+                        JSONObject obj = array.getJSONObject(i);
+                        //room_id room name(dept + room no) custodian, custodian id technician technician id
+                        //building, floor
+                        int id = obj.getInt("room_id");
+                        String prof = obj.getString("room_user");
+                        String day = obj.getString("day");
+                        String to_time = obj.getString("to");
+                        String from_time = obj.getString("from");
+
+                        if(room_id == id){
+                            if(spinner_day.equalsIgnoreCase(day)){
+                                RoomSchedule sched = new RoomSchedule(from_time, to_time, prof);
+                                scheduleList.add(sched);
+                                break;
+                            }
+                        }
+                    }
+                    schedAdapter = new ScheduleAdapter(ScheduleActivity.this, scheduleList);
+                    rView.setAdapter(schedAdapter);
+                } catch (JSONException e) {
+                    new LoadSchedule().execute("server", spinner_day);
+                    Log.w("RESULT SCHED", "Error: "+ e.getMessage());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                new LoadSchedule().execute("server", spinner_day);
+                Log.w("RESULT SCHED", "Error: "+ error.getMessage());
+            }
+        });
+        RequestQueueHandler.getInstance(ScheduleActivity.this).addToRequestQueue(str);
     }
 
     @Override

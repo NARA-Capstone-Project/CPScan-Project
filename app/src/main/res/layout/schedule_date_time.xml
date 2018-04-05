@@ -95,20 +95,6 @@
                 android:textColor="@color/black"
                 android:textSize="15sp" />
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="65dp"
-                android:layout_margin="5dp"
-                android:background="@drawable/bg_spinner">
-
-                <Spinner
-                    android:id="@+id/time"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="5dp"></Spinner>
-            </RelativeLayout>
-
-
             <TextView
                 android:id="@+id/custom_time"
                 android:layout_width="match_parent"
@@ -119,7 +105,7 @@
                 android:padding="5dp"
                 android:text="HH:mm:ss"
                 android:textSize="15sp"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <EditText
                 android:id="@+id/message"

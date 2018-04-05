@@ -151,7 +151,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             + ROOMS_CUSTODIAN + " VARCHAR, "
             + SCHED_DAY + " VARCHAR, "
             + SCHED_FROM_TIME + " VARCHAR, "
-            + SCHED_TO_TIME + " VARCHAR "
+            + SCHED_TO_TIME + " VARCHAR,"
+            + COLUMN_SYNC + " TINYINT"
             + ");";
 
     //COMPUTERS
@@ -248,7 +249,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //DB DETAILS
     public static final String DB_NAME = "db_temp";
-    public static final int DB_VERSION = 12;
+    public static final int DB_VERSION = 13;
 
 
     public SQLiteHandler(Context context) {
@@ -300,7 +301,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             db.update(TABLE_REQ_REPAIR, values, null, null);
         }else if(table.equalsIgnoreCase("computers")){
             db.update(TABLE_COMPUTERS, values, null, null);
-        }
+        }else if(table.equalsIgnoreCase("sched"))
+            db.update(TABLE_ROOM_SCHED, values, null, null);
     }
 
     public void deleteAllUnsync(String table){
@@ -317,7 +319,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             db.delete(TABLE_REQ_REPAIR,  COLUMN_SYNC + " = 0", null);
         }else if(table.equalsIgnoreCase("computers")){
             db.delete(TABLE_COMPUTERS, COLUMN_SYNC + " = 0", null);
-        }
+        }else if(table.equalsIgnoreCase("sched"))
+            db.delete(TABLE_ROOM_SCHED, COLUMN_SYNC + " = 0", null);
     }
     //REQUEST FOR INVENTORY FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////
@@ -545,6 +548,19 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put(SCHED_TO_TIME, to_time);
         values.put(SCHED_FROM_TIME, from_time);
         values.put(SCHED_DAY, day);
+
+        long insert = db.insert(TABLE_ROOM_SCHED, null, values);
+        return insert;
+    }
+    public long updateSched(int room_id, String to_time, String from_time, String room_user, String day) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ROOMS_ID, room_id);
+        values.put(ROOMS_CUSTODIAN, room_user);
+        values.put(SCHED_TO_TIME, to_time);
+        values.put(SCHED_FROM_TIME, from_time);
+        values.put(SCHED_DAY, day);
+        values.put(COLUMN_SYNC, 1);
 
         long insert = db.insert(TABLE_ROOM_SCHED, null, values);
         return insert;

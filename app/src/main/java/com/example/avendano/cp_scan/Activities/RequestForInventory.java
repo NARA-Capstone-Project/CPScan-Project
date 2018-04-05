@@ -55,7 +55,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
     SQLiteHandler db;
     EditText message;
     TextView date, time;
-    Spinner date_type, time_type;
+    Spinner date_type;
     int room_id;
     Toolbar toolbar;
     AlertDialog progress;
@@ -83,31 +83,9 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         date = (TextView) findViewById(R.id.custom_date);
         time = (TextView) findViewById(R.id.custom_time);
         date_type = (Spinner) findViewById(R.id.date);
-        time_type = (Spinner) findViewById(R.id.time);
         String[] type = new String[]{"Anytime", "Custom"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
         date_type.setAdapter(adapter);
-        time_type.setAdapter(adapter);
-        time_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0: {
-                        time.setVisibility(View.GONE);
-                        break;
-                    }
-                    case 1: {
-                        time.setVisibility(View.VISIBLE);
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
         date_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -180,8 +158,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");
             return false;
-        } else if (time_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
-                time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
+        } else if (time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             time.setError("Set date!");
             return false;
         }else{
@@ -198,10 +175,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         else
             setDate =  date.getText().toString();
 
-        if(time_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
-            setTime = "Anytime";
-        else
-            setTime =  time.getText().toString();
+        setTime =  time.getText().toString();
 
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;

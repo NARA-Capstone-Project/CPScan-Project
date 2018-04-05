@@ -39,4 +39,5 @@ public class AppConfig {
     public static String URL_DELETE_REPORT = ROOT_URL + "cict_delete_assessment.php";
     public static String URL_GET_REQ_REPORTS = ROOT_URL + "cict_get_request_reports.php";
     public static String URL_SEARCH_ROOM = ROOT_URL + "cict_search_room.php";
+    public static String URL_GET_SIGNATURE = ROOT_URL + "cict_get_user.php";
 }
