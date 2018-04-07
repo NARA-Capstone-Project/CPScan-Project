@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.avendano.cp_scan">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -93,7 +93,9 @@
             android:screenOrientation="portrait" />
         <activity android:name=".Activities.SearchActivity" />
         <activity android:name=".Activities.ViewRepairReport" />
-        <activity android:name=".Activities.SignatureActivity"></activity>
+        <activity android:name=".Activities.SignatureActivity" />
+        <activity android:name=".Activities.Main_Page"
+            android:exported="true"></activity>
     </application>
 
 </manifest>

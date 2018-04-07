@@ -25,7 +25,7 @@ public class DatePicker extends DialogFragment {
                 year, month, day);
         android.widget.DatePicker datePicker = datePickerDialog.getDatePicker();
 
-        c.add(Calendar.MONTH, +1);
+        c.add(Calendar.WEEK_OF_MONTH, +1);
         long oneMonthAhead = c.getTimeInMillis();
         datePicker.setMaxDate(oneMonthAhead);
         datePicker.setMinDate(System.currentTimeMillis() - 1000);

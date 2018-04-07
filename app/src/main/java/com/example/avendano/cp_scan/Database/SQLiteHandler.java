@@ -249,7 +249,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     //DB DETAILS
     public static final String DB_NAME = "db_temp";
-    public static final int DB_VERSION = 13;
+    public static final int DB_VERSION = 14;
 
 
     public SQLiteHandler(Context context) {

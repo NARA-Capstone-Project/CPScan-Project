@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#ffc107</color>
-    <color name="colorPrimaryDark">#ffa000</color>
-    <color name="darkorange">#ff8000</color>
+    <!--ffc107-->
+    <color name="colorPrimary">#29deb9</color>
+    <!--ffa000-->
+    <color name="colorPrimaryDark">#FF1BBC9B</color>
+    <!--ff8000-->
+    <color name="darkorange">#59abe7</color>
     <color name="colorAccent">#FF4081</color>
     <color name="bg">#fcfcfc</color>
     <color name="iconColor">#c1bebe</color>
@@ -11,4 +14,15 @@
     <color name="white">#ffffff</color>
     <color name="lightGrey">#dad9d9</color>
     <color name="black">#000000</color>
+    <color name="pictonblue">#59abe7</color>
+    <color name="mountainmeadow">#FF1BBC9B</color>
+    <color name="light">#2ef2ca</color>
+    <color name="red">#f70909</color>
+    <color name="capehoney">#fde3a7</color>
+    <color name="iron">#95A5A6</color>
+    <color name="crusta">#f2784b</color>
+    <color name="jaffa">#f27935</color>
+    <color name="wistful">#AEA8D3</color>
+    <color name="waxflower">#D2527F</color>
+
 </resources>

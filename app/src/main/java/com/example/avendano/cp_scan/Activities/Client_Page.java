@@ -118,6 +118,8 @@ public class Client_Page extends AppCompatActivity {
                         Snackbar.LENGTH_SHORT).show();
             }
         }, intentFilter);
+
+        //background sync //snackbar
         AddInventoryRequestFrmServer add = new AddInventoryRequestFrmServer(this, db);
         add.SyncFunction();
         AddRepairRequestFrmServer req = new AddRepairRequestFrmServer(this, db);
@@ -126,7 +128,6 @@ public class Client_Page extends AppCompatActivity {
         rooms.SyncFunction();
         AddCompFrmServer comps = new AddCompFrmServer(this, db);
         comps.SyncFunction();
-
     }//oncreate
 
     private void scanPc() {

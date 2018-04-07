@@ -23,6 +23,7 @@ public class Connection_Detector {
             NetworkInfo info = connectivity.getActiveNetworkInfo();
             if(info != null){
                 if(info.getState() == NetworkInfo.State.CONNECTED){
+                    //snyc
                     return true;
                 }
             }
