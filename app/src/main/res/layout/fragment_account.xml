@@ -3,10 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg"
-    tools:context="com.example.avendano.cp_scan.Fragments.AccountFragment">
+    android:background="@color/bg">
 
     <!-- TODO: Update blank fragment layout -->
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"/>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="150dp"

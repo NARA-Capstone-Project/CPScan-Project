@@ -52,7 +52,7 @@
                 android:layout_height="30dp"
                 android:layout_below="@+id/pc_status"
                 android:layout_marginTop="10dp"
-                android:background="@color/darkorange"
+                android:background="@color/button_color"
                 android:text="Report"
                 android:textColor="@color/white" />
 
@@ -66,7 +66,7 @@
                 android:layout_toRightOf="@+id/pc_report"
                 android:background="@drawable/style_button_white"
                 android:text="Cancel"
-                android:textColor="@color/darkorange"
+                android:textColor="@color/button_color"
                 android:visibility="gone" />
 
         </RelativeLayout>

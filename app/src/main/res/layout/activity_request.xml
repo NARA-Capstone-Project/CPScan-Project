@@ -51,14 +51,14 @@
             android:textColor="@color/white"
             android:textStyle="bold"
             android:background="@drawable/style_button_white"
-            android:backgroundTint="@color/darkorange"/>
+            android:backgroundTint="@color/button_color"/>
         <Button
             android:id="@+id/cancel_action"
             android:layout_marginTop="5dp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Cancel"
-            android:textColor="@color/darkorange"
+            android:textColor="@color/button_color"
             android:textStyle="bold"
             android:background="@drawable/style_button_white"/>
     </LinearLayout>

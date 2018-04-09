@@ -1,20 +1,16 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -28,7 +24,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
-import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -256,12 +251,12 @@ public class ViewRoom extends AppCompatActivity {
                     if (!obj.getBoolean("error")) {
                         if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
                             room_btn.setText("Request");
-                            room_btn.setBackgroundResource(R.color.darkorange);
+                            room_btn.setBackgroundResource(R.color.button_color);
                             room_btn.setTextColor(getResources().getColor(R.color.white));
                         } else { //kapag na request na
                             room_btn.setText("Requested");
                             room_btn.setBackgroundResource(R.drawable.style_button_white);
-                            room_btn.setTextColor(getResources().getColor(R.color.darkorange));
+                            room_btn.setTextColor(getResources().getColor(R.color.button_color));
                             int req_id = obj.getInt("req_id");
                             int rep_id = 0;
                             if (!obj.isNull("rep_id"))
@@ -329,10 +324,10 @@ public class ViewRoom extends AppCompatActivity {
             if (c.moveToFirst()) {
                 room_btn.setText("Requested");
                 room_btn.setBackgroundResource(R.drawable.style_button_white);
-                room_btn.setTextColor(getResources().getColor(R.color.darkorange));
+                room_btn.setTextColor(getResources().getColor(R.color.button_color));
             } else {
                 room_btn.setText("Request");
-                room_btn.setBackgroundResource(R.color.darkorange);
+                room_btn.setBackgroundResource(R.color.button_color);
                 room_btn.setTextColor(getResources().getColor(R.color.white));
             }
         }

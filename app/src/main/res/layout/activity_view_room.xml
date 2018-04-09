@@ -174,7 +174,7 @@
             android:layout_alignParentRight="true"
             android:layout_marginBottom="5dp"
             android:text="Report"
-            android:background="@color/darkorange"
+            android:background="@color/button_color"
             android:textColor="@color/white"
             android:textStyle="bold"/>
         <View

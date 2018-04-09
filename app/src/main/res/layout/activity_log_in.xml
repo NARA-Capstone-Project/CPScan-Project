@@ -18,7 +18,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="2dp"
-        android:background="@color/darkorange"/>
+        android:background="@color/lightGrey"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -26,6 +26,16 @@
         android:gravity="center"
         android:orientation="vertical"
         android:padding="15dp">
+
+        <TextView
+            android:id="@+id/error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/red"
+            android:text="sample"
+            android:visibility="gone"
+            android:textAlignment="center"/>
 
         <EditText
             android:id="@+id/login_username"
@@ -56,7 +66,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/style_button_white"
             android:text="login"
-            android:textColor="@color/darkorange"/>
+            android:textColor="@color/white"/>
 
         <TextView
             android:id="@+id/login_request"
@@ -65,7 +75,7 @@
             android:layout_height="wrap_content"
             android:text="Request Account"
             android:padding="5dp"
-            android:textColor="@color/darkorange" />
+            android:textColor="@color/button_color" />
     </LinearLayout>
 
 

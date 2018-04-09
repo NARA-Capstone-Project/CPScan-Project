@@ -45,14 +45,14 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginBottom="5dp"
-            android:background="@color/darkorange" />
+            android:background="@color/button_color" />
 
         <TextView
             android:layout_marginTop="5dp"
             android:id="@+id/status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/darkorange"
+            android:background="@color/button_color"
             android:textColor="@color/white"
             android:textStyle="bold"
             android:textAlignment="center"
@@ -125,7 +125,7 @@
             <View
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="@color/darkorange"/>
+                android:background="@color/button_color"/>
             <LinearLayout
                 android:paddingLeft="10dp"
                 android:layout_width="wrap_content"
@@ -191,7 +191,7 @@
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/darkorange"/>
+            android:background="@color/button_color"/>
     </com.github.aakira.expandablelayout.ExpandableLinearLayout>
 
 </RelativeLayout>

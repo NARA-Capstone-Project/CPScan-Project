@@ -3,12 +3,9 @@ package com.example.avendano.cp_scan.Activities;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.preference.DialogPreference;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Base64;
-import android.util.Base64DataException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,26 +19,16 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
-import com.example.avendano.cp_scan.Database.AddInventoryRequestFrmServer;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.AddCompFrmServer;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
-import com.example.avendano.cp_scan.Database.AddRoomsFrmServer;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Database.AddSchedFrmServer;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.login.LoginException;
 
 import dmax.dialog.SpotsDialog;
 
@@ -51,10 +38,9 @@ public class LogInActivity extends AppCompatActivity {
 
     private Button login;
     private EditText user, password;
-    private TextView request_acc;
+    private TextView request_acc, error_alert;
     private ProgressDialog pDialog;
     private Connection_Detector connection_detector = new Connection_Detector(this);
-    private SQLiteHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +51,7 @@ public class LogInActivity extends AppCompatActivity {
         password = (EditText) findViewById(R.id.login_password);
         request_acc = (TextView) findViewById(R.id.login_request);
         login = (Button) findViewById(R.id.login);
-
-        db = new SQLiteHandler(this);
+        error_alert = (TextView) findViewById(R.id.error);
         //progress dialog
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
@@ -113,7 +98,6 @@ public class LogInActivity extends AppCompatActivity {
         } else {
             if (user_lth > 0) {
                 if (pass_lth > 0) {
-                    sync();
                     return true;
                 } else {
                     password.requestFocus();
@@ -129,20 +113,9 @@ public class LogInActivity extends AppCompatActivity {
         return false;
     }
 
-    public void sync() {
-        AddCompFrmServer comp = new AddCompFrmServer(LogInActivity.this, db);
-        AddRoomsFrmServer rooms = new AddRoomsFrmServer(LogInActivity.this, db);
-        AddSchedFrmServer sched = new AddSchedFrmServer(LogInActivity.this, db);
-        AddInventoryRequestFrmServer rInv = new AddInventoryRequestFrmServer(LogInActivity.this, db);
-        rInv.SyncFunction();
-        sched.SyncFunction();
-        comp.SyncFunction();
-        rooms.SyncFunction();
-    }
-
     private void logUser(final String username, final String password) {
 
-        StringRequest strReq = new StringRequest(Request.Method.POST, AppConfig.URL_LOGIN
+        StringRequest strReq = new StringRequest(Request.Method.POST, AppConfig.LOGIN
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -152,6 +125,7 @@ public class LogInActivity extends AppCompatActivity {
                     if (!obj.getBoolean("error")) {
                         SharedPrefManager.getInstance(getApplicationContext())
                                 .userLogin(obj.getString("user_id"),
+                                        obj.getString("email"),
                                         obj.getString("username"),
                                         obj.getString("name"),
                                         obj.getString("phone"),
@@ -160,14 +134,16 @@ public class LogInActivity extends AppCompatActivity {
                                         obj.getString("acc_status")
                                 );
 
-                        //add reports and details
-                        startActivity(new Intent(getApplicationContext(), Client_Page.class));
+                        startActivity(new Intent(getApplicationContext(), Main_Page.class));
                         finish();
                     } else {
-                        if (obj.getString("message").contains("deactivated"))
-                            reactivateAccount(obj.getString("user_id"));
-                        else
-                            Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
+                        error_alert.setVisibility(View.VISIBLE);
+                        String msg = obj.getString("message");
+                        error_alert.setText(msg);
+//                        if (obj.getString("message").contains("deactivated"))
+//                            reactivateAccount(obj.getString("user_id"));
+//                        else
+//                            Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     Log.e("JSONEXCEPTION: ", e.getMessage());

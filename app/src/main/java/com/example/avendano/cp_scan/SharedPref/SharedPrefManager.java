@@ -26,6 +26,7 @@ public class SharedPrefManager {
     private static final String KEY_USERROLE = "role";
     private static final String KEY_EXPIRE = "date_expire";
     private static final String KEY_ACCSTATUS = "acc_status";
+    private static final String KEY_EMAIL = "email";
 
     public SharedPrefManager(Context context) {
         mCtx = context;
@@ -39,7 +40,7 @@ public class SharedPrefManager {
     }
 
     //store user data needed
-    public boolean userLogin(String user_id, String username, String name, String phone,
+    public boolean userLogin(String user_id,String email, String username, String name, String phone,
                              String role, String date_expire, String acc_status) {
 
         SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -53,6 +54,7 @@ public class SharedPrefManager {
         editor.putString(KEY_USERROLE, role);
         editor.putString(KEY_EXPIRE, date_expire);
         editor.putString(KEY_ACCSTATUS, acc_status);
+        editor.putString(KEY_EMAIL, email);
         editor.apply();
         return true;
     }
@@ -60,6 +62,11 @@ public class SharedPrefManager {
     public String getUserId() {
         SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getString(KEY_USERID, null);
+    }
+
+    public String getEmail(){
+        SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getString(KEY_EMAIL, null);
     }
 
     public String getName() {

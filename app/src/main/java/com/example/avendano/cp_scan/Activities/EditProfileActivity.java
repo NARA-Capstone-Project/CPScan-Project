@@ -23,9 +23,10 @@ import com.example.avendano.cp_scan.AccountShowDialog;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    String[] titles = { "Phone","Name", "Username", "Password", "Signature"};
+    String[] titles = { "Phone","Name","Email", "Username", "Password", "Signature"};
     String[] userData = {SharedPrefManager.getInstance(EditProfileActivity.this).getUserPhone(),
             SharedPrefManager.getInstance(EditProfileActivity.this).getName()
+            , SharedPrefManager.getInstance(EditProfileActivity.this).getEmail()
             , SharedPrefManager.getInstance(EditProfileActivity.this).getKeyUsername(), "" ,""};
     SQLiteHandler db;
 
@@ -37,6 +38,7 @@ public class EditProfileActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Edit Profile");
 
         db = new SQLiteHandler(EditProfileActivity.this);
 

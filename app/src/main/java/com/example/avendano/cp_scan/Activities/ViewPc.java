@@ -844,13 +844,13 @@ public class ViewPc extends AppCompatActivity {
                     if (!obj.getBoolean("error")) {
                         if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
                             report.setText("Report");
-                            report.setBackgroundResource(R.color.darkorange);
+                            report.setBackgroundResource(R.color.button_color);
                             report.setTextColor(getResources().getColor(R.color.white));
                         } else { //kapag na request na
                             if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian")) {
                                 report.setText("Reported");
                                 report.setBackgroundResource(R.drawable.style_button_white);
-                                report.setTextColor(getResources().getColor(R.color.darkorange));
+                                report.setTextColor(getResources().getColor(R.color.button_color));
                             }
                             int req_id = obj.getInt("req_id");
                             int rep_id = 0;
@@ -924,10 +924,10 @@ public class ViewPc extends AppCompatActivity {
             if (c.moveToFirst()) {
                 report.setText("Reported");
                 report.setBackgroundResource(R.drawable.style_button_white);
-                report.setTextColor(getResources().getColor(R.color.darkorange));
+                report.setTextColor(getResources().getColor(R.color.button_color));
             } else {
                 report.setText("Report");
-                report.setBackgroundResource(R.color.darkorange);
+                report.setBackgroundResource(R.color.button_color);
                 report.setTextColor(getResources().getColor(R.color.white));
             }
         }

@@ -33,7 +33,7 @@
             android:id="@+id/linear"
             android:orientation="horizontal">
             <Button
-                android:background="@color/darkorange"
+                android:background="@color/button_color"
                 android:id="@+id/done"
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:text="Ignore"
-                android:textColor="@color/darkorange"
+                android:textColor="@color/button_color"
                 android:background="@drawable/style_button_white"/>
         </LinearLayout>
 

@@ -16,11 +16,6 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Activities.LogInActivity" />
         <activity
-            android:name=".Activities.MainActivity"
-            android:configChanges="orientation"
-            android:label="CP-Scan"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".Activities.RequestActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
@@ -44,16 +39,6 @@
             android:name=".Activities.AssessmentActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".Activities.Client_Page"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <receiver
             android:name=".Connection_Detector.NetworkStateChange"
@@ -95,7 +80,15 @@
         <activity android:name=".Activities.ViewRepairReport" />
         <activity android:name=".Activities.SignatureActivity" />
         <activity android:name=".Activities.Main_Page"
-            android:exported="true"></activity>
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter></activity>
+        <activity android:name=".Activities.ProfileActivity"></activity>
+        <activity android:name=".Activities.RoomActivity"></activity>
+        <activity android:name=".Activities.RequestListsActivity"></activity>
     </application>
 
 </manifest>

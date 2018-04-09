@@ -101,7 +101,7 @@ public class RoomFragment extends Fragment {
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         swiper = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
-//        swiper.setColorSchemeColors(new Color(getResources(R.color.darkorange)));
+//        swiper.setColorSchemeColors(new Color(getResources(R.color.button_color)));
         swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
