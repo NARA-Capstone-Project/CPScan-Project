@@ -3,6 +3,7 @@ package com.example.avendano.cp_scan.Database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -108,6 +109,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String ROOM_PC_ID = "room_pc_id";
     public static final String DATE = "date";
     public static final String TIME = "time";
+    public static final String TASK_STATUS = "task_status";
 
     public static final String COLUMN_SCANNED = "scanned"; // if assessed/scanned 0 n 1
     public static final String COLUMN_TECH_ID = "technician_id";
@@ -229,6 +231,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + DATE + " DATE,"
             + TIME + " TIME,"
             + COLUMN_TECH_ID + " VARCHAR,"
+            + TASK_STATUS + " VARCHAR, "
             + COLUMN_TOGGLE + " TINYINT,"
             + COLUMN_SYNC + " TINYINT)";
 
@@ -246,11 +249,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COLUMN_TOGGLE + " TINYINT,"
             + COLUMN_SYNC + " TINYINT)";
 
-    String createReqPeripheralsDetails = "CREATE " + TABLE_PERIPHERALS_DETAILS + " ( "
-            + REQ_ID + " INTEGER,"
-            + QTY + " INTEGER,"
-            + UNIT + " TEXT,"
-            + DESCRIPTION + " TEXT,"
+    String createReqPeripheralsDetails = "CREATE TABLE " + TABLE_PERIPHERALS_DETAILS + " ( "
+            + REQ_ID + " INTEGER, "
+            + QTY + " INTEGER, "
+            + UNIT + " TEXT, "
+            + DESCRIPTION + " TEXT, "
             + QTY_ISSUED + " INTEGER"
             + ")";
 
@@ -523,11 +526,51 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         long in = db.insert(PC_TO_ASSESS, null, values);
         return in;
     }
+    public long getUnscannedCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long count = DatabaseUtils.queryNumEntries(db, PC_TO_ASSESS, COLUMN_SCANNED
+                + " = 1 ", null);
+        return count;
+    }
+
+    public long pcToAssessCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long count = DatabaseUtils.queryNumEntries(db, PC_TO_ASSESS);
+        return count;
+    }
+    public void deletePcToAssess() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM " + PC_TO_ASSESS);
+    }
+    public void updateScannedStatus(int scanned, int comp){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_SCANNED, scanned);
+        db.update(PC_TO_ASSESS, values, COMP_ID + " = ? ", new String[]{String.valueOf(comp)});
+        db.close();
+    }
+
+    public Cursor getPcToAssessAsc(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String sql = "SELECT * from " + PC_TO_ASSESS + " ORDER BY " + COLUMN_SCANNED + " ASC, " + COMP_NAME + " ASC";
+        Cursor c = db.rawQuery(sql, null);
+        return c;
+    }
+    public Cursor getPcToAssess(int comp_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {COMP_ID, COMP_MODEL,COMP_NAME, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
+                COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, COLUMN_SCANNED};
+        Cursor cursor = db.query(PC_TO_ASSESS, columns, COMP_ID + " = ?", new String[]
+                {String.valueOf(comp_id)}, null, null, null);
+        return cursor;
+    }
+
+
 
 
     //assessed pc
-    public long addAssessedPc(int comp_id, int pc_no, String model, String mb, String mb_serial, String processor,
-                              String monitor, String mon_serial, String ram, String kboard,
+    public long addAssessedPc(int comp_id, int pc_no,String model, String mb, String mb_serial, String processor,
+                              String monitor,String mon_serial, String ram, String kboard,
                               String mouse, String status, String vga, String hdd) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -550,6 +593,24 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         long rowInserted = db.insert(ASSESSED_PC, null, values);
         db.close();
         return rowInserted;
+    }
+
+    public Cursor getAssessedPc(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {COMP_ID, COMP_NAME,COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
+                COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, REPORT_MB_SERIAL, REPORT_MON_SERIAL};
+        Cursor cursor = db.query(ASSESSED_PC, columns, null, null, null, null, null);
+        return cursor;
+    }
+
+    public void deleteAssessedPc() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM " + ASSESSED_PC);
+    }
+    public long assessedPcCount(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        long c = DatabaseUtils.queryNumEntries(db,ASSESSED_PC, null,null);
+        return c;
     }
 
 }
