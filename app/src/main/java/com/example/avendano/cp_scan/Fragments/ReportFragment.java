@@ -171,7 +171,7 @@ public class ReportFragment extends Fragment {
                     dialog.dismiss();
                     progressBar.setVisibility(View.GONE);
                 }
-            }, 3000);
+            }, 2000);
          }
     }
 

@@ -70,13 +70,13 @@ public class Request_Page extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_request__page, container, false);
+        View v = inflater.inflate(R.layout.recycler_and_spinner, container, false);
 
-        recyclerView = (RecyclerView) v.findViewById(R.id.request_list);
+        recyclerView = (RecyclerView) v.findViewById(R.id.recycler_items);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         refresh = (SwipeRefreshLayout) v.findViewById(R.id.refresh);
-        req_type = (Spinner) v.findViewById(R.id.request_type);
+        req_type = (Spinner) v.findViewById(R.id.list_type);
         progress = new SpotsDialog(getContext(), "Loading...");
         progress.show();
         progress.setCancelable(false);
@@ -248,7 +248,6 @@ public class Request_Page extends Fragment {
                             repairList.add(repair);
                         }
                         Log.e("PENDING", req_status);
-
                     }
                     repairAdapter = new RepairAdapter(repairList, getContext(), getActivity(), refresh);
                     recyclerView.setAdapter(repairAdapter);

@@ -81,7 +81,7 @@ public class Schedule_Page extends Fragment {
                 new loadSchedule().execute();
             }
         });
-        add = (FloatingActionButton) view.findViewById(R.id.add_sched);
+        add = (FloatingActionButton) view.findViewById(R.id.add_btn);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler_task_sched);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

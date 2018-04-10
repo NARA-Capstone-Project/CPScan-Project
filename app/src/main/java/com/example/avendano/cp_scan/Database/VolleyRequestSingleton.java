@@ -1,14 +1,17 @@
 package com.example.avendano.cp_scan.Database;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Activities.RequestListsActivity;
 
 import java.util.Map;
 
@@ -34,7 +37,7 @@ Context mCtx;
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(mCtx, "Can't connect to the server, please try again later.", Toast.LENGTH_SHORT).show();
+               callback.onErrorResponse(error);
             }
         }){
             @Override
@@ -42,7 +45,29 @@ Context mCtx;
                 return params;
             }
         };
+        int requestTimeout = 20000;
+        str.setRetryPolicy(new DefaultRetryPolicy(requestTimeout, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
+    }
 
+    public void sendStringRequestGet(String url, final VolleyCallback callback){
+        StringRequest str = new StringRequest(Request.Method.GET
+                , url
+                , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                callback.onSuccessResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onErrorResponse(error);
+            }
+        });
+        int requestTimeout = 20000;
+        str.setRetryPolicy(new DefaultRetryPolicy(requestTimeout, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
     }
 }

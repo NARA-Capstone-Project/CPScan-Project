@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.AlertDialog;
 import android.os.AsyncTask;
@@ -16,26 +16,23 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.InventoryAdapter;
 import com.example.avendano.cp_scan.Adapter.RepairAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
 import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
-import com.example.avendano.cp_scan.Fragments.Request_Page;
 import com.example.avendano.cp_scan.Model.RequestInventory;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +60,16 @@ public class RequestListsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_request__page);
+        setContentView(R.layout.recycler_and_spinner);
 
+        inventoryList = new ArrayList<>();
+        repairList = new ArrayList<>();
         volley = new VolleyRequestSingleton(this);
-        recyclerView = (RecyclerView) findViewById(R.id.request_list);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_items);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         refresh = (SwipeRefreshLayout) findViewById(R.id.refresh);
-        request_type = (Spinner) findViewById(R.id.request_type);
+        request_type = (Spinner) findViewById(R.id.list_type);
         progress = new SpotsDialog(this, "Loading...");
         progress.show();
         progress.setCancelable(false);
@@ -82,17 +81,26 @@ public class RequestListsActivity extends AppCompatActivity {
         request_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if(previousSelection  < 0)
+                if (previousSelection < 0)
                     previousSelection = 0;
-                else{
+                else {
                     progressBar.setVisibility(View.VISIBLE);
                     new LoadRequests().execute();
                     previousSelection = position;
                 }
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
+            }
+        });
+
+        refresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refresh.setRefreshing(true);
+                new LoadRequests().execute();
             }
         });
         new LoadRequests().execute();
@@ -110,21 +118,26 @@ public class RequestListsActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             if (request_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Request")) {
-                loadInventory();
+                loadRequestInventory();
+            } else if (request_type.getSelectedItem().toString().equalsIgnoreCase("Repair Request")) {
+                loadRequestRepair();
+            }else{
+                //peripherals
             }
             return null;
         }
     }
 
-    private void loadInventory() {
+    private void loadRequestInventory() {
         Map<String, String> param = new HashMap<>();
-        param.put("user_id", SharedPrefManager.getInstance(this).getUserId());
+        param.put("id", SharedPrefManager.getInstance(this).getUserId());
+        String url = AppConfig.URL_GET_ALL_INVENTORY_REQUEST;
 
-        volley.sendStringRequestPost("", new VolleyCallback() {
+        volley.sendStringRequestPost(url, new VolleyCallback() {
             @Override
-            public void onSuccessResponse(String result) {
+            public void onSuccessResponse(String response) {
                 try {
-                    JSONArray array = new JSONArray(result);
+                    JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         int req_id = obj.getInt("req_id");
@@ -147,15 +160,90 @@ public class RequestListsActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Toast.makeText(RequestListsActivity.this, "Error Occured", Toast.LENGTH_SHORT).show();
                 }
-                if(inventoryList.size() != 0){
-                    inventoryAdapter = new InventoryAdapter(inventoryList,RequestListsActivity.this, RequestListsActivity.this
+                if (inventoryList.size() != 0) {
+                    inventoryAdapter = new InventoryAdapter(inventoryList, RequestListsActivity.this, RequestListsActivity.this
                             , refresh);
                     recyclerView.setAdapter(inventoryAdapter);
+                } else {
+                    Toast.makeText(RequestListsActivity.this, "No Request", Toast.LENGTH_SHORT).show();
+                }
+                progressBar.setVisibility(View.GONE);
+                progress.dismiss();
+                refresh.setRefreshing(false);
+
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }, param);
+    }
+
+    private void loadRequestRepair() {
+        //check connection
+        String url = AppConfig.URL_GET_ALL_REPAIR_REQUEST;
+        Map<String, String> param = new HashMap<>();
+        param.put("id", SharedPrefManager.getInstance(RequestListsActivity.this).getUserId());
+
+        volley.sendStringRequestPost(url, new VolleyCallback() {
+            @Override
+            public void onSuccessResponse(String response) {
+                Log.e("RESPONSE", response);
+                try {
+                    Log.v("REQUEST", response);
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        int req_id = obj.getInt("req_id");
+                        int rep_id = 0;
+                        if (!obj.isNull("rep_id"))
+                            rep_id = obj.getInt("rep_id");
+                        int comp_id = obj.getInt("comp_id");
+                        String cust_id = obj.getString("custodian");
+                        String tech_id = obj.getString("technician");
+                        String date = obj.getString("date");
+                        String time = obj.getString("time");
+                        String msg = obj.getString("msg");
+                        String req_status = obj.getString("req_status");
+                        String req_date = obj.getString("date_requested");
+                        String req_time = obj.getString("time_requested");
+                        String req_details = obj.getString("req_details");
+                        String path = obj.getString("image");
+
+                        if (req_status.equalsIgnoreCase("pending")) {
+                            RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                    , date, time, msg, req_date, req_time, req_status, path, req_details);
+                            repairList.add(repair);
+                        }
+                        Log.e("PENDING", req_status);
+                    }
+                    if (repairList.size() != 0) {
+                        repairAdapter = new RepairAdapter(repairList, RequestListsActivity.this, RequestListsActivity.this, refresh);
+                        recyclerView.setAdapter(repairAdapter);
+                    } else {
+                        Toast.makeText(RequestListsActivity.this, "No Request", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    Toast.makeText(RequestListsActivity.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 }
                 progressBar.setVisibility(View.GONE);
                 progress.dismiss();
                 refresh.setRefreshing(false);
             }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if(error instanceof TimeoutError)
+                    Toast.makeText(RequestListsActivity.this, "Server took too long to respond, chack your connection", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(RequestListsActivity.this, "Can't connect to the server, please try again later", Toast.LENGTH_SHORT).show();
+            }
         }, param);
+    }
+
+    private void loadRequestPeripherals() {
+
     }
 }

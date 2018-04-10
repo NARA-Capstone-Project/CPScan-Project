@@ -48,6 +48,8 @@
             </intent-filter>
         </receiver>
 
+        <service android:name=".Database.BackgroundService" android:label="@string/app_name" android:enabled="true"/>
+
         <activity
             android:name=".Activities.ViewPc"
             android:configChanges="orientation"
@@ -79,16 +81,19 @@
         <activity android:name=".Activities.SearchActivity" />
         <activity android:name=".Activities.ViewRepairReport" />
         <activity android:name=".Activities.SignatureActivity" />
-        <activity android:name=".Activities.Main_Page"
+        <activity android:name=".Pages.Main_Page"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter></activity>
-        <activity android:name=".Activities.ProfileActivity"></activity>
-        <activity android:name=".Activities.RoomActivity"></activity>
-        <activity android:name=".Activities.RequestListsActivity"></activity>
+        <activity android:name=".Pages.ProfileActivity"></activity>
+        <activity android:name=".Pages.RoomActivity"></activity>
+        <activity android:name=".Pages.RequestListsActivity"></activity>
+        <activity android:name=".Pages.SchedulesActivity"></activity>
+        <activity android:name=".Pages.ReportActivity"></activity>
+        <activity android:name=".Pages.InventoryActivty"></activity>
     </application>
 
 </manifest>

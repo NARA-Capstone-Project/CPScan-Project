@@ -8,8 +8,8 @@ public class AppConfig {
 
 //    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
 //    public static String ROOT_URL = "http://192.168.188.2/android_api/"; // genymotion
-    public static String ROOT_URL = "http://192.168.0.11/android_api/"; //lan
-    public static String ROOT = "http://192.168.0.11/api/"; //lan
+    public static String ROOT_URL = "http://192.168.254.108/android_api/"; //lan
+    public static String ROOT = "http://192.168.254.108/api/"; //lan
 
     // Server user login url
     public static String URL_LOGIN = ROOT_URL + "cict_login.php";
@@ -45,4 +45,5 @@ public class AppConfig {
     public static String LOGIN = ROOT + "login.php";
     public static String GET_ROOMS = ROOT + "get_room.php";
     public static String SEARCH_ROOMS = ROOT + "search_room.php";
+    public static String COUNT_REQ = ROOT + "count_requests.php";
 }

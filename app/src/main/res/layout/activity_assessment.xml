@@ -2,23 +2,22 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:id="@+id/container"
-    tools:context="com.example.avendano.cp_scan.Activities.AssessmentActivity">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar" />
 
     <LinearLayout
+        android:id="@+id/linear"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="5dp"
-        android:layout_below="@+id/toolbar"
-        android:id="@+id/linear">
+        android:padding="5dp">
 
         <Button
             android:id="@+id/scan"
@@ -49,19 +48,19 @@
     </LinearLayout>
 
     <View
-        android:layout_below="@+id/linear"
+        android:id="@+id/view"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/lightGrey"
-        android:id="@+id/view"/>
+        android:layout_below="@+id/linear"
+        android:background="@color/lightGrey" />
 
     <android.support.v7.widget.RecyclerView
-        android:layout_below="@+id/view"
         android:id="@+id/scan_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="5dp"
-        android:layout_marginBottom="?attr/actionBarSize">
+        android:layout_below="@+id/view"
+        android:layout_marginBottom="?attr/actionBarSize"
+        android:padding="5dp">
 
     </android.support.v7.widget.RecyclerView>
 
@@ -71,8 +70,8 @@
         android:layout_height="?attr/actionBarSize"
         android:layout_alignParentBottom="true"
         android:background="@color/white"
-        android:textColor="@color/black"
         android:hint="Write a remark..."
+        android:maxLength="80"
         android:padding="4dp"
-        android:maxLength="80"/>
+        android:textColor="@color/black" />
 </RelativeLayout>

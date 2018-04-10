@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,6 +22,8 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.EditProfileActivity;
+import com.example.avendano.cp_scan.Activities.LogInActivity;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;

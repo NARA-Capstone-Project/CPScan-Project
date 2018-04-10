@@ -18,7 +18,6 @@ public class Reports {
         this.room_id = room_id;
         this.rep_id = rep_id;
         this.room_name = room_name;
-
     }
 
     public String getDate() {
