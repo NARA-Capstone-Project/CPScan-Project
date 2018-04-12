@@ -24,7 +24,6 @@ import com.example.avendano.cp_scan.Adapter.RoomAdapter;
 import com.example.avendano.cp_scan.Adapter.SearchAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
-import com.example.avendano.cp_scan.Fragments.RoomFragment;
 import com.example.avendano.cp_scan.Model.Rooms;
 import com.example.avendano.cp_scan.Model.Search;
 import com.example.avendano.cp_scan.R;

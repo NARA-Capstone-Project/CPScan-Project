@@ -28,6 +28,7 @@ import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.RoomSchedule;
+import com.example.avendano.cp_scan.Pages.ViewRoom;
 import com.example.avendano.cp_scan.R;
 
 import org.json.JSONArray;

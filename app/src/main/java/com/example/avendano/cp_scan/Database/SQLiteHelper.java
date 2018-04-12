@@ -28,6 +28,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String ROOMS_FLOOR = "floor";
     public static final String ROOMS_PC_WORKING = "pc_working";
     public static final String ROOMS_PC_COUNT = "pc_count";
+    public static final String ROOMS_TECH_PHONE = "tech_phone";
 
     //TABLE ROOM SCHED
     public static final String TABLE_ROOM_SCHED = "room_sched";
@@ -148,6 +149,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COLUMN_CUST_ID + " VACHAR,"
             + ROOMS_TECHNICIAN + " VARCHAR,"
             + COLUMN_TECH_ID + " VACHAR,"
+            + ROOMS_TECH_PHONE + " VACHAR,"
             + ROOMS_PC_COUNT + " INTEGER, "
             + ROOMS_PC_WORKING + " INTEGER, "
             + COLUMN_TOGGLE + " TINYINT,"
@@ -366,7 +368,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     //rooms
     public void addRooms(int room_id, String room_name, String building, int flr, String custodian,
-                         String cust_id, String technician, String tech_id, int pc_count, int pc_working) {
+                         String cust_id, String technician, String tech_id,String tech_phone, int pc_count, int pc_working) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
         v.put(ROOMS_ID, room_id);
@@ -377,6 +379,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         v.put(COLUMN_CUST_ID, cust_id);
         v.put(ROOMS_TECHNICIAN, technician);
         v.put(COLUMN_TECH_ID, tech_id);
+        v.put(ROOMS_TECH_PHONE, tech_phone);
         v.put(ROOMS_PC_COUNT, pc_count);
         v.put(ROOMS_PC_WORKING, pc_working);
         db.insert(TABLE_ROOMS, null, v);
@@ -385,7 +388,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public Cursor getRooms() {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {COLUMN_REF_ID, ROOMS_ID, ROOMS_NAME, ROOMS_BUILDING, ROOMS_FLOOR,
-                ROOMS_CUSTODIAN, COLUMN_CUST_ID, ROOMS_TECHNICIAN, COLUMN_TECH_ID, ROOMS_PC_COUNT, ROOMS_PC_WORKING
+                ROOMS_CUSTODIAN, COLUMN_CUST_ID, ROOMS_TECH_PHONE,ROOMS_TECHNICIAN, COLUMN_TECH_ID, ROOMS_PC_COUNT, ROOMS_PC_WORKING
                 , COLUMN_TOGGLE, COLUMN_SYNC};
         Cursor c = db.query(TABLE_ROOMS, cols, null, null, null, null, ROOMS_NAME + " DESC", null);
         return c;
@@ -569,7 +572,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
 
     //assessed pc
-    public long addAssessedPc(int comp_id, int pc_no,String model, String mb, String mb_serial, String processor,
+    public long addAssessedPc(int comp_id, int pc_no,String model, String mb,
+                              String mb_serial, String processor,
                               String monitor,String mon_serial, String ram, String kboard,
                               String mouse, String status, String vga, String hdd) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -612,5 +616,4 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         long c = DatabaseUtils.queryNumEntries(db,ASSESSED_PC, null,null);
         return c;
     }
-
 }

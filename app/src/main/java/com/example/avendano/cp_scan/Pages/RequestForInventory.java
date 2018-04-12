@@ -1,12 +1,11 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +30,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.example.avendano.cp_scan.TimePicker;
@@ -61,6 +62,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
     AlertDialog progress;
     String tech_id;
     String room_name;
+    VolleyRequestSingleton volley;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,14 +73,12 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         getSupportActionBar().setDisplayShowTitleEnabled(true);
         getSupportActionBar().setTitle("Request Inventory");
 
+        volley = new VolleyRequestSingleton(this);
+
         progress = new SpotsDialog(this, "Requesting...");
         db = new SQLiteHandler(this);
         room_id = getIntent().getIntExtra("room_id", 0);
-        Cursor c = db.getRoomDetails(room_id);
-        if(c.moveToFirst()){
-            room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
-            tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
-        }
+
         message = (EditText) findViewById(R.id.message);
         date = (TextView) findViewById(R.id.custom_date);
         time = (TextView) findViewById(R.id.custom_time);
@@ -135,7 +135,8 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         switch (item.getItemId()) {
             case R.id.save: {
                 if(checkSchedule()){
-                    saveRequestForInventory();
+                    //check tech sched
+                    saveInventoryRequest();
                 }else{
                     progress.dismiss();
                 }
@@ -164,6 +165,67 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         }else{
             return true;
         }
+    }
+
+    private void saveInventoryRequest(){
+        String setDate = "";
+        String setTime = "";
+        final String msg = message.getText().toString().trim();
+        if(date_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
+            setDate = "Anytime";
+        else
+            setDate =  date.getText().toString();
+
+        setTime =  time.getText().toString();
+
+        final String finalSetDate = setDate;
+        final String finalSetTime = setTime;
+
+        String date_req = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String time_req = new SimpleDateFormat("HH:mm:ss").format(new Date());
+
+        Map<String, String> params = new HashMap<>();
+        params.put("room_id", String.valueOf(room_id));
+        params.put("set_time", finalSetTime);
+        params.put("set_date",finalSetDate );
+        params.put("message", msg);
+        params.put("date_req", date_req);
+        params.put("time_req", time_req);
+
+        volley.sendStringRequestPost(AppConfig.SAVE_REQ_INVENTORY, new VolleyCallback() {
+            @Override
+            public void onSuccessResponse(String response) {
+                Log.e("RESPONSe", response);
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    if(!obj.getBoolean("error")){
+                        Log.e("ID", " " + obj.getInt("id"));
+                        Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
+                        Handler h = new Handler();
+                        h.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                progress.dismiss();
+                                goToViewRoom();
+                            }
+                        }, 2000);
+                    }else{
+                        progress.dismiss();
+                        Toast.makeText(RequestForInventory.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    progress.dismiss();
+                }
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                progress.dismiss();
+            }
+        }, params);
+
     }
 
     private void saveRequestForInventory() {

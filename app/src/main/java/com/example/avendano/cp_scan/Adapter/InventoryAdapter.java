@@ -3,8 +3,6 @@ package com.example.avendano.cp_scan.Adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -16,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,14 +23,14 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Activities.AssessmentActivity;
-import com.example.avendano.cp_scan.Activities.ViewRoom;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.RequestInventory;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,15 +51,17 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     Context mCtx;
     Activity act;
     SwipeRefreshLayout swiper;
-    SQLiteHandler db;
+    //    SQLiteHandler db;
     android.app.AlertDialog progress;
+    VolleyRequestSingleton volley;
 
     public InventoryAdapter(List<RequestInventory> inventoryList, Context mCtx, Activity act, SwipeRefreshLayout swiper) {
         this.inventoryList = inventoryList;
         this.mCtx = mCtx;
         this.act = act;
         this.swiper = swiper;
-        db = new SQLiteHandler(mCtx);
+        volley = new VolleyRequestSingleton(mCtx);
+//        db = new SQLiteHandler(mCtx);
     }
 
     @Override
@@ -73,21 +74,25 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     @Override
     public void onBindViewHolder(InventoryViewHolder holder, final int position) {
         final RequestInventory inventory = inventoryList.get(position);
+        if (SharedPrefManager.getInstance(mCtx).getUserRole().equalsIgnoreCase("custodian")) {
+            holder.status.setVisibility(View.VISIBLE);
+            holder.status.setText("Status: " + inventory.getReq_status());
+            holder.btn_container.setVisibility(View.GONE);
+        }
+        getRoomName(inventory.getRoom_id(), holder.location);
         holder.category.setText(inventory.getCategory());
-        holder.location.setText(getRoomLocation(inventory.getRoom_id()));
-        holder.done.setOnClickListener(new View.OnClickListener() {
+        holder.accept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                updateDialog(inventory.getReq_id(), "done", position);
-                int id = inventory.getRoom_id();
-                addPcToAssessFrmServer(id);
+                progress = new SpotsDialog(mCtx, "Loading...");
+                progress.setCancelable(false);
+                updateRequest(inventory.getReq_id(), "accept", position);
             }
         });
-        holder.done.setText("Report");
         holder.ignore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDialog(inventory.getReq_id(), "ignore", position);
+                updateDialog(inventory.getReq_id(), position);
             }
         });
         holder.card.setOnClickListener(new View.OnClickListener() {
@@ -108,72 +113,38 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             }
         });
     }
-    private void clearDb() {
-        db.deleteAssessedPc();
-        db.deletePcToAssess();
-    }
-    private void addPcToAssessFrmServer(final int room_id) {
-        clearDb();
-        StringRequest str = new StringRequest(Request.Method.GET
-                , AppConfig.URL_GET_ALL_PC
-                , new Response.Listener<String>() {
+
+    private void getRoomName(final int room_id, final TextView location) {
+        volley.sendStringRequestGet(AppConfig.GET_ROOMS, new VolleyCallback() {
             @Override
-            public void onResponse(String response) {
+            public void onSuccessResponse(String response) {
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
-                        int comp_id = obj.getInt("comp_id");
-                        int id = 0;
-                        if (!obj.isNull("room_id")) {
-                            id = obj.getInt("room_id");
-                        }
-                        int pc_no = obj.getInt("pc_no");
-                        String model = obj.getString("model");
-                        String mb = obj.getString("mb");
-                        String pr = obj.getString("pr");
-                        String monitor = obj.getString("monitor");
-                        String ram = obj.getString("ram");
-                        String kboard = obj.getString("kboard");
-                        String mouse = obj.getString("mouse");
-                        String vga = obj.getString("vga");
-                        String hdd = obj.getString("hdd");
-                        String comp_status = obj.getString("comp_status");
-
-                        if (room_id == id) {
-                            long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                            Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
-                            Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
+                        if (room_id == obj.getInt("room_id")) {
+                            if (obj.isNull("dept_id")) {
+                                location.setText(obj.getString("room_name"));
+                            } else {
+                                location.setText(obj.getString("dept_name") + " " + obj.getString("room_name"));
+                            }
+                            break;
                         }
                     }
-                    goToAssessment(room_id);
-                } catch (JSONException e) {
-                    Toast.makeText(mCtx, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-        }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.v("RESULT", "Error: " + error.getMessage());
+                error.printStackTrace();
             }
         });
-        RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
     }
 
-    private void goToAssessment(int id) {
-        Intent intent = new Intent(mCtx, AssessmentActivity.class);
-        intent.putExtra("room_id", id);
-        intent.putExtra("request", 1);
-        mCtx.startActivity(intent);
-    }
-
-    private void updateDialog(final int req_id, final String button, final int position) {
-        String msg = "";
-        if(button.equalsIgnoreCase("ignore")){
-            msg = "Are you sure you want to ignore this request?";
-        }else{
-            msg = "Click yes to confirm action";
-        }
+    private void updateDialog(final int req_id, final int position) {
+        String msg = "Are you sure you want to ignore this request?";
         AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
         builder.setCancelable(false);
         builder.setMessage(msg)
@@ -185,7 +156,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
                             progress = new SpotsDialog(mCtx, "Loading...");
                             progress.setCancelable(false);
                             progress.show();
-                            updateRequest(req_id, button, position);
+                            updateRequest(req_id, "ignore", position);
                         } else
                             Toast.makeText(mCtx, "No internet connection", Toast.LENGTH_SHORT).show();
                     }
@@ -205,16 +176,16 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
 
             @Override
             protected Void doInBackground(Void... voids) {
-                update();
+                updateRequest(button);
                 return null;
             }
 
-            private void update() {
+            private void updateRequest(String btn_clicked) {
                 String query = "";
-                if (button.equalsIgnoreCase("done"))
-                    query = "UPDATE request_inventory SET req_status = 'Done' WHERE req_id = ?";
-                else
+                if (btn_clicked.equalsIgnoreCase("ignore"))
                     query = "UPDATE request_inventory SET req_status = 'Ignored' WHERE req_id = ?";
+                else
+                    query = "UPDATE request_inventory SET req_status = 'Accepted' WHERE req_id = ?";
 
                 final String finalQuery = query;
                 StringRequest str = new StringRequest(Request.Method.POST
@@ -263,18 +234,6 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         new UpdateRequest().execute();
     }
 
-    private String getRoomLocation(final int id) {
-        Cursor c = db.getRoomDetails(id);
-        if (c.moveToFirst()) {
-            String room_name = c.getString(c.getColumnIndex(db.ROOMS_NAME));
-            String building = c.getString(c.getColumnIndex(db.ROOMS_BUILDING));
-
-            return room_name + " in " + building;
-        } else {
-            return "No data of Room";
-        }
-    }
-
     private void showDetails(String msg_body) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
         builder.setTitle("Request Details");
@@ -298,17 +257,22 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
 
         TextView category;
         TextView location;
-        Button done, ignore;
+        Button accept, ignore;
         CardView card;
+        LinearLayout btn_container;
+        TextView status;
 
         public InventoryViewHolder(View itemView) {
             super(itemView);
 
             category = (TextView) itemView.findViewById(R.id.category);
             location = (TextView) itemView.findViewById(R.id.location);
-            done = (Button) itemView.findViewById(R.id.done);
+            accept = (Button) itemView.findViewById(R.id.accept);
             ignore = (Button) itemView.findViewById(R.id.ignore);
             card = (CardView) itemView.findViewById(R.id.cardview);
+            btn_container = (LinearLayout) itemView.findViewById(R.id.linear);
+            status = (TextView) itemView.findViewById(R.id.req_status);
+
         }
     }
 }

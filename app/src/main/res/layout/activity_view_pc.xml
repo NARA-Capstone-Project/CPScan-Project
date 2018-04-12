@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.avendano.cp_scan.Activities.ViewPc">
+    tools:context="com.example.avendano.cp_scan.Pages.ViewPc">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -237,6 +237,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_mon"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -256,6 +257,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_mb"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -275,6 +277,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_pr"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -294,6 +297,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_ram"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -314,6 +318,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_hdd"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -335,6 +340,7 @@
                         android:layout_marginTop="38dp">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_kb"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -354,6 +360,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_mouse"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -373,6 +380,7 @@
                         android:orientation="horizontal">
 
                         <CheckBox
+                            android:layout_marginBottom="-7dp"
                             android:id="@+id/check_vga"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

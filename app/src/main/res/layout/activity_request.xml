@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/bg"
-    tools:context="com.example.avendano.cp_scan.Activities.RequestActivity">
+    tools:context="com.example.avendano.cp_scan.Pages.RequestActivity">
 
     <include
         android:id="@id/toolbar"

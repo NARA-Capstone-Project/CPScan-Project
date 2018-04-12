@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.6"
+            android:gravity="center"
+            android:text="DETAILS"
+            android:textAlignment="center" />
+
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".8"
+            android:gravity="center_vertical"
+            android:text="Working" />
+
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".8"
+            android:gravity="center_vertical"
+            android:text="Not Working"/>
+
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".8"
+            android:gravity="center_vertical"
+            android:text="Missing"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="2dp"
+        android:background="@color/darkGrey" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Monitor:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/monitor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GJFO789456"/>
+                </LinearLayout>
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_mon"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@+id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@+id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@+id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Motherboard:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/mb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_mb"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Processor:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/pr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_pr"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RAM:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/ram"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_ram"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="HDD:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/hdd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_hdd"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Keyboard:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/kboard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_kb"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="VGA:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/vga"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_vga"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:weightSum="4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_weight="1.6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mouse:" />
+                    <TextView
+                        android:layout_gravity="center_horizontal"
+                        android:id="@+id/mouse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="---"/>
+                </LinearLayout>
+
+                <RadioGroup
+                    android:gravity="center"
+                    android:weightSum="2.4"
+                    android:id="@+id/btn_mouse"
+                    android:layout_width="0dp"
+                    android:layout_weight="2.4"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:tag="working"
+                        android:id="@id/btn_1"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="not working"
+                        android:id="@id/btn_2"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                    <RadioButton
+                        android:tag="missing"
+                        android:id="@id/btn_3"
+                        android:layout_weight=".8"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content" />
+                </RadioGroup>
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

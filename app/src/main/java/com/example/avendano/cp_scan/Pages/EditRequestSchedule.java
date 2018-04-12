@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -41,6 +41,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
@@ -74,17 +76,17 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     Toolbar toolbar;
     AlertDialog progress;
     ImageView photo1;
-    RadioGroup status;
-    RadioButton missing, not_working;
     private final int IMG_REQUEST = 1, CAMERA_REQUEST = 0;
     private Bitmap bitmap;
-    boolean checkBox = false; // true missing false not working
     boolean setImage = false;
+    VolleyRequestSingleton volley;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.schedule_date_time);
+
+        volley = new VolleyRequestSingleton(this);
 
         id = getIntent().getIntExtra("id", 0);  //req_id
         room_pc_id = getIntent().getIntExtra("room_pc_id", 0);  //comp or room id
@@ -145,18 +147,12 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         //FOR REPAIR
 
         photo1 = (ImageView) findViewById(R.id.photo1);
-        status = (RadioGroup) findViewById(R.id.comp_status);
         peripherals = (TextView) findViewById(R.id.peripherals);
         label = (TextView) findViewById(R.id.label);
-        missing = (RadioButton) findViewById(R.id.missing);
-        missing.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                peripheralsDialog();
-            }
-        });
-        not_working = (RadioButton) findViewById(R.id.not_working);
-        not_working.setOnClickListener(new View.OnClickListener() {
+
+        label.setVisibility(View.VISIBLE);
+        peripherals.setVisibility(View.VISIBLE);
+        peripherals.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 peripheralsDialog();
@@ -254,18 +250,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (peripherals.getText().toString().isEmpty()) {
-                            missing.setChecked(false);
-                            not_working.setChecked(false);
-                        } else {
-                            if (checkBox) {
-                                not_working.setChecked(false);
-                                missing.setChecked(true);
-                            } else {
-                                missing.setChecked(false);
-                                not_working.setChecked(true);
-                            }
-                        }
                         dialog.dismiss();
                     }
                 });
@@ -283,10 +267,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                             for (int i = 0; i < checked.size(); i++) {
                                 content = "" + content + " > " + checked.get(i).toString().trim();
                             }
-                            if (missing.isChecked())
-                                checkBox = true;
-                            else
-                                checkBox = false;
                             peripherals.setText(content);
                             peripherals.setVisibility(View.VISIBLE);
                             alert.dismiss();
@@ -312,7 +292,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 else if (type.equalsIgnoreCase("repair")) {
                     peripherals.setVisibility(View.VISIBLE);
                     photo1.setVisibility(View.VISIBLE);
-                    status.setVisibility(View.VISIBLE);
                     label.setVisibility(View.VISIBLE);
                     getReqRepDetails();
                 }
@@ -352,17 +331,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                                 EditRequestSchedule.this.date.setText(date);
                             }
                             message.setText(msg);
-                            String new_details = "";
-                            if (req_details.contains("Missing")) {
-                                new_details = req_details.replace("Missing", "");
-                                missing.setChecked(true);
-                                checkBox = true;
-                            } else if (req_details.contains("Not Working")) {
-                                new_details = req_details.replace("Not Working", "");
-                                not_working.setChecked(true);
-                                checkBox = false;
-                            }
-                            peripherals.setText(new_details.trim());
+                            peripherals.setText(req_details);
                             if (obj.isNull("image"))
                                 image_path = "";
                             else
@@ -428,11 +397,9 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     }
 
     private void getReqInvDetails() {
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_ALL_INVENTORY_REQUEST
-                , new Response.Listener<String>() {
+        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REQ, new VolleyCallback() {
             @Override
-            public void onResponse(String response) {
+            public void onSuccessResponse(String response) {
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
@@ -447,6 +414,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                                 date_type.setSelection(1);
                                 EditRequestSchedule.this.date.setText(date);
                             }
+                            EditRequestSchedule.this.time.setText(time);
                             message.setText(msg);
                             break;
                         }
@@ -459,21 +427,13 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                     e.printStackTrace();
                 }
             }
-        }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
                 progress.dismiss();
-                Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                error.printStackTrace();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("id", SharedPrefManager.getInstance(EditRequestSchedule.this).getUserId());
-                return param;
-            }
-        };
-        RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
+        });
     }
 
     private boolean checkSchedule() {
@@ -613,11 +573,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;
 
-        String rep_msg = "";
-        if (missing.isChecked())
-            rep_msg = missing.getText().toString().trim() + " " + peripherals.getText().toString().trim();
-        else
-            rep_msg = not_working.getText().toString().trim() + " " + peripherals.getText().toString().trim();
+        String rep_msg = peripherals.getText().toString().trim();
 
         String image = "";
         if (setImage)

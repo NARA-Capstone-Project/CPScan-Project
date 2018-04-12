@@ -11,6 +11,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -46,7 +47,6 @@ public class SchedulesActivity extends AppCompatActivity {
 
     String TAG = "TASK";
     Spinner list_type;
-    private FloatingActionButton add;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swiper;
     private AlertDialog progress;
@@ -56,6 +56,7 @@ public class SchedulesActivity extends AppCompatActivity {
     SQLiteHandler db;
     ProgressBar progressBar;
     VolleyRequestSingleton volley;
+    int previousSelection = -1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,25 +78,29 @@ public class SchedulesActivity extends AppCompatActivity {
             }
         });
         connection_detector = new Connection_Detector(this);
-        add = (FloatingActionButton) findViewById(R.id.add_btn);
-        add.setVisibility(View.VISIBLE);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_items);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (connection_detector.isConnected()) {
-
-                }
-//                    goToTaskActivity();
-                else
-                    Toast.makeText(SchedulesActivity.this, "No internet connection", Toast.LENGTH_SHORT).show();
-            }
-        });
         String[] items = new String[]{"Inventory Schedule", "Repair Schedule"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         list_type.setAdapter(adapter);
+        list_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (previousSelection == -1) {
+                    previousSelection = 0;
+                } else {
+                    progressBar.setVisibility(View.VISIBLE);
+                    new loadSchedule().execute();
+                    previousSelection = position;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
 
         new loadSchedule().execute();
@@ -110,20 +115,16 @@ public class SchedulesActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            //load repair, inventory schedule
-            if (connection_detector.isConnected())
-                loadScheduleFrmServer();
-//            else
-//                loadScheduleFrmLocal();
+            if (list_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Schedule"))
+                loadInventorySchedule();
+            else
+                loadRepairSchedule();
             return null;
         }
     }
 
-    private void loadScheduleFrmServer() {
-        Map<String, String> param = new HashMap<>();
-        param.put("tech_id", SharedPrefManager.getInstance(this).getUserId());
-
-        volley.sendStringRequestPost(AppConfig.URL_GET_TASK
+    private void loadInventorySchedule() {
+        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REQ
                 , new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
@@ -132,35 +133,111 @@ public class SchedulesActivity extends AppCompatActivity {
                             progress.dismiss();
                             JSONArray array = new JSONArray(response);
                             if (array.length() > 0) {
-                                Log.e(TAG, "Task got from server");
                                 for (int i = 0; i < array.length(); i++) {
                                     JSONObject obj = array.getJSONObject(i);
-                                    int sched_id = obj.getInt("sched_id");
-                                    String title = obj.getString("category");
-                                    String desc = obj.getString("desc");
-                                    String date = obj.getString("date");
-                                    String time = obj.getString("time");
-                                    int room_pc_id = obj.getInt("id");
+                                    String set_date = obj.getString("date");
+                                    String set_time = obj.getString("time");
+                                    String msg = obj.getString("msg");
+                                    int room_id = obj.getInt("room_id");
+                                    int req_id = obj.getInt("req_id");
+                                    String status = obj.getString("req_status");
+                                    String tech_id = obj.getString("technician");
 
-                                    Task task = new Task(date, time, desc, title, sched_id, room_pc_id);
-                                    taskList.add(task);
+                                    if (status.equalsIgnoreCase("accepted") ||
+                                            status.equalsIgnoreCase("done")) {
+                                        if (SharedPrefManager.getInstance(SchedulesActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
+                                            Task task = new Task(set_date, set_time, msg,
+                                                    "Inventory", room_id, req_id, status);
+                                            taskList.add(task);
+                                        }
+                                    }
+
                                 }
-                                taskAdapter = new TaskAdapter(SchedulesActivity.this, SchedulesActivity.this, taskList, swiper, db);
-                                recyclerView.setAdapter(taskAdapter);
+                                if (taskList.size() != 0) {
+                                    taskAdapter = new TaskAdapter(SchedulesActivity.this, SchedulesActivity.this, taskList, swiper);
+                                    recyclerView.setAdapter(taskAdapter);
+                                } else {
+                                    Toast.makeText(SchedulesActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
+                                }
                             } else {
-                                Toast.makeText(SchedulesActivity.this, "No Tasks", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(SchedulesActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
+                            progress.dismiss();
                         }
                         swiper.setRefreshing(false);
-
+                        progressBar.setVisibility(View.GONE);
                     }
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.e(TAG, error.getMessage());
+                        progress.dismiss();
+                        progressBar.setVisibility(View.GONE);
                     }
-                }, param);
+                });
+    }
+
+    private void loadRepairSchedule() {
+        volley.sendStringRequestGet(AppConfig.GET_REPAIR_REQ
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e(TAG, response);
+                        try {
+                            progress.dismiss();
+                            JSONArray array = new JSONArray(response);
+                            if (array.length() > 0) {
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject obj = array.getJSONObject(i);
+                                    String set_date = obj.getString("set_date");
+                                    String set_time = obj.getString("set_time");
+                                    String msg = obj.getString("msg");
+                                    int comp_id = obj.getInt("comp_id");
+                                    int req_id = obj.getInt("req_id");
+                                    String status = obj.getString("req_status");
+                                    String tech_id = obj.getString("tech_id");
+
+                                    if (status.equalsIgnoreCase("accepted") ||
+                                            status.equalsIgnoreCase("done")) {
+                                        if (SharedPrefManager.getInstance(SchedulesActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
+                                            Task task = new Task(set_date, set_time, msg,
+                                                    "Repair", comp_id, req_id, status);
+                                            taskList.add(task);
+                                        }
+                                    }
+
+                                }
+                                if (taskList.size() != 0) {
+                                    taskAdapter = new TaskAdapter(SchedulesActivity.this, SchedulesActivity.this, taskList, swiper);
+                                    recyclerView.setAdapter(taskAdapter);
+                                } else {
+                                    Toast.makeText(SchedulesActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(SchedulesActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            progress.dismiss();
+                        }
+                        swiper.setRefreshing(false);
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, error.getMessage());
+                        progressBar.setVisibility(View.GONE);
+                        progress.dismiss();
+                    }
+                });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        SchedulesActivity.this.finish();
     }
 }

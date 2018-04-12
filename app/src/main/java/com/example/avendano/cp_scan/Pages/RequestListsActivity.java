@@ -12,8 +12,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.TimeoutError;
@@ -31,6 +33,7 @@ import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +64,7 @@ public class RequestListsActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recycler_and_spinner);
+
 
         inventoryList = new ArrayList<>();
         repairList = new ArrayList<>();
@@ -121,7 +125,7 @@ public class RequestListsActivity extends AppCompatActivity {
                 loadRequestInventory();
             } else if (request_type.getSelectedItem().toString().equalsIgnoreCase("Repair Request")) {
                 loadRequestRepair();
-            }else{
+            } else {
                 //peripherals
             }
             return null;
@@ -129,11 +133,9 @@ public class RequestListsActivity extends AppCompatActivity {
     }
 
     private void loadRequestInventory() {
-        Map<String, String> param = new HashMap<>();
-        param.put("id", SharedPrefManager.getInstance(this).getUserId());
-        String url = AppConfig.URL_GET_ALL_INVENTORY_REQUEST;
+        String url = AppConfig.GET_INVENTORY_REQ;
 
-        volley.sendStringRequestPost(url, new VolleyCallback() {
+        volley.sendStringRequestGet(url, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
                 try {
@@ -151,10 +153,22 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_date = obj.getString("date_requested");
                         String req_time = obj.getString("time_requested");
 
-                        if (req_status.equalsIgnoreCase("pending")) {
-                            RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
-                                    , tech_id, date, time, msg, req_date, req_time, req_status);
-                            inventoryList.add(inventory);
+                        if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
+                            if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
+                                if(!req_status.equalsIgnoreCase("cancel")){
+                                    RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
+                                            , tech_id, date, time, msg, req_date, req_time, req_status);
+                                    inventoryList.add(inventory);
+                                }
+                            }
+                        } else {
+                            if (req_status.equalsIgnoreCase("pending")) {
+                                if (tech_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
+                                    RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
+                                            , tech_id, date, time, msg, req_date, req_time, req_status);
+                                    inventoryList.add(inventory);
+                                }
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -175,23 +189,20 @@ public class RequestListsActivity extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                error.printStackTrace();
             }
-        }, param);
+        });
     }
 
     private void loadRequestRepair() {
         //check connection
-        String url = AppConfig.URL_GET_ALL_REPAIR_REQUEST;
-        Map<String, String> param = new HashMap<>();
-        param.put("id", SharedPrefManager.getInstance(RequestListsActivity.this).getUserId());
+        String url = AppConfig.GET_REPAIR_REQ;
 
-        volley.sendStringRequestPost(url, new VolleyCallback() {
+        volley.sendStringRequestGet(url, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
                 Log.e("RESPONSE", response);
                 try {
-                    Log.v("REQUEST", response);
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
@@ -200,23 +211,36 @@ public class RequestListsActivity extends AppCompatActivity {
                         if (!obj.isNull("rep_id"))
                             rep_id = obj.getInt("rep_id");
                         int comp_id = obj.getInt("comp_id");
-                        String cust_id = obj.getString("custodian");
-                        String tech_id = obj.getString("technician");
-                        String date = obj.getString("date");
-                        String time = obj.getString("time");
+                        String cust_id = obj.getString("cust_id");
+                        String tech_id = obj.getString("tech_id");
+                        String date = obj.getString("set_date");
+                        String time = obj.getString("set_time");
                         String msg = obj.getString("msg");
                         String req_status = obj.getString("req_status");
-                        String req_date = obj.getString("date_requested");
-                        String req_time = obj.getString("time_requested");
+                        String req_date = obj.getString("date_req");
+                        String req_time = obj.getString("time_req");
                         String req_details = obj.getString("req_details");
                         String path = obj.getString("image");
+                        if(obj.isNull("image"))
+                            path = "";
 
-                        if (req_status.equalsIgnoreCase("pending")) {
-                            RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
-                                    , date, time, msg, req_date, req_time, req_status, path, req_details);
-                            repairList.add(repair);
+                        if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
+                            if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
+                                if(!req_status.equalsIgnoreCase("cancel")){
+                                    RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                            , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                    repairList.add(repair);
+                                }
+                            }
+                        } else {
+                            if (req_status.equalsIgnoreCase("pending")) {
+                                if (tech_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
+                                    RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                            , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                    repairList.add(repair);
+                                }
+                            }
                         }
-                        Log.e("PENDING", req_status);
                     }
                     if (repairList.size() != 0) {
                         repairAdapter = new RepairAdapter(repairList, RequestListsActivity.this, RequestListsActivity.this, refresh);
@@ -235,12 +259,12 @@ public class RequestListsActivity extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                if(error instanceof TimeoutError)
-                    Toast.makeText(RequestListsActivity.this, "Server took too long to respond, chack your connection", Toast.LENGTH_SHORT).show();
+                if (error instanceof TimeoutError)
+                    Toast.makeText(RequestListsActivity.this, "Server took too long to respond, check your connection", Toast.LENGTH_SHORT).show();
                 else
                     Toast.makeText(RequestListsActivity.this, "Can't connect to the server, please try again later", Toast.LENGTH_SHORT).show();
             }
-        }, param);
+        });
     }
 
     private void loadRequestPeripherals() {

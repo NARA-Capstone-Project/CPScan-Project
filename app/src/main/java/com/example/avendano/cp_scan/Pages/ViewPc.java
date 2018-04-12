@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,6 +29,8 @@ import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -43,9 +45,12 @@ import dmax.dialog.SpotsDialog;
 
 public class ViewPc extends AppCompatActivity {
 
-    private int comp_id, room_id;
+    private int comp_id, room_id, req_id;
     SQLiteHandler db;
     android.app.AlertDialog progressDialog;
+
+    VolleyRequestSingleton volley;
+
 
     TextView pcno, room_name, comp_status, instr, pc_os;
     TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
@@ -67,6 +72,9 @@ public class ViewPc extends AppCompatActivity {
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
         make_request_report = getIntent().getIntExtra("request", 0);
+        req_id =  getIntent().getIntExtra("req_id", 0);
+
+        volley = new VolleyRequestSingleton(this);
         connection_detector = new Connection_Detector(this);
         db = new SQLiteHandler(this);
         progressDialog = new SpotsDialog(this, "Loading...");
@@ -320,50 +328,8 @@ public class ViewPc extends AppCompatActivity {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                getRequestId();
+                confirmReport();
                 return null;
-            }
-
-            private void getRequestId() {
-                StringRequest str = new StringRequest(Request.Method.POST
-                        , AppConfig.URL_CHECK_LAST_REPAIR_REQUEST
-                        , new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        progressDialog.dismiss();
-                        try {
-                            JSONObject obj = new JSONObject(response);
-                            Log.e("getRequestId", response);
-                            if (!obj.getBoolean("error")) {
-                                if (obj.getBoolean("pending")) {
-                                    int req_id = obj.getInt("req_id");
-                                    Log.e("Array", details().toString());
-                                    confirmReport(req_id, true);
-                                }
-                            }
-                        } catch (JSONException e) {
-                            Log.e("RESPONSE", response);
-                            Toast.makeText(ViewPc.this, "An error occurred, try again later", Toast.LENGTH_SHORT).show();
-                            ViewPc.this.finish();
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        progressDialog.dismiss();
-                        Toast.makeText(ViewPc.this, "Can't connect to the server, check your internet connection and try again", Toast.LENGTH_SHORT).show();
-                        Log.e("VIEWROOM", "ERROR: " + error.getMessage());
-                    }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        Map<String, String> param = new HashMap<>();
-                        param.put("comp_id", String.valueOf(comp_id));
-                        return param;
-                    }
-                };
-                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
             }
 
             private String message() {
@@ -413,7 +379,8 @@ public class ViewPc extends AppCompatActivity {
                 return msg;
             }
 
-            private void confirmReport(final int req_id, final boolean req_save) {
+            private void confirmReport() {
+                progressDialog.dismiss();
                 AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                 String msg = message();
                 builder.setTitle("Confirm Report...")
@@ -421,7 +388,7 @@ public class ViewPc extends AppCompatActivity {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                saveReport(req_id, req_save); //true = save din sa request_reports
+                                saveReport(); //true = save din sa request_reports
                                 progressDialog.show();
                             }
                         })
@@ -433,100 +400,7 @@ public class ViewPc extends AppCompatActivity {
                         });
                 AlertDialog alert = builder.create();
                 alert.show();
-                progressDialog.dismiss();
             }
-
-            private void showAlert(final int req_id, String msg, final String image_path) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
-                builder.setTitle("Report")
-                        .setMessage(msg)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                progressDialog.show();
-                                confirmReport(req_id, true);
-                                Log.e("Array", details().toString());
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                progressDialog.show();
-                                confirmReport(req_id, false);
-                                dialog.dismiss();
-                                Log.e("Array", details().toString());
-                            }
-                        });
-
-                if (image_path.isEmpty()) {
-
-                } else
-                    builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            showImage(image_path);
-                        }
-                    });
-                AlertDialog alert = builder.create();
-                alert.show();
-                progressDialog.dismiss();
-            }
-
-            private void showImage(String path) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT_URL + path))); /** replace with your own uri */
-            }
-
-            private void saveReport(final int req_id, final boolean req_save) {
-                final String rem = remark.getText().toString().trim();
-                final JSONArray array = details();
-                StringRequest str = new StringRequest(Request.Method.POST
-                        , AppConfig.URL_SAVE_A_REPORT
-                        , new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            Log.e("RESPONSE", response);
-                            JSONObject obj = new JSONObject(response);
-                            if (!obj.getBoolean("error")) {
-                                Log.w("INSERT REPORT", "SUCCESS");
-                                int rep = obj.getInt("rep_id");
-                                String message = obj.getString("message");
-                                String msg_body = obj.getString("body");
-                                Log.e("MESSAGE", message);
-                                Log.e("BODY", msg_body);
-                                setrep_id(rep, array, req_id, req_save);
-                            } else {
-                                progressDialog.dismiss();
-                                Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (JSONException e) {
-                            Log.e("RESPONSE", response);
-                            progressDialog.dismiss();
-                            Toast.makeText(ViewPc.this, "An error occurred, please try again later.", Toast.LENGTH_SHORT).show();
-                            Log.e("JSON ERROR", "SAVE REPORT: " + e.getMessage());
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        progressDialog.dismiss();
-                        Log.w("INSERT REPORT", "NOT SUCCESS");
-                        Toast.makeText(ViewPc.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
-                    }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        Map<String, String> params = new HashMap<>();
-                        params.put("tech_id", SharedPrefManager.getInstance(ViewPc.this).getUserId());
-                        params.put("room_id", String.valueOf(room_id));
-                        params.put("remarks", rem);
-                        params.put("category", "Repair Report");
-                        return params;
-                    }
-                };
-                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
-            }
-
             private JSONArray details() {
                 int idx;
                 RadioButton btn;
@@ -658,177 +532,50 @@ public class ViewPc extends AppCompatActivity {
                 return array;
             }
 
-            private void setrep_id(int rep, JSONArray array, int req_id, boolean req_save) {
-                JSONArray newArray = new JSONArray();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        JSONObject newObj = new JSONObject();
-                        JSONObject oldObj = array.getJSONObject(i);
-                        newObj.put("comp_id", oldObj.getInt("comp_id"));
-                        newObj.put("pc_no", oldObj.getInt("pc_no"));
-                        newObj.put("model", oldObj.getString("model"));
-                        newObj.put("mb", oldObj.getString("mb"));
-                        newObj.put("mb_serial", oldObj.getString("mb_serial"));
-                        newObj.put("monitor", oldObj.getString("monitor"));
-                        newObj.put("mon_serial", oldObj.getString("mon_serial"));
-                        newObj.put("pr", oldObj.getString("pr"));
-                        newObj.put("kb", oldObj.getString("kb"));
-                        newObj.put("mouse", oldObj.getString("mouse"));
-                        newObj.put("ram", oldObj.getString("ram"));
-                        newObj.put("hdd", oldObj.getString("hdd"));
-                        newObj.put("vga", oldObj.getString("vga"));
-                        newObj.put("comp_status", oldObj.getString("comp_status"));
-                        newObj.put("rep_id", String.valueOf(rep));
-                        //add objects to new jsoon array
-                        newArray.put(newObj);
-                    } catch (JSONException e) {
-                        Log.e("JSONEXCEP", "" + e.getMessage());
-                    }
-                }
-                Log.e("NEW JSONARRAY", "" + newArray.toString());
-                saveReportDetails(rep, newArray, req_id, req_save);
-            }
+            private void saveReport(){
+                Map<String, String> params = new HashMap<>();
+                JSONArray details = details();
+                String rem = remark.getText().toString().trim();
+                params.put("room_id", String.valueOf(room_id));
+                params.put("req_id", String.valueOf(req_id));
+                params.put("details", details.toString());
+                params.put("remarks", rem);
 
-            private void saveReportDetails(final int rep, JSONArray newArray, final int req_id, final boolean req_save) {
-                JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
-                        , AppConfig.URL_SAVE_A_DETAILS
-                        , newArray
-                        , new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        try {
-                            JSONObject obj = response.getJSONObject(0);
-                            if (!obj.getBoolean("error")) {
-                                if (req_save) {
-                                    saveRequestReport(req_id, rep);
-                                } else {
-                                    activityRecreate();
-                                    progressDialog.dismiss();
-                                    Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                deleteReport(rep);
-                            }
-                        } catch (JSONException e) {
-                            Log.e("error", " " + e.getMessage());
-                            deleteReport(rep);
-                        }
-                    }
 
-                }, new Response.ErrorListener() {
+                volley.sendStringRequestPost(AppConfig.SAVE_REPAIR,new VolleyCallback() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        deleteReport(rep);
-                        Log.w("save details", "NOT SUCCESS: " + error.getMessage());
-                    }
-                });
-                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(req);
-            }
-
-            private void saveRequestReport(final int req_id, final int rep_id) {
-                Handler h = new Handler();
-                h.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        saveRequest(req_id, rep_id);
-                    }
-                }, 3000);
-            }
-
-            private void saveRequest(final int req_id, int rep_id) {
-                final String query = "UPDATE request_repair SET rep_id = " + rep_id + ", req_status = 'Done' WHERE req_id = ?";
-                StringRequest str = new StringRequest(Request.Method.POST
-                        , AppConfig.URL_UPDATE_SCHEDULE
-                        , new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response.toString());
                         try {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
-                                Toast.makeText(ViewPc.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
-                                updateSQlite(req_id, "Done");
-                            }
-                            activityRecreate();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        progressDialog.dismiss();
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("714", error.getMessage());
-                        progressDialog.dismiss();
-                    }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        Map<String, String> map = new HashMap<>();
-                        map.put("query", query);
-                        map.put("id", String.valueOf(req_id));
-                        return map;
-                    }
-                };
-                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
-            }
-
-            private void deleteReport(final int rep_id) {
-                Handler h = new Handler();
-                h.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        deleteReportFrmServer(rep_id);
-                    }
-                }, 3000);
-            }
-
-            private void deleteReportFrmServer(final int rep_id) {
-                final String query = "DELETE FROM assessment_report WHERE rep_id = ?";
-                StringRequest str = new StringRequest(Request.Method.POST
-                        , AppConfig.URL_DELETE_REPORT
-                        , new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            progressDialog.dismiss();
-                            JSONObject obj = new JSONObject(response);
-                            if (!obj.getBoolean("error")) {
-                                Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
-                                Log.e("DELETED", "success");
+                                progressDialog.dismiss();
+                                Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                                ViewPc.this.finish();
                             } else {
-                                Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
-                                Log.e("DELETED", "not success");
+                                progressDialog.dismiss();
+                                Log.e("DELETE STATUS", obj.getString("del"));
+                                Toast.makeText(ViewPc.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
                             }
-                        } catch (JSONException e) {
-                            progressDialog.dismiss();
-                            Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            Log.e("RESPONSE", e.getMessage() + response.toString());
                             e.printStackTrace();
+                            progressDialog.dismiss();
+                            Toast.makeText(ViewPc.this, "Something went wrong in saving report", Toast.LENGTH_SHORT).show();
                         }
                     }
-                }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        Log.e("RESPONSE", error.getMessage());
+                        Log.e("RESPOnSE", error.getClass().toString());
                         progressDialog.dismiss();
-                        Toast.makeText(ViewPc.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
-                        Log.e("ERROR", error.getMessage());
+                        Toast.makeText(ViewPc.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
                     }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        Map<String, String> param = new HashMap<>();
-                        param.put("query", query);
-                        param.put("rep_id", String.valueOf(rep_id));
-                        return param;
-                    }
-                };
-                RequestQueueHandler.getInstance(ViewPc.this).addToRequestQueue(str);
+                }, params);
             }
         }
         new Getter().execute();
-    }
-
-    private void activityRecreate() {
-        this.recreate();
     }
 
     private void checkLastReqRepair(final boolean popup) {
@@ -844,13 +591,11 @@ public class ViewPc extends AppCompatActivity {
                     if (!obj.getBoolean("error")) {
                         if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
                             report.setText("Report");
-                            report.setBackgroundResource(R.color.button_color);
                             report.setTextColor(getResources().getColor(R.color.white));
                         } else { //kapag na request na
                             if (SharedPrefManager.getInstance(ViewPc.this).getUserRole().equalsIgnoreCase("custodian")) {
                                 report.setText("Reported");
-                                report.setBackgroundResource(R.drawable.style_button_white);
-                                report.setTextColor(getResources().getColor(R.color.button_color));
+                                report.setTextColor(getResources().getColor(R.color.white));
                             }
                             int req_id = obj.getInt("req_id");
                             int rep_id = 0;
@@ -877,7 +622,6 @@ public class ViewPc extends AppCompatActivity {
                     Toast.makeText(ViewPc.this, "An error occurred, try again later", Toast.LENGTH_SHORT).show();
                     ViewPc.this.finish();
                     e.printStackTrace();
-                    checkLastRepairRequestFrmLocal(popup);
                 }
             }
         }, new Response.ErrorListener() {
@@ -885,7 +629,6 @@ public class ViewPc extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 progressDialog.dismiss();
                 Log.e("VIEWROOM", "ERROR: " + error.getMessage());
-                checkLastRepairRequestFrmLocal(popup);
             }
         }) {
             @Override
@@ -896,41 +639,6 @@ public class ViewPc extends AppCompatActivity {
             }
         };
         RequestQueueHandler.getInstance(this).addToRequestQueue(str);
-    }
-
-    private void checkLastRepairRequestFrmLocal(boolean popup) {
-        if (popup) {
-            Cursor c = db.checkIfRepairRequested(comp_id);
-            if (c.moveToFirst()) {
-                int req_id = c.getInt(c.getColumnIndex(db.REQ_ID));
-                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
-                int compid = c.getInt(c.getColumnIndex(db.COMP_ID));
-                ;
-                String cust_id = c.getString(c.getColumnIndex(db.COLUMN_CUST_ID));
-                String tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
-                String date = c.getString(c.getColumnIndex(db.REQ_DATE));
-                String time = c.getString(c.getColumnIndex(db.REQ_TIME));
-                String msg = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
-                String req_date = c.getString(c.getColumnIndex(db.DATE_OF_REQ));
-                String req_time = c.getString(c.getColumnIndex(db.TIME_OF_REQ));
-                String req_status = c.getString(c.getColumnIndex(db.REQ_STATUS));
-                String req_details = c.getString(c.getColumnIndex(db.REQ_DETAILS));
-
-                showRequestDetails(req_id, rep_id, compid, cust_id, tech_id, date, time,
-                        msg, req_date, req_time, req_status, req_details);
-            }
-        } else {
-            Cursor c = db.checkIfRepairRequested(comp_id);
-            if (c.moveToFirst()) {
-                report.setText("Reported");
-                report.setBackgroundResource(R.drawable.style_button_white);
-                report.setTextColor(getResources().getColor(R.color.button_color));
-            } else {
-                report.setText("Report");
-                report.setBackgroundResource(R.color.button_color);
-                report.setTextColor(getResources().getColor(R.color.white));
-            }
-        }
     }
 
     private void showRequestDetails(final int req_id, int rep_id, final int room_id, String cust_id,
@@ -957,20 +665,6 @@ public class ViewPc extends AppCompatActivity {
                 dialog.dismiss();
             }
         })
-                .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (connection_detector.isConnected()) {
-                            Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
-                            intent.putExtra("type", "repair");
-                            intent.putExtra("room_pc_id", comp_id);
-                            intent.putExtra("id", req_id);
-                            ViewPc.this.startActivity(intent);
-                            finish();
-                        } else
-                            Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
-                    }
-                })
                 .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -978,6 +672,22 @@ public class ViewPc extends AppCompatActivity {
                         cancelRequestRepair(req_id);
                     }
                 });
+        if(!req_status.equalsIgnoreCase("accepted")){
+            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (connection_detector.isConnected()) {
+                        Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
+                        intent.putExtra("type", "repair");
+                        intent.putExtra("room_pc_id", comp_id);
+                        intent.putExtra("id", req_id);
+                        ViewPc.this.startActivity(intent);
+                        finish();
+                    } else
+                        Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         AlertDialog alert = builder.create();
         alert.show();
     }

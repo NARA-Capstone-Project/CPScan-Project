@@ -90,7 +90,7 @@ public class ReportActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         list_type = (Spinner) findViewById(R.id.list_type);
-        String[] items = new String[]{"Inventory Reports", "Repair Reports", "Peripherals Request Reports"};
+        String[] items = new String[]{"Inventory Reports", "Repair Reports"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         list_type.setAdapter(adapter);
         list_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -116,6 +116,7 @@ public class ReportActivity extends AppCompatActivity {
             public void onRefresh() {
                 swiper.setRefreshing(true);
                 //loader
+                new ReportsLoader().execute();
             }
         });
 
@@ -133,8 +134,6 @@ public class ReportActivity extends AppCompatActivity {
                 loadInventoryReports();
             } else if (list_type.getSelectedItem().toString().equalsIgnoreCase("Repair Reports")) { // repair
                 loadRepairRequestReport();
-            } else {  //peripherals
-                loadInventoryRequestReport();
             }
             return null;
         }
@@ -154,179 +153,104 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
-    private void loadRepairRequestReport(){
+    private void loadRepairRequestReport() {
         requestList.clear();
-        String query = "";
-        String role = SharedPrefManager.getInstance(ReportActivity.this).getUserRole();
-        String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
-        Log.e("USER", role + " " + user_id);
-        if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
-            query = "select * from assessment_reports where rep_id in (select rep_id from " +
-                    "request_repair as i where req_status = 'Done') order by date desc, time desc;";
-        else
-            query= "select * from assessment_reports where (rep_id in (select rep_id from " +
-                    "request_repair as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
-                    "or custodian_id = '"+user_id+"')  order by date desc, time desc;";
-        final String finalQuery = query;
-        Log.e("QUERY", finalQuery);
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_REQ_REPORTS
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    Log.e("RESPONSE 186", response);
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++){
-                        JSONObject obj = array.getJSONObject(i);
-                        String category = obj.getString("category");
-                        String date = obj.getString("date");
-                        String time = obj.getString("time");
-                        String name = obj.getString("name");
-                        int rep_id = obj.getInt("rep_id");
+        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
 
-                        RequestReport report = new RequestReport(rep_id,date + " " + time, category, name);
-                        requestList.add(report);
+                                String date = obj.getString("date");
+                                String time = obj.getString("time");
+                                String cat = obj.getString("cat");
+                                String cust_id = obj.getString("cust_id");
+                                String tech_id = obj.getString("tech_id");
+                                int rep_id = obj.getInt("rep_id");
+                                String room_name = obj.getString("room_name");
+                                String name = "PC " + obj.getString("pc_no") + " of " + room_name;
+
+                                if(cat.contains("Repair")){
+                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
+                                    if(user_id.equals(cust_id) || user_id.equals(tech_id) ){
+                                        RequestReport report = new RequestReport(rep_id, date + " " + time, cat, name);
+                                        requestList.add(report);
+                                    }
+                                }
+                            }
+                            if (requestList.size() != 0) {
+                                requestAdapter = new RequestAdapter(ReportActivity.this, ReportActivity.this, requestList, swiper);
+                                recyclerView.setAdapter(requestAdapter);
+                                requestAdapter.notifyDataSetChanged();
+                            } else {
+                                Toast.makeText(ReportActivity.this, "No Repair Reports", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    requestAdapter = new RequestAdapter(ReportActivity.this,ReportActivity.this,requestList,swiper);
-                    recyclerView.setAdapter(requestAdapter);
-                    requestAdapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
-            }
-        }){
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("query", finalQuery);
-                params.put("req_type", "Repair");
-                return params;
-            }
-        };
-        RequestQueueHandler.getInstance(ReportActivity.this).addToRequestQueue(str);
-    }
 
-    private void loadInventoryRequestReport(){
-        requestList.clear();
-        String query = "";
-        String role = SharedPrefManager.getInstance(ReportActivity.this).getUserRole();
-        String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
-        Log.e("USER", role + " " + user_id);
-        if(role.equalsIgnoreCase("main technician") || role.equalsIgnoreCase("admin"))
-            query = "select * from assessment_reports where rep_id in (select rep_id from " +
-                    "request_inventory as i where req_status = 'Done') order by date desc, time desc;";
-        else
-            query= "select * from assessment_reports where (rep_id in (select rep_id from " +
-                    "request_inventory as i where req_status = 'Done')) and (technician_id = '"+user_id+"' " +
-                    "or custodian_id = '"+user_id+"') order by date desc, time desc;";
-
-        final String finalQuery = query;
-        Log.e("QUERY", finalQuery);
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_REQ_REPORTS
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    Log.e("RESPONSE 186", response);
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++){
-                        JSONObject obj = array.getJSONObject(i);
-                        String category = obj.getString("category");
-                        String date = obj.getString("date");
-                        String time = obj.getString("time");
-                        String name = obj.getString("name");
-                        int rep_id = obj.getInt("rep_id");
-
-                        RequestReport report = new RequestReport(rep_id,date + " " + time, category, name);
-                        requestList.add(report);
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if(error instanceof TimeoutError)
+                            Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
+                        else
+                            Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
                     }
-                    requestAdapter = new RequestAdapter(ReportActivity.this,ReportActivity.this,requestList,swiper);
-                    recyclerView.setAdapter(requestAdapter);
-                    requestAdapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
-            }
-        }){
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("query", finalQuery);
-                params.put("req_type", "Inventory");
-                return params;
-            }
-        };
-        RequestQueueHandler.getInstance(ReportActivity.this).addToRequestQueue(str);
-    }
+                });
+        }
 
     private void loadInventoryReports() {
         reportsList.clear();
-        StringRequest stringRequest = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_REPORT
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    Log.w("REsP", "length : " + response.length());
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        int rep_id = obj.getInt("rep_id");
-                        String cat = obj.getString("category");
-                        int room_id = obj.getInt("room_id");
-                        String date = obj.getString("date");
-                        String room_name = obj.getString("room_name");
-                        String cust_id = obj.getString("cust_id");
-                        String tech_id = obj.getString("tech_id");
-                        String time = obj.getString("time");
-                        int signed = obj.getInt("cust_signed");
-                        String remarks = obj.getString("remarks");
-                        int htech_signed = obj.getInt("htech_signed");
-                        int admin_signed = obj.getInt("admin_signed");
+        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
 
-                        Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
-                        reportsList.add(reports);
+                                String date = obj.getString("date");
+                                String time = obj.getString("time");
+                                String cat = obj.getString("cat");
+                                String room_name = obj.getString("room_name");
+                                String cust_id = obj.getString("cust_id");
+                                String tech_id = obj.getString("tech_id");
+                                int room_id = obj.getInt("room_id");
+                                int rep_id = obj.getInt("rep_id");
+
+                                if(cat.contains("Inventory")){
+                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
+                                    if(user_id.equals(cust_id) || user_id.equals(tech_id) ){
+                                        Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
+                                        reportsList.add(reports);
+                                    }
+                                }
+                            }
+
+                            if (reportsList.size() != 0) {
+                                reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
+                                recyclerView.setAdapter(reportAdapter);
+                                reportAdapter.notifyDataSetChanged();
+                            } else {
+                                Toast.makeText(ReportActivity.this, "No Inventory Reports", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                        }
                     }
 
-                    Log.w("LOADED", "Server reports");
-                    if (reportsList.isEmpty()) {
-                        Log.w("NOREPORTS", "NO REPORTS");
-                    } else {
-//                        addDetails();
-                        reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
-                        recyclerView.setAdapter(reportAdapter);
-                        reportAdapter.notifyDataSetChanged();
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if(error instanceof TimeoutError)
+                            Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
+                        else
+                            Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
                     }
-                } catch (JSONException e) {
-                    Log.e("RESPONSE", response);
-                    Log.e("JSON ERROR 1", "ReportFragment: " + e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("Volleyerror 1", "Load ReportsLoader: " + error.getMessage());
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("user_id", SharedPrefManager.getInstance(ReportActivity.this).getUserId());
-                return param;
-            }
-        };
-        RequestQueueHandler.getInstance(ReportActivity.this).addToRequestQueue(stringRequest);
+                });
     }
 }

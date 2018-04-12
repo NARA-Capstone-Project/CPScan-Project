@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -14,17 +15,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activities.LogInActivity" />
+        <activity android:name=".Pages.LogInActivity" />
         <activity
-            android:name=".Activities.RequestActivity"
+            android:name=".Pages.RequestActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.ViewRoom"
+            android:name=".Pages.ViewRoom"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.RoomPc"
+            android:name=".Pages.RoomPc"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
@@ -51,7 +52,7 @@
         <service android:name=".Database.BackgroundService" android:label="@string/app_name" android:enabled="true"/>
 
         <activity
-            android:name=".Activities.ViewPc"
+            android:name=".Pages.ViewPc"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
@@ -59,19 +60,19 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.EditProfileActivity"
+            android:name=".Pages.EditProfileActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.RequestForInventory"
+            android:name=".Pages.RequestForInventory"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.RequestForRepair"
+            android:name=".Pages.RequestForRepair"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.EditRequestSchedule"
+            android:name=".Pages.EditRequestSchedule"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
@@ -94,6 +95,7 @@
         <activity android:name=".Pages.SchedulesActivity"></activity>
         <activity android:name=".Pages.ReportActivity"></activity>
         <activity android:name=".Pages.InventoryActivty"></activity>
+        <activity android:name=".Pages.AssessPc"></activity>
     </application>
 
 </manifest>

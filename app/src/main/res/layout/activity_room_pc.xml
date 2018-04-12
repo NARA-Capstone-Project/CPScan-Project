@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg"
     android:orientation="vertical"
-    tools:context="com.example.avendano.cp_scan.Activities.RoomPc">
+    tools:context="com.example.avendano.cp_scan.Pages.RoomPc">
 
     <include
         android:id="@+id/toolbar"

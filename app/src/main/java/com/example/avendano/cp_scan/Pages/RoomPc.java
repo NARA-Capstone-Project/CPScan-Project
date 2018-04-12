@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.ProgressDialog;
 import android.content.Intent;

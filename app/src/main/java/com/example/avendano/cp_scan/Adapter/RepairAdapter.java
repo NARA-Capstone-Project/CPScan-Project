@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -17,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,13 +25,14 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Activities.ViewPc;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,15 +53,17 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
     Context mCtx;
     Activity act;
     SwipeRefreshLayout swiper;
-    SQLiteHandler db;
+    String name = "";
+//    SQLiteHandler db;
     android.app.AlertDialog progress;
-
+    VolleyRequestSingleton volley;
     public RepairAdapter(List<RequestRepair> repairList, Context mCtx, Activity act, SwipeRefreshLayout swiper) {
         this.repairList = repairList;
         this.mCtx = mCtx;
         this.act = act;
         this.swiper = swiper;
-        db = new SQLiteHandler(mCtx);
+//        db = new SQLiteHandler(mCtx);
+        volley = new VolleyRequestSingleton(mCtx);
     }
 
     @Override
@@ -74,19 +77,24 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
     public void onBindViewHolder(RepairViewHolder holder, final int position) {
         final RequestRepair repair = repairList.get(position);
         holder.category.setText(repair.getCategory());
-        holder.location.setText(getPcDetails(repair.getComp_id()));
-        holder.done.setOnClickListener(new View.OnClickListener() {
+        if(SharedPrefManager.getInstance(mCtx).getUserRole().equalsIgnoreCase("custodian")){
+            holder.status.setVisibility(View.VISIBLE);
+            holder.status.setText("Status: " + repair.getReq_status());
+            holder.btn_container.setVisibility(View.GONE);
+        }
+        getPcDetails(repair.getComp_id(), holder.location);
+        holder.accept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-           //     updateDialog(repair.getReq_id(), "done", position);
-                pcDetails(repair.getComp_id(), position);
+                progress = new SpotsDialog(mCtx, "Loading...");
+                progress.setCancelable(false);
+                updateRequest(repair.getReq_id(), "accept", position);
             }
         });
-        holder.done.setText("Report");
         holder.ignore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateDialog(repair.getReq_id(), "ignore", position);
+                updateDialog(repair.getReq_id(), position);
             }
         });
         holder.card.setOnClickListener(new View.OnClickListener() {
@@ -109,68 +117,9 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         });
     }
 
-    private void pcDetails(final int compid, final int position){
-        class pcDetails extends AsyncTask<Void,Void,Void>{
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                getPc();
-                return null;
-            }
-
-            private void getPc() {
-                StringRequest str = new StringRequest(Request.Method.GET
-                        , AppConfig.URL_GET_ALL_PC
-                        , new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONArray array = new JSONArray(response);
-                            for (int i = 0; i < array.length(); i++){
-                                JSONObject obj = array.getJSONObject(i);
-                                int comp_id = obj.getInt("comp_id");
-                                int room_id = 0;
-                                if (!obj.isNull("room_id")) {
-                                    room_id = obj.getInt("room_id");
-                                }
-
-                                if(comp_id == compid){
-                                    gotoViewPc(room_id, position);
-                                    break;
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("ERROR", "repair adapter: " + error.getMessage());
-                    }
-                });
-                RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
-            }
-
-            private void gotoViewPc(int room_id, int position) {
-                Intent intent = new Intent(mCtx, ViewPc.class);
-                intent.putExtra("comp_id", repairList.get(position).getComp_id());
-                intent.putExtra("room_id", room_id);
-                intent.putExtra("request", 1);
-                mCtx.startActivity(intent);
-            }
-        }
-
-        new pcDetails().execute();
-    }
-
-    private void updateDialog(final int req_id, final String button, final int position) {
+    private void updateDialog(final int req_id, final int position) {
         String msg = "";
-        if(button.equalsIgnoreCase("ignore")){
-            msg = "Are you sure you want to ignore this request?";
-        }else{
-            msg = "Click yes to confirm action";
-        }
+       msg = "Are you sure you want to ignore this request?";
         AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
         builder.setCancelable(false);
         builder.setMessage(msg)
@@ -182,7 +131,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                             progress = new SpotsDialog(mCtx, "Loading...");
                             progress.setCancelable(false);
                             progress.show();
-                            updateRequest(req_id, button, position);
+                            updateRequest(req_id, "ignore", position);
                         } else
                             Toast.makeText(mCtx, "No internet connection", Toast.LENGTH_SHORT).show();
                     }
@@ -197,7 +146,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         alert.show();
     }
 
-    private void updateRequest(final int req_id, final String button, final int position) {
+    private void updateRequest(final int req_id, final String btn_clicked, final int position) {
         class UpdateRequest extends AsyncTask<Void, Void, Void> {
 
             @Override
@@ -208,10 +157,11 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
 
             private void update() {
                 String query = "";
-                if (button.equalsIgnoreCase("done"))
-                    query = "UPDATE request_repair SET req_status = 'Done' WHERE req_id = ?";
-                else
+
+                if (btn_clicked.equalsIgnoreCase("ignore"))
                     query = "UPDATE request_repair SET req_status = 'Ignored' WHERE req_id = ?";
+                else
+                    query = "UPDATE request_repair SET req_status = 'Accepted' WHERE req_id = ?";
 
                 final String finalQuery = query;
                 StringRequest str = new StringRequest(Request.Method.POST
@@ -260,21 +210,33 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         new UpdateRequest().execute();
     }
 
-    private String getPcDetails(final int id) {
-        Cursor c = db.getCompDetails(id);
-        if (c.moveToFirst()) {
-            int pc_name = c.getInt(c.getColumnIndex(db.COMP_NAME));
-            int room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
-            String room_name = "";
-
-            Cursor r = db.getRoomDetails(room_id);
-            if(r.moveToFirst()){
-                room_name = " in " + r.getString(r.getColumnIndex(db.ROOMS_NAME));
+    private void getPcDetails(final int comp_id, final TextView location) {
+        //comp name and room id
+        volley.sendStringRequestGet(AppConfig.GET_COMPUTERS, new VolleyCallback() {
+            @Override
+            public void onSuccessResponse(String response) {
+                try{
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++){
+                        JSONObject obj = array.getJSONObject(i);
+                        int c_id = obj.getInt("comp_id");
+                        if(c_id == comp_id){
+                            int pc_no = obj.getInt("pc_no");
+                            String room_name = obj.getString("room_name");
+                            location.setText("PC " + pc_no + " of Room " + room_name);
+                            break;
+                        }
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
-            return "PC " + pc_name +  room_name;
-        } else {
-            return "No data of Computer";
-        }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
     }
 
     private void showDetails(String msg_body, final String image_path) {
@@ -308,17 +270,22 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
 
         TextView category;
         TextView location;
-        Button done, ignore;
+        Button accept, ignore;
         CardView card;
+        LinearLayout btn_container;
+        TextView status;
 
         public RepairViewHolder(View itemView) {
             super(itemView);
 
             category = (TextView) itemView.findViewById(R.id.category);
             location = (TextView) itemView.findViewById(R.id.location);
-            done = (Button) itemView.findViewById(R.id.done);
+            accept = (Button) itemView.findViewById(R.id.accept);
             ignore = (Button) itemView.findViewById(R.id.ignore);
             card = (CardView) itemView.findViewById(R.id.cardview);
+            btn_container = (LinearLayout) itemView.findViewById(R.id.linear);
+            status = (TextView) itemView.findViewById(R.id.req_status);
         }
     }
+
 }

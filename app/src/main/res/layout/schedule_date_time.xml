@@ -10,34 +10,16 @@
         layout="@layout/toolbar" />
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Computer Status:"
         android:id="@+id/label"
-        android:visibility="gone"/>
-
-    <RadioGroup
-        android:id="@+id/comp_status"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:text="Select Not Working Peripherals:"/>
 
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Missing"
-            android:id="@+id/missing"
-            />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Not Working"
-            android:id="@+id/not_working"/>
-    </RadioGroup>
     <TextView
+        android:visibility="gone"
+        android:hint="Select Peripherals..."
+        android:background="@drawable/bg_spinner"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

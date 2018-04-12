@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.avendano.cp_scan.Activities.ViewPc;
+import com.example.avendano.cp_scan.Pages.ViewPc;
 import com.example.avendano.cp_scan.Model.Computers;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;

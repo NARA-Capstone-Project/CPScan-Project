@@ -14,20 +14,14 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Activities.LogInActivity;
-import com.example.avendano.cp_scan.Activities.ViewPc;
-import com.example.avendano.cp_scan.Activities.ViewRoom;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
 import com.example.avendano.cp_scan.Database.AddCompFrmServer;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.BackgroundService;
-import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
@@ -41,6 +35,7 @@ import com.nex3z.notificationbadge.NotificationBadge;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -54,8 +49,10 @@ public class Main_Page extends AppCompatActivity {
     Toolbar toolbar;
     SQLiteHelper db;
     VolleyRequestSingleton volley;
+    TextView display_date;
 
     int position = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,6 +114,8 @@ public class Main_Page extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Account");
 
+        display_date = (TextView) findViewById(R.id.date);
+        display_date.setText(new SimpleDateFormat("MMM dd, yyyy").format(new Date()));
         account = (CardView) findViewById(R.id.account);
         room = (CardView) findViewById(R.id.rooms);
         report = (CardView) findViewById(R.id.reports);
@@ -176,12 +175,23 @@ public class Main_Page extends AppCompatActivity {
         }, intentFilter);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String role = SharedPrefManager.getInstance(this).getUserRole();
+        if (!role.equalsIgnoreCase("custodian")) {
+            badge.setNumber(0);
+            getReqCount();
+        }
+    }
+
     private void getRoomToAssess() {
         final ArrayList<String> tempRooms = new ArrayList<>();
         final ArrayList<Integer> room_ids = new ArrayList<>();
+        final ArrayList<Integer> req_ids = new ArrayList<>();
         Map<String, String> param = new HashMap<>();
         param.put("user_id", SharedPrefManager.getInstance(this).getUserId());
-        volley.sendStringRequestPost(AppConfig.GET_TASKS, new VolleyCallback() {
+        volley.sendStringRequestPost(AppConfig.GET_INVENTORY_REQ, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
                 Log.e("RESPONSe", response);
@@ -190,31 +200,24 @@ public class Main_Page extends AppCompatActivity {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
-                        int id = obj.getInt("sched_id");
-                        String cat = obj.getString("cat");
-                        String desc = obj.getString("desc");
-                        int room_pc_id = obj.getInt("room_pc_id");
-                        String date = obj.getString("date");
-                        String time = obj.getString("time");
-                        String name = obj.getString("name");
-                        String status = obj.getString("status");
-                        if (cat.contains("Inventory")) {
-                            if (status.equalsIgnoreCase("pending")) {
-                                if (date.equalsIgnoreCase("anytime")) {
-                                    tempRooms.add(name);
-                                    room_ids.add(id);
-                                } else {
-                                    Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
-                                    if (task_date.equals(new Date()) || task_date.before(new Date())) {
-                                        tempRooms.add(name);
-                                        room_ids.add(room_pc_id);
-                                    }
-                                }
+                        //roomid rooms req id
+                        int room_id = obj.getInt("room_id");
+                        int req_id = obj.getInt("req_id");
+                        String room_name = obj.getString("room_name");
+                        String set_date = obj.getString("date");
+                        String req_status = obj.getString("req_status");
+
+                        if(req_status.equalsIgnoreCase("accepted")){
+                            Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
+                            if(task_date.equals(new Date()) || task_date.before(new Date())){
+                                tempRooms.add(room_name);
+                                room_ids.add(room_id);
+                                req_ids.add(req_id);
                             }
                         }
                     }
                     if (tempRooms.size() != 0)
-                        showRoomsInDialog(tempRooms, room_ids);
+                        showRoomsInDialog(tempRooms, room_ids, req_ids);
                     else
                         Toast.makeText(Main_Page.this, "No scheduled inventory for today", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
@@ -229,7 +232,7 @@ public class Main_Page extends AppCompatActivity {
         }, param);
     }
 
-    private void showRoomsInDialog(final ArrayList<String> tempRooms, final ArrayList<Integer> room_ids) {
+    private void showRoomsInDialog(final ArrayList<String> tempRooms, final ArrayList<Integer> room_ids, final ArrayList<Integer> req_ids) {
         String[] rooms = tempRooms.toArray(new String[tempRooms.size()]);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Choose Room...")
@@ -243,7 +246,7 @@ public class Main_Page extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //pass room id to inventory activity
-                        addPcToAssessFrmServer(room_ids.get(position));
+                        addPcToAssessFrmServer(room_ids.get(position), req_ids.get(position));
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -336,11 +339,13 @@ public class Main_Page extends AppCompatActivity {
         db.close();
         this.stopService(new Intent(this, BackgroundService.class));
     }
+
     private void clearDb() {
         db.deleteAssessedPc();
         db.deletePcToAssess();
     }
-    private void addPcToAssessFrmServer(final int id) {
+
+    private void addPcToAssessFrmServer(final int id, final int req_id) {
         clearDb();
         volley.sendStringRequestGet(AppConfig.GET_COMPUTERS, new VolleyCallback() {
             @Override
@@ -368,11 +373,9 @@ public class Main_Page extends AppCompatActivity {
 
                         if (room_id == id) {
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                            Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
-                            Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
                         }
                     }
-                    goToAssessment(id);
+                    goToAssessment(id, req_id);
                 } catch (JSONException e) {
                     Toast.makeText(Main_Page.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
                 }
@@ -386,9 +389,10 @@ public class Main_Page extends AppCompatActivity {
         });
     }
 
-    private void goToAssessment(int room_id){
+    private void goToAssessment(int room_id, int req_id) {
         Intent intent = new Intent(Main_Page.this, InventoryActivty.class);
         intent.putExtra("room_id", room_id);
+        intent.putExtra("req_id", req_id);
         startActivity(intent);
         //start activity for result
     }

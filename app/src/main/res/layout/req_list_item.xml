@@ -26,6 +26,16 @@
             android:text="location"
             android:ellipsize="end"
             android:maxLines="1"/>
+        <TextView
+            android:id="@+id/req_status"
+            android:visibility="gone"
+            android:elevation="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status: "
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"/>
+
         <LinearLayout
             android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
@@ -34,11 +44,11 @@
             android:orientation="horizontal">
             <Button
                 android:background="@color/button_color"
-                android:id="@+id/done"
+                android:id="@+id/accept"
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
-                android:text="Done"
+                android:text="Accept"
                 android:layout_marginRight="5dp"/>
             <Button
                 android:id="@+id/ignore"

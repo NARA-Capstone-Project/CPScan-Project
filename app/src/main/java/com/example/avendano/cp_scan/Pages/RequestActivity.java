@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -26,9 +26,6 @@ import com.example.avendano.cp_scan.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 

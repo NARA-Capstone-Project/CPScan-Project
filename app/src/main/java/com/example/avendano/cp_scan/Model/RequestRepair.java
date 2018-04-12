@@ -34,7 +34,7 @@ public class RequestRepair {
     }
 
     public String getCategory() {
-        return "Request Repair";
+        return "Repair Request";
     }
 
     public int getReq_id() {

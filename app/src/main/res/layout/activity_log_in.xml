@@ -6,7 +6,7 @@
     android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.avendano.cp_scan.Activities.LogInActivity">
+    tools:context="com.example.avendano.cp_scan.Pages.LogInActivity">
 
 
     <ImageView
@@ -64,7 +64,7 @@
             android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/style_button_white"
+            android:background="@color/button_color"
             android:text="login"
             android:textColor="@color/white"/>
 

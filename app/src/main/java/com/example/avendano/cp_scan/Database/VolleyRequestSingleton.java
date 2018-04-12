@@ -11,7 +11,12 @@ import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Pages.ReportActivity;
+import com.example.avendano.cp_scan.Pages.RequestListsActivity;
+
+import org.json.JSONArray;
 
 import java.util.Map;
 
@@ -69,5 +74,31 @@ Context mCtx;
         str.setRetryPolicy(new DefaultRetryPolicy(requestTimeout, 0,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
+    }
+
+    public void sendJSONArrayRequest(String url, final Map<String, String> params, JSONArray details, final VolleyJSONArrayCallback callback){
+        JsonArrayRequest req = new JsonArrayRequest(Request.Method.POST
+                , url
+                , details
+                , new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                callback.onSuccessResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onErrorResponse(error);
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                return params;
+            }
+        };
+        int requestTimeout = 20000;
+        req.setRetryPolicy(new DefaultRetryPolicy(requestTimeout, 0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        RequestQueueHandler.getInstance(mCtx).addToRequestQueue(req);
     }
 }

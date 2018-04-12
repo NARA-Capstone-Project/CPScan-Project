@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:background="@color/mountainmeadow"
+            android:background="@color/button_color"
             android:padding="4dp"
             android:text="Scan QR"
             android:textColor="@color/white" />

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.Model.Assess_Computers;
 import com.example.avendano.cp_scan.R;
 
@@ -28,12 +29,12 @@ public class AssessAdapter extends RecyclerView.Adapter<AssessAdapter.AssessHold
 
     private Context mCtx;
     private List<Assess_Computers> pcList;
-    private SQLiteHandler db;
+    private SQLiteHelper db;
 
     public AssessAdapter(Context mCtx, List<Assess_Computers> pcList) {
         this.mCtx = mCtx;
         this.pcList = pcList;
-        db = new SQLiteHandler(mCtx);
+        db = new SQLiteHelper(mCtx);
     }
 
     @Override

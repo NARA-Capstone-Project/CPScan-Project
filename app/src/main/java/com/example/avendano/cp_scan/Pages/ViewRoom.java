@@ -1,9 +1,7 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
-import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -23,10 +21,13 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.ScheduleActivity;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -34,10 +35,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +52,7 @@ public class ViewRoom extends AppCompatActivity {
     android.app.AlertDialog dialog;
     Connection_Detector connection_detector;
     String image_path;
+    VolleyRequestSingleton volley;
 
     @Override
     public void onBackPressed() {
@@ -78,6 +76,7 @@ public class ViewRoom extends AppCompatActivity {
         Log.e("REQUEST COUNT", db.getRequestCount());
 
         connection_detector = new Connection_Detector(this);
+        volley = new VolleyRequestSingleton(this);
 
         //get room id
         room_id = getIntent().getIntExtra("room_id", 0);
@@ -94,8 +93,7 @@ public class ViewRoom extends AppCompatActivity {
 
         user_role = SharedPrefManager.getInstance(this).getUserRole();
         room_btn = (Button) findViewById(R.id.room_button);
-        if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("custodian") ||
-        user_role.equalsIgnoreCase("main technician")) {
+        if (user_role.equalsIgnoreCase("custodian")) {
             room_btn.setVisibility(View.VISIBLE);
         } else {
             room_btn.setVisibility(View.INVISIBLE);
@@ -170,40 +168,6 @@ public class ViewRoom extends AppCompatActivity {
                         } else {
                             checkLastInventoryRequestFrmServer(true);
                         }
-                    } else if (user_role.equalsIgnoreCase("technician") || user_role.equalsIgnoreCase("main technician")) {
-                        if (connection_detector.isConnected()) {
-                            if (checkDate()) {//naassess na ngayong week
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                                builder.setMessage("This room has been assessed this week. Reassess?")
-                                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                addPcToAssessFrmServer();
-                                            }
-                                        })
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        });
-                                AlertDialog alert = builder.create();
-                                alert.show();
-                            } else {
-                                addPcToAssessFrmServer();
-                            }
-                        } else {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                            builder.setMessage("No Internet Connection")
-                                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    });
-                            AlertDialog alert = builder.create();
-                            alert.show();
-                        }
                     }
                 } else {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
@@ -240,101 +204,50 @@ public class ViewRoom extends AppCompatActivity {
     }
 
     private void checkLastInventoryRequestFrmServer(final boolean popup) {
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_CHECK_LAST_INVENTORY_REQUEST
-                , new Response.Listener<String>() {
+        Map<String, String> param = new HashMap<>();
+        param.put("room_id", String.valueOf(room_id));
+        volley.sendStringRequestPost(AppConfig.PENDING_INVENTORY, new VolleyCallback() {
             @Override
-            public void onResponse(String response) {
-                Log.e("RESPONSE", response);
+            public void onSuccessResponse(String response) {
+                Log.e("RESPONSe", response);
                 try {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
-                        if (!obj.getBoolean("pending")) { //kapag hindi pa nagrerequest
-                            room_btn.setText("Request");
-                            room_btn.setBackgroundResource(R.color.button_color);
-                            room_btn.setTextColor(getResources().getColor(R.color.white));
-                        } else { //kapag na request na
+                        if (obj.getBoolean("pending")) {
                             room_btn.setText("Requested");
-                            room_btn.setBackgroundResource(R.drawable.style_button_white);
-                            room_btn.setTextColor(getResources().getColor(R.color.button_color));
                             int req_id = obj.getInt("req_id");
-                            int rep_id = 0;
-                            if (!obj.isNull("rep_id"))
-                                rep_id = obj.getInt("rep_id");
-                            int room_id = obj.getInt("room_id");
-                            String cust_id = obj.getString("custodian");
-                            String tech_id = obj.getString("technician");
                             String date = obj.getString("date");
                             String time = obj.getString("time");
                             String msg = obj.getString("msg");
                             String req_date = obj.getString("date_requested");
                             String req_time = obj.getString("time_requested");
                             String req_status = obj.getString("req_status");
-
                             if (popup)
-                                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
+                                showRequestDetails(req_id, room_id, date, time,
                                         msg, req_date, req_time, req_status);
+                        } else {
+                            room_btn.setText("Request");
                         }
+                    } else {
+                        room_btn.setText("Error");
+                        room_btn.setEnabled(false);
+                        Log.e("PENDING", "error");
                     }
-                } catch (JSONException e) {
+
+                } catch (Exception e) {
                     e.printStackTrace();
-                    checkLastInventoryRequestFrmLocal(popup);
                 }
             }
-        }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("VIEWROOM", "ERROR: " + error.getMessage());
-                checkLastInventoryRequestFrmLocal(popup);
+                error.printStackTrace();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("room_id", String.valueOf(room_id));
-                return param;
-            }
-        };
-        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
+        }, param);
+
     }
 
-    @SuppressLint("ResourceAsColor")
-    private void checkLastInventoryRequestFrmLocal(boolean popup) {
-        if (popup) {
-            Cursor c = db.checkIfRequested(room_id);
-            if (c.moveToFirst()) {
-                int req_id = c.getInt(c.getColumnIndex(db.REQ_ID));
-                int rep_id = c.getInt(c.getColumnIndex(db.REPORT_ID));
-                int room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
-                ;
-                String cust_id = c.getString(c.getColumnIndex(db.COLUMN_CUST_ID));
-                String tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
-                String date = c.getString(c.getColumnIndex(db.REQ_DATE));
-                String time = c.getString(c.getColumnIndex(db.REQ_TIME));
-                String msg = c.getString(c.getColumnIndex(db.REQ_MESSAGE));
-                String req_date = c.getString(c.getColumnIndex(db.DATE_OF_REQ));
-                String req_time = c.getString(c.getColumnIndex(db.TIME_OF_REQ));
-                String req_status = c.getString(c.getColumnIndex(db.REQ_STATUS));
-
-                showRequestDetails(req_id, rep_id, room_id, cust_id, tech_id, date, time,
-                        msg, req_date, req_time, req_status);
-            }
-        } else {
-            Cursor c = db.checkIfRequested(room_id);
-            if (c.moveToFirst()) {
-                room_btn.setText("Requested");
-                room_btn.setBackgroundResource(R.drawable.style_button_white);
-                room_btn.setTextColor(getResources().getColor(R.color.button_color));
-            } else {
-                room_btn.setText("Request");
-                room_btn.setBackgroundResource(R.color.button_color);
-                room_btn.setTextColor(getResources().getColor(R.color.white));
-            }
-        }
-    }
-
-    private void showRequestDetails(final int req_id, int rep_id, final int room_id, String cust_id,
-                                    String tech_id, String date, String time, String msg,
+    private void showRequestDetails(final int req_id, final int room_id, String date, String time, String msg,
                                     String date_req, String time_req, String req_status) {
         //alertdialog
         String msg_body = "";
@@ -355,20 +268,7 @@ public class ViewRoom extends AppCompatActivity {
                 dialog.dismiss();
             }
         })
-                .setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (connection_detector.isConnected()) {
-                            Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
-                            intent.putExtra("type", "inventory");
-                            intent.putExtra("room_pc_id", room_id);
-                            intent.putExtra("id", req_id);
-                            ViewRoom.this.startActivity(intent);
-                            finish();
-                        } else
-                            Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
-                    }
-                })
+
                 .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -376,6 +276,22 @@ public class ViewRoom extends AppCompatActivity {
                         cancelRequestInventory(req_id);
                     }
                 });
+        if(!req_status.equalsIgnoreCase("accepted")){
+            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (connection_detector.isConnected()) {
+                        Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
+                        intent.putExtra("type", "inventory");
+                        intent.putExtra("room_pc_id", room_id);
+                        intent.putExtra("id", req_id);
+                        ViewRoom.this.startActivity(intent);
+                        finish();
+                    } else
+                        Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         AlertDialog alert = builder.create();
         alert.show();
     }
@@ -436,7 +352,6 @@ public class ViewRoom extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             //update sqlite
                             if (!obj.getBoolean("error")) {
-                                updateSQlite(req_id);
                                 new backgroundTasks().execute();
                                 Handler handler = new Handler();
                                 handler.postDelayed(new Runnable() {
@@ -476,119 +391,31 @@ public class ViewRoom extends AppCompatActivity {
         new cancel().callCancel();
     }
 
-    private void updateSQlite(int req_id) {
-        db.updateReqInvStatus(req_id, "Cancel");
-    }
-
-    private void addPcToAssessFrmServer() {
-        StringRequest str = new StringRequest(Request.Method.GET
-                , AppConfig.URL_GET_ALL_PC
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        int comp_id = obj.getInt("comp_id");
-                        int room_id = 0;
-                        if (!obj.isNull("room_id")) {
-                            room_id = obj.getInt("room_id");
-                        }
-                        int pc_no = obj.getInt("pc_no");
-                        String model = obj.getString("model");
-                        String mb = obj.getString("mb");
-                        String pr = obj.getString("pr");
-                        String monitor = obj.getString("monitor");
-                        String ram = obj.getString("ram");
-                        String kboard = obj.getString("kboard");
-                        String mouse = obj.getString("mouse");
-                        String vga = obj.getString("vga");
-                        String hdd = obj.getString("hdd");
-                        String comp_status = obj.getString("comp_status");
-
-                        if (room_id == ViewRoom.this.room_id) {
-                            long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                            Log.w("ADDED TO PCTOASSESS: ", "Status: " + in);
-                            Log.w("ADDED TO PCTOASSESS: ", "MODEL: " + model);
-                        }
-                    }
-                    goToAssessment();
-                } catch (JSONException e) {
-                    Toast.makeText(ViewRoom.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.v("RESULT", "Error: " + error.getMessage());
-            }
-        });
-        RequestQueueHandler.getInstance(ViewRoom.this).addToRequestQueue(str);
-    }
-
-    private void goToAssessment() {
-        Intent intent = new Intent(ViewRoom.this, AssessmentActivity.class);
-        intent.putExtra("room_id", room_id);
-        intent.putExtra("request", 0);
-        startActivity(intent);
-        finish();
-    }
-
-    private boolean checkDate() {
-        String lastReportDate = lastAssess.getText().toString().trim();
-        //compare kung naassess na this week
-        if (!lastReportDate.equals("--")) {
-            Date date1 = null;
-            try {
-                date1 = new SimpleDateFormat("yyyy-MM-dd").parse(lastReportDate);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            Calendar currentCalendar = Calendar.getInstance();
-            int week = currentCalendar.get(Calendar.WEEK_OF_YEAR);
-            Calendar targetCalendar = Calendar.getInstance();
-            targetCalendar.setTime(date1);
-            int targetWeek = targetCalendar.get(Calendar.WEEK_OF_YEAR);
-            return week == targetWeek;
-        } else {
-            return false;
-        }
-    }
-
     private void roomDetails() {
-        StringRequest stringRequest = new StringRequest(Request.Method.GET
-                , AppConfig.URL_GET_ALL_ROOM
-                , new Response.Listener<String>() {
+        volley.sendStringRequestGet(AppConfig.GET_ROOMS, new VolleyCallback() {
             @Override
-            public void onResponse(String response) {
+            public void onSuccessResponse(String response) {
                 try {
                     dialog.dismiss();
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         int room_id = obj.getInt("room_id");
-                        int floor = obj.getInt("floor");
+                        int floor = obj.getInt("flr");
                         String room_name = "";
                         if (obj.isNull("dept_name")) {
                             room_name = obj.getString("room_name");
                         } else {
                             room_name = obj.getString("dept_name") + " " + obj.getString("room_name");
                         }
-                        String custodian = obj.getString("room_custodian");
+                        String custodian = obj.getString("cust_name");
                         String building = obj.getString("building");
                         int pc_count = obj.getInt("pc_count");
                         int pc_working = obj.getInt("pc_working");
                         String path = obj.getString("room_image");
 
-                        String lastAssess = "";
-                        if (obj.isNull("lastAssess")) {
-                            lastAssess = "--";
-                        } else {
-                            lastAssess = obj.getString("lastAssess");
-                        }
+
                         if (room_id == ViewRoom.this.room_id) {
-                            ViewRoom.this.lastAssess.setText(lastAssess);
                             ViewRoom.this.floor.setText("" + floor);
                             ViewRoom.this.building.setText(building);
                             ViewRoom.this.room.setText(room_name);
@@ -601,21 +428,20 @@ public class ViewRoom extends AppCompatActivity {
                                 image_path = AppConfig.ROOT_URL + path;
                                 getImage();
                             }
+                            break;
                         }
                     }
                 } catch (JSONException e) {
+                    dialog.dismiss();
                     Log.e("JSON ERROR 1", "ViewRoom: " + e.getMessage());
                 }
             }
-        }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
-                dialog.dismiss();
-                getLocalRoomDetails();
-                Log.w("Volleyerror 1", "ViewRoom: " + error.getMessage());
+
             }
         });
-        RequestQueueHandler.getInstance(this).addToRequestQueue(stringRequest);
     }
 
     private void getImage() {
@@ -636,28 +462,6 @@ public class ViewRoom extends AppCompatActivity {
                 });
 
         RequestQueueHandler.getInstance(ViewRoom.this).addToRequestQueue(req);
-    }
-
-    private void getLocalRoomDetails() {
-        Cursor c = db.getRoomDetails(room_id);
-        if (c.moveToFirst()) {
-            String building = c.getString(c.getColumnIndex(db.ROOMS_BUILDING));
-            int flr = c.getInt(c.getColumnIndex(db.ROOMS_FLOOR));
-
-            String room = c.getString(c.getColumnIndex(db.ROOMS_NAME));
-            String custodian = c.getString(c.getColumnIndex(db.ROOMS_CUSTODIAN));
-            int pc_count = c.getInt(c.getColumnIndex(db.ROOMS_PC_COUNT));
-            int pc_working = c.getInt(c.getColumnIndex(db.ROOMS_PC_WORKING));
-            String lasAssess = c.getString(c.getColumnIndex(db.ROOMS_LAST_ASSESS));
-
-            lastAssess.setText(lasAssess);
-            floor.setText("" + flr);
-            this.building.setText(building);
-            this.room.setText(room);
-            cust.setText(custodian);
-            this.pc_count.setText("" + pc_count);
-            this.pc_working.setText("" + pc_working);
-        }
     }
 
     private void clearDb() {

@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.avendano.cp_scan.Activities.ViewRoom">
+    tools:context="com.example.avendano.cp_scan.Pages.ViewRoom">
 
 
     <RelativeLayout
@@ -173,7 +173,7 @@
             android:layout_below="@+id/pc_count"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="5dp"
-            android:text="Report"
+            android:text="Request"
             android:background="@color/button_color"
             android:textColor="@color/white"
             android:textStyle="bold"/>

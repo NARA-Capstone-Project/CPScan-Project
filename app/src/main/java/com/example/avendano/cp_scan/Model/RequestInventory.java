@@ -20,7 +20,7 @@ public class RequestInventory {
         this.time_req = time_req;
         this.req_status = req_status;
     }
-    public String getCategory(){return "Request Inventory";}
+    public String getCategory(){return "Inventory Request";}
 
     public int getReq_id() {
         return req_id;

@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Activities;
+package com.example.avendano.cp_scan.Pages;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -25,9 +24,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,11 +33,12 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.PoolingByteArrayOutputStream;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Database.AppConfig;
 import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
@@ -75,9 +72,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
     private final int IMG_REQUEST = 1, CAMERA_REQUEST = 0;
     private Bitmap bitmap;
     private String TAG = "RequestForRepair";
-    RadioGroup status;
     android.app.AlertDialog progress;
-    RadioButton missing, not_working;
     boolean checkBox = false; // true missing false not working
     boolean setImage = false;
 
@@ -102,26 +97,16 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         photo1 = (ImageView) findViewById(R.id.photo1);
         photo1.setVisibility(View.VISIBLE);
         date_type = (Spinner) findViewById(R.id.date);
-        status = (RadioGroup) findViewById(R.id.comp_status);
         peripherals = (TextView) findViewById(R.id.peripherals);
         label = (TextView) findViewById(R.id.label);
         label.setVisibility(View.VISIBLE);
-        missing = (RadioButton) findViewById(R.id.missing);
-        missing.setOnClickListener(new View.OnClickListener() {
+        peripherals.setVisibility(View.VISIBLE);
+        peripherals.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 peripheralsDialog();
             }
         });
-        not_working = (RadioButton) findViewById(R.id.not_working);
-        not_working.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                peripheralsDialog();
-            }
-        });
-        status.setVisibility(View.VISIBLE);
-
         String[] type = new String[]{"Anytime", "Custom"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
         date_type.setAdapter(adapter);
@@ -191,18 +176,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (peripherals.getText().toString().isEmpty()) {
-                            missing.setChecked(false);
-                            not_working.setChecked(false);
-                        } else {
-                            if (checkBox) {
-                                not_working.setChecked(false);
-                                missing.setChecked(true);
-                            } else {
-                                missing.setChecked(false);
-                                not_working.setChecked(true);
-                            }
-                        }
                         dialog.dismiss();
                     }
                 });
@@ -220,10 +193,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                             for (int i = 0; i < checked.size(); i++) {
                                 content = "" + content + " > " + checked.get(i).toString().trim();
                             }
-                            if (missing.isChecked())
-                                checkBox = true;
-                            else
-                                checkBox = false;
                             peripherals.setText(content);
                             peripherals.setVisibility(View.VISIBLE);
                             alert.dismiss();
@@ -338,77 +307,62 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         setTime = time.getText().toString();
 
         final String add_msg = message.getText().toString().trim();
-        String rep_msg = "";
-        if (missing.isChecked())
-            rep_msg = missing.getText().toString().trim() + " " + peripherals.getText().toString().trim();
-        else
-            rep_msg = not_working.getText().toString().trim() + " " + peripherals.getText().toString().trim();
+        String rep_msg = peripherals.getText().toString().trim();
 
         String image = "";
         if (setImage)
             image = imageToString();
 
-
-        String tech_id = "";
-        Cursor c = db.getRoomDetails(room_id);
-        if (c.moveToFirst()) {
-            tech_id = c.getString(c.getColumnIndex(db.COLUMN_TECH_ID));
-        }
-
         final String finalRep_msg = rep_msg;
         final String finalSetTime = setTime;
         final String finalSetDate = setDate;
-        final String finalTech_id = tech_id;
 
         final String finalImage = image;
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_REQUEST_REPAIR
-                , new Response.Listener<String>() {
+
+        String date_req = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String time_req = new SimpleDateFormat("HH:mm:ss").format(new Date());
+
+
+        Map<String, String> params = new HashMap<>();
+        params.put("comp_id", String.valueOf(comp_id));
+        params.put("message", add_msg);
+        params.put("set_date", finalSetDate);
+        params.put("set_time", finalSetTime);
+        params.put("date_req", date_req);
+        params.put("time_req", time_req);
+        params.put("image", finalImage);
+        params.put("rep_details", finalRep_msg);
+
+        VolleyRequestSingleton volley = new VolleyRequestSingleton(this);
+        volley.sendStringRequestPost(AppConfig.SAVE_REQ_REPAIR, new VolleyCallback() {
             @Override
-            public void onResponse(String response) {
-                Log.e("RESPONSE", response);
-                try {
+            public void onSuccessResponse(String response) {
+                Log.e("RESPONSe", response);
+                try{
                     JSONObject obj = new JSONObject(response);
-                    if (!obj.getBoolean("error")) {
+                    if(!obj.getBoolean("error")){
+                        Log.e("Id", " " + obj.getInt("id"));
                         Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         progress.dismiss();
                         gotoViewPc();
-                    } else {
-                        Toast.makeText(RequestForRepair.this, "An error occured", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(RequestForRepair.this, "An Error occurred, pleaase try again later", Toast.LENGTH_SHORT).show();
+                        progress.dismiss();
                     }
-                } catch (JSONException e) {
+                }catch (Exception e){
+                    Toast.makeText(RequestForRepair.this, "An Error occurred, pleaase try again later", Toast.LENGTH_SHORT).show();
                     progress.dismiss();
-                    Log.e("RESPONSE", response);
                     e.printStackTrace();
                 }
-
             }
-        }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
+                Toast.makeText(RequestForRepair.this, "Can't connect to the server, pleaase try again later", Toast.LENGTH_SHORT).show();
                 progress.dismiss();
-                Log.e("ERROR", error.getMessage());
+                error.printStackTrace();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("comp_id", String.valueOf(comp_id));
-                params.put("msg", add_msg);
-                params.put("cust_id", SharedPrefManager.getInstance(RequestForRepair.this).getUserId());
-                params.put("tech_id", finalTech_id);
-                params.put("date", finalSetDate);
-                params.put("time", finalSetTime);
-                params.put("image", finalImage);
-                params.put("rep_details", finalRep_msg);
-                return params;
-            }
-        };
-
-        str.setRetryPolicy(new DefaultRetryPolicy(0
-                , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
-                ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        RequestQueueHandler.getInstance(RequestForRepair.this).addToRequestQueue(str);
+        }, params);
     }
 
     private String imageToString() {
@@ -465,7 +419,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             time.setError("Set date!");
             return false;
         } else if (peripherals.getText().toString().equalsIgnoreCase("")) {
-            Toast.makeText(this, "Select computer status and peripherals", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Select peripherals", Toast.LENGTH_SHORT).show();
             return false;
         } else {
             return true;
