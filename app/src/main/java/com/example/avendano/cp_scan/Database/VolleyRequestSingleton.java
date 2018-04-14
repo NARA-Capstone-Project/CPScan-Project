@@ -1,20 +1,14 @@
 package com.example.avendano.cp_scan.Database;
 
 import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Pages.ReportActivity;
-import com.example.avendano.cp_scan.Pages.RequestListsActivity;
 
 import org.json.JSONArray;
 

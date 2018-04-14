@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,11 +17,10 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
 import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Task;
-import com.example.avendano.cp_scan.Pages.ViewPc;
+import com.example.avendano.cp_scan.Activities.ViewPc;
 import com.example.avendano.cp_scan.R;
 
 import org.json.JSONArray;

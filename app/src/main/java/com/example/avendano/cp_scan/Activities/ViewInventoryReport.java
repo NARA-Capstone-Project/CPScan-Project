@@ -2,7 +2,6 @@ package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -25,7 +24,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Adapter.ReportAdapter;
 import com.example.avendano.cp_scan.Adapter.ReportDetailsAdapter;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;

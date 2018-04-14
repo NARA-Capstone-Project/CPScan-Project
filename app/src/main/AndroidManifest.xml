@@ -15,31 +15,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Pages.LogInActivity" />
+        <activity android:name=".Activities.LogInActivity" />
         <activity
-            android:name=".Pages.RequestActivity"
+            android:name=".Activities.RequestActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.ViewRoom"
+            android:name=".Activities.ViewRoom"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.RoomPc"
+            android:name=".Activities.RoomPc"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activities.ScheduleActivity"
             android:label="@string/title_activity_schedule"
             android:theme="@style/AppTheme" />
-        <activity
-            android:name=".Activities.PcAssessment"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".Activities.AssessmentActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait" />
 
         <receiver
             android:name=".Connection_Detector.NetworkStateChange"
@@ -52,7 +44,7 @@
         <service android:name=".Database.BackgroundService" android:label="@string/app_name" android:enabled="true"/>
 
         <activity
-            android:name=".Pages.ViewPc"
+            android:name=".Activities.ViewPc"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
@@ -60,42 +52,37 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.EditProfileActivity"
+            android:name=".Activities.EditProfileActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.RequestForInventory"
+            android:name=".Activities.RequestForInventory"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.RequestForRepair"
+            android:name=".Activities.RequestForRepair"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Pages.EditRequestSchedule"
+            android:name=".Activities.EditRequestSchedule"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".Activities.TaskActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait" />
-        <activity android:name=".Activities.SearchActivity" />
         <activity android:name=".Activities.ViewRepairReport" />
         <activity android:name=".Activities.SignatureActivity" />
-        <activity android:name=".Pages.Main_Page"
+        <activity android:name=".Activities.Main_Page"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter></activity>
-        <activity android:name=".Pages.ProfileActivity"></activity>
-        <activity android:name=".Pages.RoomActivity"></activity>
-        <activity android:name=".Pages.RequestListsActivity"></activity>
-        <activity android:name=".Pages.SchedulesActivity"></activity>
-        <activity android:name=".Pages.ReportActivity"></activity>
-        <activity android:name=".Pages.InventoryActivty"></activity>
-        <activity android:name=".Pages.AssessPc"></activity>
+        <activity android:name=".Activities.ProfileActivity"></activity>
+        <activity android:name=".Activities.RoomActivity"></activity>
+        <activity android:name=".Activities.RequestListsActivity"></activity>
+        <activity android:name=".Activities.SchedulesActivity"></activity>
+        <activity android:name=".Activities.ReportActivity"></activity>
+        <activity android:name=".Activities.InventoryActivty"></activity>
+        <activity android:name=".Activities.AssessPc"></activity>
     </application>
 
 </manifest>

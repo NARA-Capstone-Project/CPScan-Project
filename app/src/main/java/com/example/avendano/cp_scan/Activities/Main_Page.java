@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -35,7 +35,6 @@ import com.nex3z.notificationbadge.NotificationBadge;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -76,7 +75,6 @@ public class Main_Page extends AppCompatActivity {
                 scan = (CardView) findViewById(R.id.quick_scan);
                 inventory = (CardView) findViewById(R.id.start_inventory);
                 badge = (NotificationBadge) findViewById(R.id.badge);
-                badge.setNumber(0);
                 getReqCount();
 
                 inventory.setOnClickListener(new View.OnClickListener() {
@@ -180,7 +178,6 @@ public class Main_Page extends AppCompatActivity {
         super.onResume();
         String role = SharedPrefManager.getInstance(this).getUserRole();
         if (!role.equalsIgnoreCase("custodian")) {
-            badge.setNumber(0);
             getReqCount();
         }
     }
@@ -272,9 +269,8 @@ public class Main_Page extends AppCompatActivity {
                     int per = obj.getInt("peripherals");
 
                     int sum = inv + per + rep;
-
+                    badge.setNumber(0);
                     setBadgeNumber(sum);
-
                 } catch (Exception e) {
 
                 }

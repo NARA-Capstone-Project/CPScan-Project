@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.app.AlertDialog;
 import android.os.AsyncTask;
@@ -17,36 +17,23 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Adapter.ReportAdapter;
-import com.example.avendano.cp_scan.Adapter.RequestAdapter;
-import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.RequestQueueHandler;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
 import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Reports;
-import com.example.avendano.cp_scan.Model.RequestReport;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import dmax.dialog.SpotsDialog;
-
-import static java.security.AccessController.getContext;
 
 /**
  * Created by Avendano on 10 Apr 2018.
@@ -59,10 +46,7 @@ public class ReportActivity extends AppCompatActivity {
     private SwipeRefreshLayout swiper;
     private AlertDialog progress;
     List<Reports> reportsList;
-    List<RequestReport> requestList;
     ReportAdapter reportAdapter;
-    RequestAdapter requestAdapter;
-    Connection_Detector connection_detector;
     ProgressBar progressBar;
     VolleyRequestSingleton volley;
     Spinner list_type;
@@ -121,7 +105,6 @@ public class ReportActivity extends AppCompatActivity {
         });
 
         reportsList = new ArrayList<>();
-        requestList = new ArrayList<>();
 
         new ReportsLoader().execute();
     }
@@ -131,9 +114,9 @@ public class ReportActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             //chesk spinner
             if (list_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Reports")) { //inventory
-                loadInventoryReports();
+                loadReports("Inventory");
             } else if (list_type.getSelectedItem().toString().equalsIgnoreCase("Repair Reports")) { // repair
-                loadRepairRequestReport();
+                loadReports("Repair");
             }
             return null;
         }
@@ -153,62 +136,13 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
-    private void loadRepairRequestReport() {
-        requestList.clear();
-        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
-                , new VolleyCallback() {
-                    @Override
-                    public void onSuccessResponse(String response) {
-                        try {
-                            JSONArray array = new JSONArray(response);
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject obj = array.getJSONObject(i);
-
-                                String date = obj.getString("date");
-                                String time = obj.getString("time");
-                                String cat = obj.getString("cat");
-                                String cust_id = obj.getString("cust_id");
-                                String tech_id = obj.getString("tech_id");
-                                int rep_id = obj.getInt("rep_id");
-                                String room_name = obj.getString("room_name");
-                                String name = "PC " + obj.getString("pc_no") + " of " + room_name;
-
-                                if(cat.contains("Repair")){
-                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
-                                    if(user_id.equals(cust_id) || user_id.equals(tech_id) ){
-                                        RequestReport report = new RequestReport(rep_id, date + " " + time, cat, name);
-                                        requestList.add(report);
-                                    }
-                                }
-                            }
-                            if (requestList.size() != 0) {
-                                requestAdapter = new RequestAdapter(ReportActivity.this, ReportActivity.this, requestList, swiper);
-                                recyclerView.setAdapter(requestAdapter);
-                                requestAdapter.notifyDataSetChanged();
-                            } else {
-                                Toast.makeText(ReportActivity.this, "No Repair Reports", Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (Exception e) {
-                            Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        if(error instanceof TimeoutError)
-                            Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
-                        else
-                            Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
-                    }
-                });
-        }
-
-    private void loadInventoryReports() {
+    private void loadReports(final String category) {
         reportsList.clear();
         volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
                 , new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
                         try {
                             JSONArray array = new JSONArray(response);
                             for (int i = 0; i < array.length(); i++) {
@@ -217,36 +151,47 @@ public class ReportActivity extends AppCompatActivity {
                                 String date = obj.getString("date");
                                 String time = obj.getString("time");
                                 String cat = obj.getString("cat");
-                                String room_name = obj.getString("room_name");
                                 String cust_id = obj.getString("cust_id");
                                 String tech_id = obj.getString("tech_id");
-                                int room_id = obj.getInt("room_id");
                                 int rep_id = obj.getInt("rep_id");
+                                String room_name = obj.getString("room_name");
+                                int room_id = obj.getInt("room_id");
 
-                                if(cat.contains("Inventory")){
-                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
-                                    if(user_id.equals(cust_id) || user_id.equals(tech_id) ){
-                                        Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
-                                        reportsList.add(reports);
+                                String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
+                                if (category.equalsIgnoreCase("repair")) {
+                                    if (cat.contains("Repair")) {
+                                        if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                            String pc_name = "PC " + obj.getString("pc_no") + " of " + room_name;
+                                            Reports reports = new Reports(date + " " + time, cat, pc_name, room_id, rep_id);
+                                            reportsList.add(reports);
+                                        }
+                                    }
+                                } else {
+                                    if (cat.contains("Inventory")) {
+                                        if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                            Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
+                                            reportsList.add(reports);
+                                        }
                                     }
                                 }
                             }
-
                             if (reportsList.size() != 0) {
                                 reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
                                 recyclerView.setAdapter(reportAdapter);
                                 reportAdapter.notifyDataSetChanged();
                             } else {
-                                Toast.makeText(ReportActivity.this, "No Inventory Reports", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ReportActivity.this, "No Reports", Toast.LENGTH_SHORT).show();
+                                reportAdapter.notifyDataSetChanged();
                             }
                         } catch (Exception e) {
+                            e.printStackTrace();
                             Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error instanceof TimeoutError)
+                        if (error instanceof TimeoutError)
                             Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
                         else
                             Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();

@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -26,8 +26,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;

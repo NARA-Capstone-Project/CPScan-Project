@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -21,18 +21,13 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.VolleyError;
-import com.example.avendano.cp_scan.Activities.AssessmentActivity;
-import com.example.avendano.cp_scan.Activities.PcAssessment;
 import com.example.avendano.cp_scan.Adapter.AssessAdapter;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyJSONArrayCallback;
 import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Assess_Computers;
 import com.example.avendano.cp_scan.R;
-import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -40,7 +35,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

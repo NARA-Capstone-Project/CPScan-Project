@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -18,8 +18,6 @@ import android.widget.Toast;
 
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.R;
-
-import java.util.zip.CheckedInputStream;
 
 import dmax.dialog.SpotsDialog;
 

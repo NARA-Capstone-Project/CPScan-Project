@@ -1,9 +1,8 @@
-package com.example.avendano.cp_scan.Pages;
+package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -23,7 +22,6 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
 import com.example.avendano.cp_scan.Database.AppConfig;
@@ -218,10 +216,9 @@ public class ViewPc extends AppCompatActivity {
                     if (cancel.getVisibility() == View.VISIBLE) {
                         //check if may nag request and save report
                         //check inputs muna sa rbutn saka checkbox
-                        progressDialog.show();
                         if (checkInput()) {
                             if (connection_detector.isConnected())
-                                saveRequestReport();
+                                confirmReport();
                             else {
                                 final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                                 builder.setMessage("No Internet Connection")
@@ -235,7 +232,6 @@ public class ViewPc extends AppCompatActivity {
                                 alert.show();
                             }
                         } else {
-                            progressDialog.dismiss();
                             Toast.makeText(ViewPc.this, "You haven't check any computer status/peripherals", Toast.LENGTH_SHORT).show();
                         }
                     } else {
@@ -328,78 +324,8 @@ public class ViewPc extends AppCompatActivity {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                confirmReport();
+                saveReport();
                 return null;
-            }
-
-            private String message() {
-                String msg = "";
-                //check kung may nakacheck sa checbox
-                if (working.isChecked())
-                    msg = "Confirm if computer is working and in good condition";
-                else if (defective.isChecked()) {
-                    msg = "The Following Peripherals are Defective: \n";
-                    if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
-                            monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
-                        msg = "Confirm if this computer is defective";
-                    else {
-                        if (monitor.isChecked())
-                            msg = msg + "\tMonitor\n";
-                        if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
-                            msg = msg + "\tSystem Unit\n";
-
-                        if (keyboard.isChecked())
-                            msg = msg + "\tKeyboard\n";
-
-                        if (mouse.isChecked())
-                            msg = msg + "\tMouse\n";
-                        if (vga.isChecked())
-                            msg = msg + "\nVGA";
-                    }
-                } else {
-                    msg = "The Following Peripherals are Missing: \n";
-                    if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
-                            monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
-                        msg = "Confirm if this computer is missing";
-                    else {
-                        if (monitor.isChecked())
-                            msg = msg + "\tMonitor\n";
-                        if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
-                            msg = msg + "\tSystem Unit\n";
-
-                        if (keyboard.isChecked())
-                            msg = msg + "\tKeyboard\n";
-
-                        if (mouse.isChecked())
-                            msg = msg + "\tMouse\n";
-                        if (vga.isChecked())
-                            msg = msg + "\nVGA";
-                    }
-                }
-                return msg;
-            }
-
-            private void confirmReport() {
-                progressDialog.dismiss();
-                AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
-                String msg = message();
-                builder.setTitle("Confirm Report...")
-                        .setMessage(msg)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                saveReport(); //true = save din sa request_reports
-                                progressDialog.show();
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog alert = builder.create();
-                alert.show();
             }
             private JSONArray details() {
                 int idx;
@@ -541,7 +467,6 @@ public class ViewPc extends AppCompatActivity {
                 params.put("details", details.toString());
                 params.put("remarks", rem);
 
-
                 volley.sendStringRequestPost(AppConfig.SAVE_REPAIR,new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
@@ -567,8 +492,6 @@ public class ViewPc extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
-                        Log.e("RESPONSE", error.getMessage());
-                        Log.e("RESPOnSE", error.getClass().toString());
                         progressDialog.dismiss();
                         Toast.makeText(ViewPc.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
                     }
@@ -576,6 +499,75 @@ public class ViewPc extends AppCompatActivity {
             }
         }
         new Getter().execute();
+    }
+
+    private String message() {
+        String msg = "";
+        //check kung may nakacheck sa checbox
+        if (working.isChecked())
+            msg = "Confirm if computer is working and in good condition";
+        else if (defective.isChecked()) {
+            msg = "The Following Peripherals are Defective: \n";
+            if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
+                    monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
+                msg = "Confirm if this computer is defective";
+            else {
+                if (monitor.isChecked())
+                    msg = msg + "\tMonitor\n";
+                if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
+                    msg = msg + "\tSystem Unit\n";
+
+                if (keyboard.isChecked())
+                    msg = msg + "\tKeyboard\n";
+
+                if (mouse.isChecked())
+                    msg = msg + "\tMouse\n";
+                if (vga.isChecked())
+                    msg = msg + "\nVGA";
+            }
+        } else {
+            msg = "The Following Peripherals are Missing: \n";
+            if (mb.isChecked() && pr.isChecked() && ram.isChecked() && hdd.isChecked() &&
+                    monitor.isChecked() && keyboard.isChecked() && mouse.isChecked() && vga.isChecked())
+                msg = "Confirm if this computer is missing";
+            else {
+                if (monitor.isChecked())
+                    msg = msg + "\tMonitor\n";
+                if (mb.isChecked() || pr.isChecked() || ram.isChecked() || hdd.isChecked())
+                    msg = msg + "\tSystem Unit\n";
+
+                if (keyboard.isChecked())
+                    msg = msg + "\tKeyboard\n";
+
+                if (mouse.isChecked())
+                    msg = msg + "\tMouse\n";
+                if (vga.isChecked())
+                    msg = msg + "\nVGA";
+            }
+        }
+        return msg;
+    }
+
+    private void confirmReport() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
+        String msg = message();
+        builder.setTitle("Confirm Report...")
+                .setMessage(msg)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        saveRequestReport();
+                        progressDialog.show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     private void checkLastReqRepair(final boolean popup) {
