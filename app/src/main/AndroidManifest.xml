@@ -41,7 +41,7 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".Database.BackgroundService" android:label="@string/app_name" android:enabled="true"/>
+        <service android:name=".Database.GetNewRepairRequest" android:label="@string/app_name" />
 
         <activity
             android:name=".Activities.ViewPc"

@@ -49,7 +49,7 @@ public class ViewPc extends AppCompatActivity {
 
     VolleyRequestSingleton volley;
 
-
+    int pc;
     TextView pcno, room_name, comp_status, instr, pc_os;
     TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
@@ -61,6 +61,7 @@ public class ViewPc extends AppCompatActivity {
     int make_request_report;
     private static final String WORKING = "OK";
     private static final String NOT_WORKING = "NONE/NOT WORKING";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,8 +196,9 @@ public class ViewPc extends AppCompatActivity {
                             Intent intent = new Intent(ViewPc.this, RequestForRepair.class);
                             intent.putExtra("comp_id", comp_id);
                             intent.putExtra("room_id", room_id);
+                            intent.putExtra("room_name", room_name.getText().toString().trim());
+                            intent.putExtra("pc_no", pc);
                             startActivity(intent);
-                            finish();
                         } else {
                             final AlertDialog.Builder builder = new AlertDialog.Builder(ViewPc.this);
                             builder.setMessage("No Internet Connection")
@@ -262,6 +264,7 @@ public class ViewPc extends AppCompatActivity {
         });
         showDialog();
         new loadDetails().execute();
+        Log.e("CREATe", "");
     }
 
     private boolean checkInput() {
@@ -314,9 +317,41 @@ public class ViewPc extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             loadPcDetails();
+            getRoomDetails();
             checkLastReqRepair(false);
             return null;
         }
+    }
+
+    private void getRoomDetails() {
+        volley.sendStringRequestGet(AppConfig.GET_ROOMS
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        try{
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length() ; i++){
+                                JSONObject obj = array.getJSONObject(i);
+                                int id = obj.getInt("room_id");
+                                if(room_id == id){
+                                    if(obj.isNull("dept_id"))
+                                        room_name.setText(obj.getString("room_name"));
+                                    else
+                                        room_name.setText(obj.getString("dept_name") + " " + obj.getString("room_name"));
+                                    break;
+                                }
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("ROOMS", "error getting room details");
+                        error.printStackTrace();
+                    }
+                });
     }
 
     private void saveRequestReport() {
@@ -711,6 +746,8 @@ public class ViewPc extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.e("RESUME", "");
+        showDialog();
         new loadDetails().execute();
     }
 
@@ -812,6 +849,7 @@ public class ViewPc extends AppCompatActivity {
                             } else {
                                 getRoomName(room_id);
                             }
+                            pc = obj.getInt("pc_no");
                             pcno.setText("PC " + obj.getInt("pc_no"));
                             pc_model.setText(obj.getString("model"));
                             pc_processor.setText(obj.getString("pr"));

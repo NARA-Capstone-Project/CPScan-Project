@@ -143,30 +143,26 @@ public class ViewRoom extends AppCompatActivity {
                 int pc = Integer.parseInt(pc_count.getText().toString().trim());
                 if (pc > 0) {
                     if (user_role.equalsIgnoreCase("custodian")) {
-                        //if hindi pa nagrerequest "Request"
-                        //pag nkapagrequest na "Edit Request"
-                        String request = room_btn.getText().toString().trim();
-                        if (request.equalsIgnoreCase("request")) {
-                            if (connection_detector.isConnected()) {
-                                Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
-                                intent.putExtra("room_id", room_id);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
-                                builder.setMessage("No Internet Connection")
-                                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                            }
-                                        });
-                                AlertDialog alert = builder.create();
-                                alert.show();
+                        String items[] = {"Request Inventory", "Request Peripherals"};
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
+                        builder.setTitle("Select Request...");
+                        builder.setItems(items, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case 0: {
+                                        checkLastInventoryRequestFrmServer();
+                                        break;
+                                    }
+                                    case 1: {
+                                        Toast.makeText(ViewRoom.this, "Request Peripherals", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    }
+                                }
                             }
-                        } else {
-                            checkLastInventoryRequestFrmServer(true);
-                        }
+                        });
+                        AlertDialog alert = builder.create();
+                        alert.show();
                     }
                 } else {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(ViewRoom.this);
@@ -195,14 +191,12 @@ public class ViewRoom extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             clearDb();
-            if (user_role.equalsIgnoreCase("custodian"))
-                checkLastInventoryRequestFrmServer(false);
             roomDetails();
             return null;
         }
     }
 
-    private void checkLastInventoryRequestFrmServer(final boolean popup) {
+    private void checkLastInventoryRequestFrmServer() {
         Map<String, String> param = new HashMap<>();
         param.put("room_id", String.valueOf(room_id));
         volley.sendStringRequestPost(AppConfig.PENDING_INVENTORY, new VolleyCallback() {
@@ -213,7 +207,6 @@ public class ViewRoom extends AppCompatActivity {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         if (obj.getBoolean("pending")) {
-                            room_btn.setText("Requested");
                             int req_id = obj.getInt("req_id");
                             String date = obj.getString("date");
                             String time = obj.getString("time");
@@ -221,11 +214,14 @@ public class ViewRoom extends AppCompatActivity {
                             String req_date = obj.getString("date_requested");
                             String req_time = obj.getString("time_requested");
                             String req_status = obj.getString("req_status");
-                            if (popup)
-                                showRequestDetails(req_id, room_id, date, time,
-                                        msg, req_date, req_time, req_status);
-                        } else {
-                            room_btn.setText("Request");
+
+                            showRequestDetails(req_id, room_id, date, time,
+                                    msg, req_date, req_time, req_status);
+                        }else{
+                            Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
+                            intent.putExtra("room_id", room_id);
+                            startActivity(intent);
+                            finish();
                         }
                     } else {
                         room_btn.setText("Error");
@@ -275,7 +271,7 @@ public class ViewRoom extends AppCompatActivity {
                         cancelRequestInventory(req_id);
                     }
                 });
-        if(!req_status.equalsIgnoreCase("accepted")){
+        if (!req_status.equalsIgnoreCase("accepted")) {
             builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -427,6 +423,7 @@ public class ViewRoom extends AppCompatActivity {
                                 image_path = AppConfig.ROOT_URL + path;
                                 getImage();
                             }
+                            ViewRoom.this.lastAssess.setText(obj.getString("last_assess"));
                             break;
                         }
                     }

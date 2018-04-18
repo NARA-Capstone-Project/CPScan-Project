@@ -199,7 +199,6 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 try {
                     JSONObject obj = new JSONObject(response);
                     if(!obj.getBoolean("error")){
-                        Log.e("ID", " " + obj.getInt("id"));
                         Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         Handler h = new Handler();
                         h.postDelayed(new Runnable() {
@@ -226,68 +225,6 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
             }
         }, params);
 
-    }
-
-    private void saveRequestForInventory() {
-        String setDate = "";
-        String setTime = "";
-        final String msg = message.getText().toString().trim();
-        if(date_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
-            setDate = "Anytime";
-        else
-            setDate =  date.getText().toString();
-
-        setTime =  time.getText().toString();
-
-        final String finalSetDate = setDate;
-        final String finalSetTime = setTime;
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_REQUEST_INVENTORY
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                progress.dismiss();
-                try {
-                    JSONObject obj = new JSONObject(response);
-                    if(!obj.getBoolean("error")){
-                        Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                        Log.e("SMS", obj.getString("message"));
-                        Log.e("MSG_BODY", obj.getString("body"));
-                        goToViewRoom();
-                    }else{
-                        Toast.makeText(RequestForInventory.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    Log.e("RESPONSE", response);
-                    Log.e("REQUESTINVENTORY", "JSON " + e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                progress.dismiss();
-//                Log.e("REQUESTINVENTORY", error.getMessage());
-                Toast.makeText(RequestForInventory.this, "Can't connect to the server, " +
-                        "check your connection or try again later", Toast.LENGTH_SHORT).show();
-            }
-        }){
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("room_id", String.valueOf(room_id));
-                params.put("cust_id", SharedPrefManager.getInstance(RequestForInventory.this).getUserId());
-                params.put("room_name", room_name);
-                params.put("tech_id", tech_id);
-                params.put("date", finalSetDate);
-                params.put("time", finalSetTime);
-                params.put("message", msg);
-                return params;
-            }
-        };
-        str.setRetryPolicy(new DefaultRetryPolicy(0
-                        , DefaultRetryPolicy.DEFAULT_MAX_RETRIES
-                        ,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        RequestQueueHandler.getInstance(RequestForInventory.this).addToRequestQueue(str);
     }
 
     @Override

@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.avendano.cp_scan.Activities.ViewInventoryReport;
+import com.example.avendano.cp_scan.Activities.ViewRepairReport;
 import com.example.avendano.cp_scan.Model.Reports;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;
@@ -54,7 +55,12 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
             @Override
             public void onClick(View v) {
                 //check i inventory or repair
-                Intent intent = new Intent(mCtx, ViewInventoryReport.class);
+                Intent intent = null;
+                if(reportList.get(position).getCategory().contains("Repair")){
+                    intent = new Intent(mCtx, ViewRepairReport.class);
+                }else{
+                    intent = new Intent(mCtx, ViewInventoryReport.class);
+                }
                 intent.putExtra("rep_id", reportList.get(position).getRep_id());
                 act.startActivity(intent);
             }

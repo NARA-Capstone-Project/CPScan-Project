@@ -472,7 +472,7 @@ public class InventoryActivty extends AppCompatActivity {
                 volley.sendStringRequestPost(AppConfig.SAVE_INVENTORY,new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
-                        Log.e("RESPONSE", response.toString());
+                        Log.e("RESPONSE", response);
                         try {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {

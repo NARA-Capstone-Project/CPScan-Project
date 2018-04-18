@@ -21,7 +21,7 @@ import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
 import com.example.avendano.cp_scan.Database.AddCompFrmServer;
 import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.BackgroundService;
+import com.example.avendano.cp_scan.Database.GetNewRepairRequest;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.Database.VolleyCallback;
@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class Main_Page extends AppCompatActivity {
     NotificationBadge badge;
@@ -164,7 +165,7 @@ public class Main_Page extends AppCompatActivity {
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
                     //background
-                    Intent i = new Intent(Main_Page.this, BackgroundService.class);
+                    Intent i = new Intent(Main_Page.this, GetNewRepairRequest.class);
                     startService(i);
                 } else
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
@@ -183,9 +184,19 @@ public class Main_Page extends AppCompatActivity {
     }
 
     private void getRoomToAssess() {
+        //today
         final ArrayList<String> tempRooms = new ArrayList<>();
         final ArrayList<Integer> room_ids = new ArrayList<>();
         final ArrayList<Integer> req_ids = new ArrayList<>();
+        //missed
+        final ArrayList<String> tempRoomsM = new ArrayList<>();
+        final ArrayList<Integer> room_idsM = new ArrayList<>();
+        final ArrayList<Integer> req_idsM = new ArrayList<>();
+        //merged
+        final ArrayList<String> rooms = new ArrayList<>();
+        final ArrayList<Integer> roomids = new ArrayList<>();
+        final ArrayList<Integer> reqids = new ArrayList<>();
+
         Map<String, String> param = new HashMap<>();
         param.put("user_id", SharedPrefManager.getInstance(this).getUserId());
         volley.sendStringRequestPost(AppConfig.GET_INVENTORY_REQ, new VolleyCallback() {
@@ -202,20 +213,45 @@ public class Main_Page extends AppCompatActivity {
                         int req_id = obj.getInt("req_id");
                         String room_name = obj.getString("room_name");
                         String set_date = obj.getString("date");
+                        String set_time = obj.getString("time");
                         String req_status = obj.getString("req_status");
 
-                        if(req_status.equalsIgnoreCase("accepted")){
-                            Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
-                            if(task_date.equals(new Date()) || task_date.before(new Date())){
+                        if (req_status.equalsIgnoreCase("accepted")) {
+                            if (set_date.equalsIgnoreCase("anytime")) {
+                                room_name = room_name + " (Anytime)";
                                 tempRooms.add(room_name);
                                 room_ids.add(room_id);
                                 req_ids.add(req_id);
+                            } else {
+                                Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
+                                String strToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                                Date today = new SimpleDateFormat("yyyy-MM-dd").parse(strToday);
+                                if (task_date.equals(today) || task_date.before(today)) {
+                                    if (task_date.before(today)) {
+                                        room_name = room_name + " (Missed)";
+                                        tempRoomsM.add(room_name);
+                                        room_idsM.add(room_id);
+                                        req_idsM.add(req_id);
+                                    } else {
+                                        room_name = room_name + " (Today -" + set_time + ")";
+                                        tempRooms.add(room_name);
+                                        room_ids.add(room_id);
+                                        req_ids.add(req_id);
+                                    }
+                                }
                             }
+
                         }
                     }
-                    if (tempRooms.size() != 0)
-                        showRoomsInDialog(tempRooms, room_ids, req_ids);
-                    else
+                    if (tempRooms.size() != 0 || tempRoomsM.size() != 0) {
+                        rooms.addAll(tempRoomsM);
+                        rooms.addAll(tempRooms);
+                        reqids.addAll(req_idsM);
+                        reqids.addAll(req_ids);
+                        roomids.addAll(room_idsM);
+                        roomids.addAll(room_ids);
+                        showRoomsInDialog(rooms, roomids, reqids);
+                    } else
                         Toast.makeText(Main_Page.this, "No scheduled inventory for today", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -307,33 +343,56 @@ public class Main_Page extends AppCompatActivity {
                 String content = result.getContents();
                 String[] parts = content.split("#");
                 String serial = parts[0];
-                if (getCompId(serial) != 0) {
-                    Intent intent = new Intent(Main_Page.this, ViewPc.class);
-                    intent.putExtra("comp_id", getCompId(serial));
-                    Main_Page.this.startActivity(intent);
-                } else {
-                    Toast.makeText(Main_Page.this, "Computer is not found in database", Toast.LENGTH_SHORT).show();
-                }
+                checkComputer(serial);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
-    private int getCompId(String serial) {
-//        Cursor c = db.getCompIdAndModel(serial);
-//        if (c.moveToFirst()) {
-//            int comp_id = c.getInt(c.getColumnIndex(db.COMP_ID));
-//            return comp_id;
-//        }
-        return 0;
+    private void checkComputer(final String serial) {
+
+        volley.sendStringRequestGet(AppConfig.GET_COMPUTERS
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            int counter = 0;
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                String mb = obj.getString("mb");
+                                String mon = obj.getString("monitor");
+                                int comp_id = obj.getInt("comp_id");
+
+                                if (serial.equals(mb) || serial.equals(mon)) {
+                                    Intent intent = new Intent(Main_Page.this, ViewPc.class);
+                                    intent.putExtra("comp_id", comp_id);
+                                    Main_Page.this.startActivity(intent);
+                                    break;
+                                }else{
+                                    counter++;
+                                }
+                            }
+                            if(counter == array.length())
+                                Toast.makeText(Main_Page.this, "Scanned computer not recognized", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         db.close();
-        this.stopService(new Intent(this, BackgroundService.class));
+        this.stopService(new Intent(this, GetNewRepairRequest.class));
     }
 
     private void clearDb() {

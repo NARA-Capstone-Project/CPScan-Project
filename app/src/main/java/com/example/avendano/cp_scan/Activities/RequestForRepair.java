@@ -34,8 +34,10 @@ import com.example.avendano.cp_scan.Database.VolleyCallback;
 import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.example.avendano.cp_scan.TimePicker;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -66,6 +68,9 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
     android.app.AlertDialog progress;
     boolean checkBox = false; // true missing false not working
     boolean setImage = false;
+    int pc_no;
+    String room_name;
+    VolleyRequestSingleton volley;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,8 +82,12 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         getSupportActionBar().setDisplayShowTitleEnabled(true);
         getSupportActionBar().setTitle("Request Repair");
 
+        volley = new VolleyRequestSingleton(this);
+
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
+        room_name = getIntent().getStringExtra("room_name");
+        pc_no = getIntent().getIntExtra("pc_no", 0);
         db = new SQLiteHandler(this);
 
         progress = new SpotsDialog(this, "Requesting...");
@@ -279,7 +288,8 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             }
 
             case R.id.cancel: {
-                gotoViewPc();
+//                        gotoViewPc();
+                finish();
             }
         }
 
@@ -324,7 +334,6 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         params.put("image", finalImage);
         params.put("rep_details", finalRep_msg);
 
-        VolleyRequestSingleton volley = new VolleyRequestSingleton(this);
         volley.sendStringRequestPost(AppConfig.SAVE_REQ_REPAIR, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
@@ -334,14 +343,13 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                     if(!obj.getBoolean("error")){
                         Log.e("Id", " " + obj.getInt("id"));
                         Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                        progress.dismiss();
-                        gotoViewPc();
+                        finish();
                     }else{
                         Toast.makeText(RequestForRepair.this, "An Error occurred, pleaase try again later", Toast.LENGTH_SHORT).show();
                         progress.dismiss();
                     }
                 }catch (Exception e){
-                    Toast.makeText(RequestForRepair.this, "An Error occurred, pleaase try again later", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RequestForRepair.this, "An Error occurred, please try again later", Toast.LENGTH_SHORT).show();
                     progress.dismiss();
                     e.printStackTrace();
                 }
@@ -356,6 +364,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         }, params);
     }
 
+
     private String imageToString() {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
@@ -367,8 +376,10 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        gotoViewPc();
+//        gotoViewPc();
+        this.finish();
     }
+
 
     @Override
     public void onDateSet(android.widget.DatePicker view, int year, int month, int dayOfMonth) {
@@ -388,16 +399,16 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         c.set(Calendar.HOUR_OF_DAY, hourOfDay);
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
-        String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
-        time.setText(timeString);
+        String timeString = new SimpleDateFormat("HH:mm").format(getTime);
+        time.setText(timeString+":00");
     }
 
-    private void gotoViewPc() {
-        Intent intent = new Intent(RequestForRepair.this, ViewPc.class);
-        intent.putExtra("comp_id", comp_id);
-        startActivity(intent);
-        finish();
-    }
+//    private void gotoViewPc() {
+//        Intent intent = new Intent(RequestForRepair.this, ViewPc.class);
+//        intent.putExtra("comp_id", comp_id);
+//        startActivity(intent);
+//        finish();
+//    }
 
     private boolean checkInput() {
         progress.show();

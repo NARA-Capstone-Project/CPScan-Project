@@ -105,12 +105,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String QTY_ISSUED = "qty_issued";
 
     //TASK SCHEDULE
-    public static final String TABLE_TASK_SCHEDULE = "task_schedule";
-    public static final String SCHED_ID = "sched_id";
-    public static final String ROOM_PC_ID = "room_pc_id";
-    public static final String DATE = "date";
-    public static final String TIME = "time";
-    public static final String TASK_STATUS = "task_status";
+//    public static final String TABLE_TASK_SCHEDULE = "task_schedule";
+//    public static final String SCHED_ID = "sched_id";
+//    public static final String ROOM_PC_ID = "room_pc_id";
+//    public static final String DATE = "date";
+//    public static final String TIME = "time";
+//    public static final String TASK_STATUS = "task_status";
 
     public static final String COLUMN_SCANNED = "scanned"; // if assessed/scanned 0 n 1
     public static final String COLUMN_TECH_ID = "technician_id";
@@ -224,18 +224,19 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + REQ_STATUS + " VARCHAR,"
             + COLUMN_TOGGLE + " TINYINT,"
             + COLUMN_SYNC + " TINYINT)";
-    String createTaskSched = "CREATE TABLE " + TABLE_TASK_SCHEDULE + " ( "
-            + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + SCHED_ID + " INTEGER,"
-            + REPORT_CATEGORY + " VARCHAR,"
-            + DESCRIPTION + " TEXT,"
-            + ROOM_PC_ID + " INTEGER,"
-            + DATE + " DATE,"
-            + TIME + " TIME,"
-            + COLUMN_TECH_ID + " VARCHAR,"
-            + TASK_STATUS + " VARCHAR, "
-            + COLUMN_TOGGLE + " TINYINT,"
-            + COLUMN_SYNC + " TINYINT)";
+
+//    String createTaskSched = "CREATE TABLE " + TABLE_TASK_SCHEDULE + " ( "
+//            + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+//            + SCHED_ID + " INTEGER,"
+//            + REPORT_CATEGORY + " VARCHAR,"
+//            + DESCRIPTION + " TEXT,"
+//            + ROOM_PC_ID + " INTEGER,"
+//            + DATE + " DATE,"
+//            + TIME + " TIME,"
+//            + COLUMN_TECH_ID + " VARCHAR,"
+//            + TASK_STATUS + " VARCHAR, "
+//            + COLUMN_TOGGLE + " TINYINT,"
+//            + COLUMN_SYNC + " TINYINT)";
 
     String createReqPeripherals = "CREATE TABLE " + TABLE_REQ_PERIPHERALS + " ( "
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -310,7 +311,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL(createReportDetails);
         db.execSQL(createRequestRepair);
         db.execSQL(createRequestInventory);
-        db.execSQL(createTaskSched);
+//        db.execSQL(createTaskSched);
         db.execSQL(createReqPeripherals);
         db.execSQL(createReqPeripheralsDetails);
         db.execSQL(createPcToAssess);
@@ -320,7 +321,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_COMPUTERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASK_SCHEDULE);
+//        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASK_SCHEDULE);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ROOMS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ASSESSMENT_REPORT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_REPORT_DETAILS);

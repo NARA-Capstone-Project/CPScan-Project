@@ -1,7 +1,9 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -18,6 +20,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,28 +29,39 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.android.volley.VolleyError;
+import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Database.VolleyCallback;
+import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.security.spec.ECParameterSpec;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+
+import dmax.dialog.SpotsDialog;
 
 public class SignatureActivity extends AppCompatActivity {
 
-    String from, type;
+    String from;
     Button mClear, mGetSign, mCancel;
-    File file;
     LinearLayout mContent;
     View view;
     signature mSignature;
     Bitmap bitmap;
     int rep_id;
-    // Creating Separate Directory for saving Generated Images
-    String DIRECTORY = Environment.getExternalStorageDirectory().getPath() + "/UserSignature/";
-    String pic_name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-    String StoredPath = DIRECTORY + pic_name + ".png";
+    VolleyRequestSingleton volley;
+    AlertDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +69,9 @@ public class SignatureActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signature);
 
         from = getIntent().getStringExtra("from");
-        type = getIntent().getStringExtra("type");
         rep_id = getIntent().getIntExtra("rep_id", 0);
+
+        volley = new VolleyRequestSingleton(this);
 
         mContent = (LinearLayout) findViewById(R.id.canvasLayout);
         mSignature = new signature(getApplicationContext(), null);
@@ -71,16 +86,15 @@ public class SignatureActivity extends AppCompatActivity {
         mGetSign.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String imageToString = "";
                 Log.v("log_tag", "Panel Saved");
-                if (Build.VERSION.SDK_INT >= 23) {
-                    isStoragePermissionGranted();
-                } else {
-                    view.setDrawingCacheEnabled(true);
-                    mSignature.save(view, StoredPath);
-                    Toast.makeText(getApplicationContext(), "Successfully Saved", Toast.LENGTH_SHORT).show();
-                    // Calling the same class
-                    recreate();
+                view.setDrawingCacheEnabled(true);
+                imageToString = mSignature.save(view);
+                Toast.makeText(SignatureActivity.this, "save Clicked!", Toast.LENGTH_SHORT).show();
+                if (from.equalsIgnoreCase("report")) {
+                    saveSignature(imageToString);
                 }
+                //check kung gustong isave if galing sa report then update ung sign status
             }
         });
         mClear.setOnClickListener(new View.OnClickListener() {
@@ -94,42 +108,107 @@ public class SignatureActivity extends AppCompatActivity {
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(SignatureActivity.this, ViewInventoryReport.class);
-                intent.putExtra("type", type);
-                intent.putExtra("rep_id", rep_id);
-                startActivity(intent);
-                finish();
+                if (from.equalsIgnoreCase("report")) {
+                    Intent intent = new Intent(SignatureActivity.this, ViewInventoryReport.class);
+                    intent.putExtra("rep_id", rep_id);
+                    startActivity(intent);
+                    finish();
+                }
             }
         });
-    }
-    public boolean isStoragePermissionGranted() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (getApplicationContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                return true;
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                return false;
-            }
-        } else {
-            return true;
-        }
+        progress = new SpotsDialog(this, "Saving...");
+        progress.setCancelable(false);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+    private void saveSignature(final String image) {
+        String user_id = SharedPrefManager.getInstance(this).getUserId();
+        String query = "UPDATE accounts SET signature = ? WHERE user_id = ? ;";
 
-            view.setDrawingCacheEnabled(true);
-            mSignature.save(view, StoredPath);
-            Toast.makeText(getApplicationContext(), "Successfully Saved", Toast.LENGTH_SHORT).show();
-            // Calling the same class
-            recreate();
-        }
+        Map<String, String> param = new HashMap<>();
+        param.put("query", query);
+        param.put("image", image);
+        param.put("user_id", user_id);
+
+        volley.sendStringRequestPost(AppConfig.SAVE_SIGNATURE
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                Log.e("IMAGE", obj.getString("image"));
+                                if (obj.getString("image").equalsIgnoreCase("inserted"))
+                                    updateSignedStatus();
+                                else {
+                                    progress.dismiss();
+                                    Toast.makeText(SignatureActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                progress.dismiss();
+                                Toast.makeText(SignatureActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            progress.dismiss();
+                            Toast.makeText(SignatureActivity.this, "An error occurred while saving", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(SignatureActivity.this, "Can't connect to the server, pleaase try again later", Toast.LENGTH_SHORT).show();
+                        progress.dismiss();
+                        error.printStackTrace();
+                    }
+                }, param);
+    }
+
+    private void updateSignedStatus() {
+        String user_role = SharedPrefManager.getInstance(this).getUserRole();
+        String query;
+
+        if (user_role.equalsIgnoreCase("head technician"))
+            query = "UPDATE assessment_reports SET htech_signed = 1 where rep_id = '" + rep_id + "'";
+        else if (user_role.equalsIgnoreCase("custodian"))
+            query = "UPDATE assessment_reports SET cust_signed = 1 where rep_id = '" + rep_id + "'";
         else
-        {
-            Toast.makeText(this, "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
-        }
+            query = "UPDATE assessment_reports SET admin_signed = 1 where rep_id = '" + rep_id + "'";
+
+        Map<String, String> param = new HashMap<>();
+        param.put("query", query);
+
+        volley.sendStringRequestPost(AppConfig.UPDATE_QUERY
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        try {
+                            JSONObject obj = new JSONObject(response);
+
+                            if (!obj.getBoolean("error")) {
+                                Toast.makeText(SignatureActivity.this, obj.getString("message"), Toast.LENGTH_SHORT).show();
+                                if (from.equalsIgnoreCase("report")) {
+                                    Intent intent = new Intent(SignatureActivity.this, ViewInventoryReport.class);
+                                    intent.putExtra("rep_id", rep_id);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(SignatureActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                        }
+                        progress.dismiss();
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(SignatureActivity.this, "Can't connect to the server, pleaase try again later", Toast.LENGTH_SHORT).show();
+                        progress.dismiss();
+                        error.printStackTrace();
+                    }
+                }, param);
     }
 
     private class signature extends View {
@@ -151,26 +230,27 @@ public class SignatureActivity extends AppCompatActivity {
             paint.setStrokeWidth(STROKE_WIDTH);
         }
 
-        public void save(View v, String StoredPath) {
+        public String save(View v) {
             if (bitmap == null) {
                 bitmap = Bitmap.createBitmap(mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
             }
             Canvas canvas = new Canvas(bitmap);
-            try {
-                FileOutputStream mFileOutStream = new FileOutputStream(StoredPath);
-                v.draw(canvas);
+            //convert output to image jpg and to string
+            v.draw(canvas);
 
-                // Convert the output file to Image such as .png
-                bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
-//                Intent intent = new Intent(SignatureActivity.this, ViewInventoryReport.class);
-//                intent.putExtra("imagePath", StoredPath);
-//                startActivity(intent);
-//                finish();
-                mFileOutStream.flush();
-                mFileOutStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+            byte[] imgBytes = outputStream.toByteArray();
+
+//                FileOutputStream mFileOutStream = new FileOutputStream(StoredPath);
+//                v.draw(canvas);
+//                // Convert the output file to Image such as .png
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
+//                mFileOutStream.flush();
+//                mFileOutStream.close();
+
+            return Base64.encodeToString(imgBytes, Base64.DEFAULT);
+//            passImageString(Base64.encodeToString(imgBytes, Base64.DEFAULT));
         }
 
         public void clear() {
@@ -231,6 +311,7 @@ public class SignatureActivity extends AppCompatActivity {
         private void debug(String string) {
             Log.v("log_tag", string);
         }
+
         private void expandDirtyRect(float historicalX, float historicalY) {
             if (historicalX < dirtyRect.left) {
                 dirtyRect.left = historicalX;
@@ -244,6 +325,7 @@ public class SignatureActivity extends AppCompatActivity {
                 dirtyRect.bottom = historicalY;
             }
         }
+
         private void resetDirtyRect(float eventX, float eventY) {
             dirtyRect.left = Math.min(lastTouchX, eventX);
             dirtyRect.right = Math.max(lastTouchX, eventX);

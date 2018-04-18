@@ -181,7 +181,6 @@ public class ReportActivity extends AppCompatActivity {
                                 reportAdapter.notifyDataSetChanged();
                             } else {
                                 Toast.makeText(ReportActivity.this, "No Reports", Toast.LENGTH_SHORT).show();
-                                reportAdapter.notifyDataSetChanged();
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

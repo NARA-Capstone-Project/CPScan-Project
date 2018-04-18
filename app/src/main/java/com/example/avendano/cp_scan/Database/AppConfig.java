@@ -7,14 +7,13 @@ package com.example.avendano.cp_scan.Database;
 public class AppConfig {
 
 //    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
-    public static String ROOT_URL = "http://192.168.0.11/android_api/"; // genymotion
+    public static String ROOT_URL = "http://192.168.0.15/android_api/"; // genymotion
 //    public static String ROOT_URL = "http://192.168.0.11/android_api/"; //lan
-    public static String ROOT = "http://192.168.0.11/api/";
+    public static String ROOT = "http://192.168.0.15/api/";
 
     public static String URL_REQUEST_ACCOUNT = ROOT_URL + "cict_request_account.php"; //request an account
     public static String URL_GET_ALL_PC = ROOT_URL + "cict_get_all_pc.php"; //get all pc data of all pc
     public static String URL_GET_ALL_ROOM = ROOT_URL + "cict_get_all_rooms.php"; //get all room
-    public static String URL_GET_REPORT_DETAILS = ROOT_URL + "cict_getInventoryDetails.php"; //// save assessment details then update computers
     public static String URL_ROOM_SCHED = ROOT_URL + "cict_get_sched.php"; //get sched
     public static String URL_EDIT_PROFILE = ROOT_URL + "cict_edit_user.php"; // edit profile
     public static String URL_REACTIVATE_ACC = ROOT_URL + "cict_reactivate_account.php";
@@ -26,8 +25,6 @@ public class AppConfig {
     public static String URL_CHECK_LAST_REPAIR_REQUEST = ROOT_URL + "cict_repair_request_details.php";
     public static String URL_GET_ALL_REPAIR_REQUEST = ROOT_URL + "cict_getAllRepairRequest.php";
     public static String URL_UPDATE_REPAIR_REQUEST = ROOT_URL + "cict_update_repair.php";
-    public static String URL_GET_REQ_REPORTS = ROOT_URL + "cict_get_request_reports.php";
-    public static String URL_GET_SIGNATURE = ROOT_URL + "cict_get_user.php";
 
     public static String LOGIN = ROOT + "login.php";
     public static String GET_ROOMS = ROOT + "get_room.php";
@@ -42,4 +39,9 @@ public class AppConfig {
     public static String SAVE_REQ_REPAIR = ROOT + "save_request_repair.php";
     public static String PENDING_INVENTORY = ROOT + "pending_request_inventory.php";
     public static String GET_INVENTORY_REPORTS = ROOT + "get_inventory_reports.php";
+    public static String GET_INVENTORY_REPORTS_DETAILS = ROOT + "get_inventory_details.php";
+    public static String GET_USER_INFO = ROOT + "get_user_info.php";
+    public static String UPDATE_QUERY = ROOT + "update.php";
+    public static String SAVE_SIGNATURE = ROOT + "save_signature.php";
+    public static String SEND_SMS = ROOT + "send_sms.php";
 }

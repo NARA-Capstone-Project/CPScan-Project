@@ -32,7 +32,7 @@ public class AssessPc extends AppCompatActivity {
     Toolbar toolbar;
     RadioGroup mon_stat, mb_stat, pr_stat, ram_stat, hdd_stat, kb_stat, vga_stat, mouse_stat;
     TextView mon, mb, pr, ram, hdd, kb, vga, mouse;
-    String WORKING = "Working", NOT_WORKING = "None/Not Working", MISSING = "Missing";
+    String WORKING = "OK", NOT_WORKING = "None/Not Working", MISSING = "Missing";
     String COMP_STATUS_NOT_WORKING = "Defective", comp_status, model;
     String mon_status, mb_status, pr_status, ram_status, hdd_status, kb_status, vga_status, mouse_status;
 
@@ -108,7 +108,7 @@ public class AssessPc extends AppCompatActivity {
                 RadioButton btn = group.findViewById(checkedId);
                 String stat = btn.getTag().toString();
                 if(stat.equalsIgnoreCase("working"))
-                    pr_status = WORKING;
+                    pr_status = pr.getText().toString().trim();
                 else if(stat.equalsIgnoreCase("not working"))
                     pr_status = NOT_WORKING;
                 else
@@ -122,7 +122,7 @@ public class AssessPc extends AppCompatActivity {
                 RadioButton btn = group.findViewById(checkedId);
                 String stat = btn.getTag().toString();
                 if(stat.equalsIgnoreCase("working"))
-                    ram_status = WORKING;
+                    ram_status = ram.getText().toString().trim();
                 else if(stat.equalsIgnoreCase("not working"))
                     ram_status = NOT_WORKING;
                 else
@@ -136,7 +136,7 @@ public class AssessPc extends AppCompatActivity {
                 RadioButton btn = group.findViewById(checkedId);
                 String stat = btn.getTag().toString();
                 if(stat.equalsIgnoreCase("working"))
-                    hdd_status = WORKING;
+                    hdd_status = hdd.getText().toString().trim();
                 else if(stat.equalsIgnoreCase("not working"))
                     hdd_status = NOT_WORKING;
                 else
@@ -164,7 +164,7 @@ public class AssessPc extends AppCompatActivity {
                 RadioButton btn = group.findViewById(checkedId);
                 String stat = btn.getTag().toString();
                 if(stat.equalsIgnoreCase("working"))
-                    vga_status = WORKING;
+                    vga_status = "Built-In";
                 else if(stat.equalsIgnoreCase("not working"))
                     vga_status = NOT_WORKING;
                 else
@@ -271,7 +271,7 @@ public class AssessPc extends AppCompatActivity {
                     && hdd_status.equalsIgnoreCase(MISSING) && kb_status.equalsIgnoreCase(MISSING) && vga_status.equalsIgnoreCase(MISSING) && mouse_status.equalsIgnoreCase(MISSING)){
                 comp_status = MISSING;
             }else{
-                comp_status = WORKING;
+                comp_status = "Working";
             }
             long insert = db.addAssessedPc(comp_id, pc_no, model,mb_status, mb.getText().toString(),
                     pr_status, mon_status, mon.getText().toString(),ram_status, kb_status, mouse_status,
