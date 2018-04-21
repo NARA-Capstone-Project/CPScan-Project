@@ -8,8 +8,27 @@
 <include
     layout="@layout/toolbar"
     android:id="@+id/toolbar"/>
-    <ListView
+    <EditText
         android:layout_below="@id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/purpose"
+        android:background="@color/white"
+        android:hint="Purpose..."
+        android:padding="5dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        />
+    <View
+        android:layout_below="@id/purpose"
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/darkGrey"
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="3dp"/>
+    <ListView
+        android:layout_below="@id/view"
         android:id="@+id/peripherals"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

@@ -94,6 +94,7 @@ public class HttpURLCon {
         }
         return sb.toString();
     }
+
     //this method is converting keyvalue pairs data into a query string as needed to send to the server
     private String getPostDataString(Map<String, String> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();

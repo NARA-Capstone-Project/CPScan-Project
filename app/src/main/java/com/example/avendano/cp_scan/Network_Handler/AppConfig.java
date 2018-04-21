@@ -36,6 +36,7 @@ public class AppConfig {
     public static String SAVE_REPAIR = ROOT + "save_repair_report.php";
     public static String SAVE_REQ_INVENTORY = ROOT + "save_request_inventory.php";
     public static String SAVE_REQ_REPAIR = ROOT + "save_request_repair.php";
+    public static String SAVE_REQ_PERIPHERALS = ROOT + "save_request_peripherals.php";
     public static String PENDING_INVENTORY = ROOT + "pending_request_inventory.php";
     public static String GET_INVENTORY_REPORTS = ROOT + "get_inventory_reports.php";
     public static String GET_INVENTORY_REPORTS_DETAILS = ROOT + "get_inventory_details.php";

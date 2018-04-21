@@ -156,6 +156,8 @@ public class ViewRoom extends AppCompatActivity {
                                     }
                                     case 1: {
                                         Intent intent = new Intent(ViewRoom.this, RequestPeripherals.class);
+                                        intent.putExtra("room_name", room.getText().toString().trim());
+                                        intent.putExtra("room_id", room_id);
                                         startActivity(intent);
                                         break;
                                     }
@@ -436,7 +438,7 @@ public class ViewRoom extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                error.printStackTrace();
             }
         });
     }
