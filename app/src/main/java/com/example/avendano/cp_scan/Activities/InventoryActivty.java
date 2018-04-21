@@ -22,12 +22,13 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.AssessAdapter;
-import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Assess_Computers;
 import com.example.avendano.cp_scan.R;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -354,17 +355,19 @@ public class InventoryActivty extends AppCompatActivity {
                                 JSONObject obj = array.getJSONObject(i);
                                 String monitor = obj.getString("monitor");
                                 String mb = obj.getString("mb");
+                                int id = obj.getInt("room_id");
+
                                 if (serial.equals(monitor) || serial.equals(mb)) {
                                     String room_name = obj.getString("room_name");
                                     int pc_no = obj.getInt("pc_no");
-                                    showAlert("This is PC " + pc_no + " of " + room_name + " room");
+                                    showAlert("This is PC " + pc_no + " of " + room_name + " room", true, id, room_name, pc_no);
                                     break;
                                 } else {
                                     x++;
                                 }
                             }
                             if (x == len)
-                                showAlert("Computer not found in database");
+                                showAlert("Computer not found in database", false, 0, "",0);
                         } catch (Exception e) {
                             Log.e("ERROR", e.getMessage());
                         }
@@ -377,14 +380,16 @@ public class InventoryActivty extends AppCompatActivity {
                 });
             }
 
-            private void showAlert(String msg) {
+            private void showAlert(String msg, final boolean sendSMS, final int pc_room_id, final String pc_room_name, final int pc_no) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(InventoryActivty.this);
                 builder.setMessage(msg);
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //send sms to custodians
-                        Toast.makeText(InventoryActivty.this, "Alert sent to custodians", Toast.LENGTH_SHORT).show();
+                        if(sendSMS){
+                            sendSms(pc_room_id, pc_room_name, pc_no);
+                        }
                         serial_edttxt.setText("");
                         dialog.dismiss();
                     }
@@ -394,6 +399,40 @@ public class InventoryActivty extends AppCompatActivity {
             }
         }
         new SearchComp().execute(serial);
+    }
+
+    private void sendSms(int pc_room_id, String pc_room_name, int pc_no) {
+        Map<String, String> params = new HashMap<>();
+        params.put("room_cust", SharedPrefManager.getInstance(this).getUserId());
+        params.put("room_cust_phone", SharedPrefManager.getInstance(this).getUserPhone());
+        params.put("room_name", room_name);
+        params.put("pc_room_name", pc_room_name);
+        params.put("pc_room_id", String.valueOf(pc_room_id));
+        params.put("pc_no", String.valueOf(pc_no));
+
+        volley.sendStringRequestPost(AppConfig.SEND_SMS,
+                new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        try{
+                            JSONObject obj = new JSONObject(response);
+                            if(obj.getString("sms").equalsIgnoreCase("not sent!")){
+                                Log.e("SMS", "NOT SENT!");
+                            }else{
+                                Log.e("SMS", obj.getString("sms"));
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                }
+                , params);
     }
 
     @Override

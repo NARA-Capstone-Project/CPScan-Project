@@ -1,22 +1,15 @@
 package com.example.avendano.cp_scan.Activities;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.os.Build;
-import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -30,23 +23,16 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.android.volley.VolleyError;
-import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.security.spec.ECParameterSpec;
-import java.util.Date;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import dmax.dialog.SpotsDialog;

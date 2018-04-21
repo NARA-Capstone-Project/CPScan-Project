@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Connection_Detector;
+package com.example.avendano.cp_scan.Network_Handler;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

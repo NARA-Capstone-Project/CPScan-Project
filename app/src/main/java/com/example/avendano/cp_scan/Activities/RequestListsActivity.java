@@ -20,9 +20,9 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.InventoryAdapter;
 import com.example.avendano.cp_scan.Adapter.RepairAdapter;
-import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.RequestInventory;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
@@ -106,6 +106,13 @@ public class RequestListsActivity extends AppCompatActivity {
     }
 
     class LoadRequests extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            inventoryList.clear();
+            repairList.clear();
+        }
 
         @Override
         protected void onPostExecute(Void aVoid) {

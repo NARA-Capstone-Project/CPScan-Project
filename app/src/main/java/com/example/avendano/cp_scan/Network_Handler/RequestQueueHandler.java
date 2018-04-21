@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Database;
+package com.example.avendano.cp_scan.Network_Handler;
 
 import android.content.Context;
 

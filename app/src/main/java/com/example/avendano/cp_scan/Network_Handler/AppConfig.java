@@ -1,4 +1,4 @@
-package com.example.avendano.cp_scan.Database;
+package com.example.avendano.cp_scan.Network_Handler;
 
 /**
  * Created by Avendano on 6 Mar 2018.
@@ -18,7 +18,6 @@ public class AppConfig {
     public static String URL_EDIT_PROFILE = ROOT_URL + "cict_edit_user.php"; // edit profile
     public static String URL_REACTIVATE_ACC = ROOT_URL + "cict_reactivate_account.php";
     public static String URL_DEACTIVATE_ACC = ROOT_URL + "cict_deactivate_user.php";
-    public static String URL_REQUEST_INVENTORY = ROOT_URL + "cict_request_inventory.php";
     public static String URL_GET_ALL_INVENTORY_REQUEST = ROOT_URL + "cict_getAllInventoryRequest.php";
     public static String URL_UPDATE_SCHEDULE = ROOT_URL + "cict_update_schedule.php";
     public static String URL_CANCEL_SCHEDULE = ROOT_URL + "cict_cancel_schedule.php";
@@ -43,5 +42,5 @@ public class AppConfig {
     public static String GET_USER_INFO = ROOT + "get_user_info.php";
     public static String UPDATE_QUERY = ROOT + "update.php";
     public static String SAVE_SIGNATURE = ROOT + "save_signature.php";
-    public static String SEND_SMS = ROOT + "send_sms.php";
+    public static String SEND_SMS = ROOT + "send_alert_sms.php";
 }

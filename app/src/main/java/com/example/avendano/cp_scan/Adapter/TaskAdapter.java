@@ -16,9 +16,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.VolleyError;
-import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Task;
 import com.example.avendano.cp_scan.Activities.ViewPc;
 import com.example.avendano.cp_scan.R;

@@ -19,9 +19,10 @@ import android.widget.Toast;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.RoomAdapter;
-import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Rooms;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
@@ -137,7 +138,7 @@ public class RoomActivity extends AppCompatActivity {
 
         if (string.isEmpty()) {
             url = AppConfig.GET_ROOMS;
-            volley.sendStringRequestGet(url, new com.example.avendano.cp_scan.Database.VolleyCallback() {
+            volley.sendStringRequestGet(url, new VolleyCallback() {
                 @Override
                 public void onSuccessResponse(String result) {
                     try {
@@ -198,7 +199,7 @@ public class RoomActivity extends AppCompatActivity {
         } else {
             url = AppConfig.SEARCH_ROOMS;
             param.put("query", query);
-            volley.sendStringRequestPost(url, new com.example.avendano.cp_scan.Database.VolleyCallback() {
+            volley.sendStringRequestPost(url, new VolleyCallback() {
                 @Override
                 public void onSuccessResponse(String result) {
                     try {

@@ -1,4 +1,6 @@
-package com.example.avendano.cp_scan.Database;
+package com.example.avendano.cp_scan.Network_Handler;
+
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,6 +22,38 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class HttpURLCon {
 
+    public String sendGetRequest(String requestUrl){
+        URL url;
+        String response = "";
+
+        StringBuilder sb = null;
+        try {
+            url = new URL(AppConfig.COUNT_REQ);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(30000);
+            conn.setConnectTimeout(30000);
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                sb = new StringBuilder();
+                String res;
+
+                while ((res = br.readLine()) != null) {
+                    sb.append(res);
+                }
+                response = sb.toString();
+            }
+
+        } catch (Exception e) {
+            Log.e("REQSERVIEC", "error");
+            e.printStackTrace();
+        }
+        return response;
+    }
+
     public String sendPostRequest(String requestURL, Map<String, String> postDataParams) {
         URL url;
 
@@ -27,8 +61,8 @@ public class HttpURLCon {
         try {
             url = new URL(requestURL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(15000);
-            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(30000);
+            conn.setConnectTimeout(30000);
             conn.setRequestMethod("POST");
             conn.setDoInput(true);
             conn.setDoOutput(true);

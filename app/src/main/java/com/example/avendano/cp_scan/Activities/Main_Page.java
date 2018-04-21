@@ -1,10 +1,16 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.os.Binder;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
@@ -18,14 +24,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.VolleyError;
-import com.example.avendano.cp_scan.Connection_Detector.NetworkStateChange;
+import com.example.avendano.cp_scan.Network_Handler.NetworkStateChange;
 import com.example.avendano.cp_scan.Database.AddCompFrmServer;
-import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.GetNewRepairRequest;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
+import com.example.avendano.cp_scan.BackgroundServices.GetNewRepairRequest;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -41,7 +47,8 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Main_Page extends AppCompatActivity {
     NotificationBadge badge;
@@ -50,18 +57,18 @@ public class Main_Page extends AppCompatActivity {
     SQLiteHelper db;
     VolleyRequestSingleton volley;
     TextView display_date;
+    Intent receiverIntent;
+    BroadcastReceiver reqCountReceiver;
 
     int position = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_page_custodian);
 
+        Intent intent = new Intent(this, GetNewRepairRequest.class);
+        startService(intent);
         db = new SQLiteHelper(this);
-        SQLiteHandler handler = new SQLiteHandler(this);
-        AddCompFrmServer comp = new AddCompFrmServer(this, handler);
-        comp.SyncFunction();
         volley = new VolleyRequestSingleton(this);
         //if log in
         if (!SharedPrefManager.getInstance(this).isLoggedIn()) {
@@ -70,22 +77,28 @@ public class Main_Page extends AppCompatActivity {
         } else {
             //check if not a custodian
             String role = SharedPrefManager.getInstance(this).getUserRole();
-            if (!role.equalsIgnoreCase("custodian")) {
+            if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
+                    role.equalsIgnoreCase("admin")) {
+
                 setContentView(R.layout.main_page_technician);
                 req_sched = (CardView) findViewById(R.id.req_sched);
                 scan = (CardView) findViewById(R.id.quick_scan);
                 inventory = (CardView) findViewById(R.id.start_inventory);
                 badge = (NotificationBadge) findViewById(R.id.badge);
-                getReqCount();
+                badge.setAnimationEnabled(false);
+
+                //get request count from service
+                receiverIntent = new Intent(this, GetNewRepairRequest.class);
+                reqCountReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        setNotifCount(intent);
+                    }
+                };
 
                 inventory.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //assessment
-                        //startactivity for result
-                        //dialog muna
-//                        AssessmentDialog assessmentDialog = new AssessmentDialog();
-//                        assessmentDialog.show(getSupportFragmentManager(), "");
                         getRoomToAssess();
                     }
                 });
@@ -164,9 +177,6 @@ public class Main_Page extends AppCompatActivity {
                 if (isNetworkAvailable) {
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
-                    //background
-                    Intent i = new Intent(Main_Page.this, GetNewRepairRequest.class);
-                    startService(i);
                 } else
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
                             Snackbar.LENGTH_INDEFINITE).show();
@@ -174,13 +184,9 @@ public class Main_Page extends AppCompatActivity {
         }, intentFilter);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        String role = SharedPrefManager.getInstance(this).getUserRole();
-        if (!role.equalsIgnoreCase("custodian")) {
-            getReqCount();
-        }
+    private void setNotifCount(Intent intent) {
+        int sum = intent.getIntExtra("number", 0);
+        setBadgeNumber(sum);
     }
 
     private void getRoomToAssess() {
@@ -293,32 +299,6 @@ public class Main_Page extends AppCompatActivity {
         alert.show();
     }
 
-    private void getReqCount() {
-        VolleyRequestSingleton volley = new VolleyRequestSingleton(this);
-        volley.sendStringRequestGet(AppConfig.COUNT_REQ, new VolleyCallback() {
-            @Override
-            public void onSuccessResponse(String response) {
-                try {
-                    JSONObject obj = new JSONObject(response);
-                    int inv = obj.getInt("inventory");
-                    int rep = obj.getInt("repair");
-                    int per = obj.getInt("peripherals");
-
-                    int sum = inv + per + rep;
-                    badge.setNumber(0);
-                    setBadgeNumber(sum);
-                } catch (Exception e) {
-
-                }
-            }
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-    }
-
     private void setBadgeNumber(int sum) {
         badge.setNumber(sum);
     }
@@ -392,7 +372,25 @@ public class Main_Page extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         db.close();
-        this.stopService(new Intent(this, GetNewRepairRequest.class));
+        String role = SharedPrefManager.getInstance(this).getUserRole();
+
+        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
+                role.equalsIgnoreCase("admin")){
+            unregisterReceiver(reqCountReceiver);
+            stopService(receiverIntent);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(!SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")
+                || SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("main technician") ||
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")){
+            startService(receiverIntent);
+            registerReceiver(reqCountReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
+        }
+
     }
 
     private void clearDb() {

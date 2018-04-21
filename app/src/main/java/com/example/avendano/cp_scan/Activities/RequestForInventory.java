@@ -21,19 +21,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.example.avendano.cp_scan.Database.AppConfig;
-import com.example.avendano.cp_scan.Database.RequestQueueHandler;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.DatePicker;
-import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.example.avendano.cp_scan.TimePicker;
 import com.example.avendano.cp_scan.R;
 

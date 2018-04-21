@@ -18,11 +18,11 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.TaskAdapter;
-import com.example.avendano.cp_scan.Connection_Detector.Connection_Detector;
-import com.example.avendano.cp_scan.Database.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.Connection_Detector;
+import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
-import com.example.avendano.cp_scan.Database.VolleyCallback;
-import com.example.avendano.cp_scan.Database.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Task;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;

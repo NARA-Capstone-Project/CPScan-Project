@@ -34,14 +34,19 @@
             android:theme="@style/AppTheme" />
 
         <receiver
-            android:name=".Connection_Detector.NetworkStateChange"
+            android:name=".Network_Handler.NetworkStateChange"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
 
-        <service android:name=".Database.GetNewRepairRequest" android:label="@string/app_name" />
+        <service
+            android:name=".BackgroundServices.GetNewRepairRequest"
+            android:label="@string/app_name" />
+        <service
+            android:name=".BackgroundServices.SyncingService"
+            android:label="@string/app_name" />
 
         <activity
             android:name=".Activities.ViewPc"
@@ -69,20 +74,23 @@
             android:screenOrientation="portrait" />
         <activity android:name=".Activities.ViewRepairReport" />
         <activity android:name=".Activities.SignatureActivity" />
-        <activity android:name=".Activities.Main_Page"
+        <activity
+            android:name=".Activities.Main_Page"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter></activity>
-        <activity android:name=".Activities.ProfileActivity"></activity>
-        <activity android:name=".Activities.RoomActivity"></activity>
-        <activity android:name=".Activities.RequestListsActivity"></activity>
-        <activity android:name=".Activities.SchedulesActivity"></activity>
-        <activity android:name=".Activities.ReportActivity"></activity>
-        <activity android:name=".Activities.InventoryActivty"></activity>
-        <activity android:name=".Activities.AssessPc"></activity>
+            </intent-filter>
+        </activity>
+        <activity android:name=".Activities.ProfileActivity" />
+        <activity android:name=".Activities.RoomActivity" />
+        <activity android:name=".Activities.RequestListsActivity" />
+        <activity android:name=".Activities.SchedulesActivity" />
+        <activity android:name=".Activities.ReportActivity" />
+        <activity android:name=".Activities.InventoryActivty" />
+        <activity android:name=".Activities.AssessPc" />
+        <activity android:name=".Activities.RequestPeripherals"></activity>
     </application>
 
 </manifest>
