@@ -382,6 +382,19 @@ public class Main_Page extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        String role = SharedPrefManager.getInstance(this).getUserRole();
+
+        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
+                role.equalsIgnoreCase("admin")){
+            unregisterReceiver(reqCountReceiver);
+            stopService(receiverIntent);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if(!SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")

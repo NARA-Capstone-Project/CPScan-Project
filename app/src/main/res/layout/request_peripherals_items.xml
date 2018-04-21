@@ -1,15 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="5dp"
+    android:padding="5dp"
+    android:background="@color/white">
+
+    <ImageView
+        android:id="@+id/remove"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_remove"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"/>
 
     <TextView
-        android:id="@+id/textView"
+        android:textSize="15dp"
+        android:layout_below="@id/remove"
+        android:id="@+id/peripheral"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="14dp"
-        android:text="TextView" />
+        android:layout_alignParentLeft="true"
+        android:text="TextView"
+        android:layout_marginBottom="3dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/qty"
+        android:layout_below="@id/remove"
+        android:text="Qty:  "/>
+
+    <com.michaelmuenzer.android.scrollablennumberpicker.ScrollableNumberPicker
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="3dp"
+        android:layout_below="@id/remove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/qty"
+        app:snp_buttonIconLeft="@drawable/ic_leftarrow"
+        app:snp_buttonIconRight="@drawable/ic_rightarrow"
+        app:snp_maxValue="20"
+        app:snp_minValue="1"
+        app:snp_value="1"
+        app:snp_stepSize="1"
+        app:snp_updateInterval="10">
+
+    </com.michaelmuenzer.android.scrollablennumberpicker.ScrollableNumberPicker>
+
 </RelativeLayout>

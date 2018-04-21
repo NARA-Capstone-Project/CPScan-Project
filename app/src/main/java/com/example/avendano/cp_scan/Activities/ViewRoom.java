@@ -155,7 +155,8 @@ public class ViewRoom extends AppCompatActivity {
                                         break;
                                     }
                                     case 1: {
-                                        Toast.makeText(ViewRoom.this, "Request Peripherals", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(ViewRoom.this, RequestPeripherals.class);
+                                        startActivity(intent);
                                         break;
                                     }
                                 }
