@@ -19,12 +19,13 @@ import android.widget.Toast;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.InventoryAdapter;
+import com.example.avendano.cp_scan.Adapter.PeripheralAdapter;
 import com.example.avendano.cp_scan.Adapter.RepairAdapter;
+import com.example.avendano.cp_scan.Model.*;
+import com.example.avendano.cp_scan.Model.RequestPeripherals;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
 import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
-import com.example.avendano.cp_scan.Model.RequestInventory;
-import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
@@ -47,11 +48,13 @@ public class RequestListsActivity extends AppCompatActivity {
     //request inventory, repair, peripherals
     List<RequestInventory> inventoryList;
     List<RequestRepair> repairList;
+    List<com.example.avendano.cp_scan.Model.RequestPeripherals> peripheralsList;
     SwipeRefreshLayout refresh;
     AlertDialog progress;
     ProgressBar progressBar;
     InventoryAdapter inventoryAdapter;
     RepairAdapter repairAdapter;
+    PeripheralAdapter peripheralAdapter;
     VolleyRequestSingleton volley;
     int previousSelection = -1;
 
@@ -63,6 +66,8 @@ public class RequestListsActivity extends AppCompatActivity {
 
         inventoryList = new ArrayList<>();
         repairList = new ArrayList<>();
+        peripheralsList = new ArrayList<>();
+
         volley = new VolleyRequestSingleton(this);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_items);
         recyclerView.setHasFixedSize(true);
@@ -112,13 +117,12 @@ public class RequestListsActivity extends AppCompatActivity {
             super.onPreExecute();
             inventoryList.clear();
             repairList.clear();
+            peripheralsList.clear();
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            inventoryList.clear();
-            repairList.clear();
         }
 
         @Override
@@ -128,7 +132,7 @@ public class RequestListsActivity extends AppCompatActivity {
             } else if (request_type.getSelectedItem().toString().equalsIgnoreCase("Repair Request")) {
                 loadRequestRepair();
             } else {
-                //peripherals
+                loadRequestPeripherals();
             }
             return null;
         }
@@ -157,7 +161,7 @@ public class RequestListsActivity extends AppCompatActivity {
 
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                if(!req_status.equalsIgnoreCase("cancel")){
+                                if (!req_status.equalsIgnoreCase("cancel")) {
                                     RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
                                             , tech_id, date, time, msg, req_date, req_time, req_status);
                                     inventoryList.add(inventory);
@@ -191,6 +195,10 @@ public class RequestListsActivity extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
+
+                progressBar.setVisibility(View.GONE);
+                progress.dismiss();
+                refresh.setRefreshing(false);
                 error.printStackTrace();
             }
         });
@@ -223,12 +231,12 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_time = obj.getString("time_req");
                         String req_details = obj.getString("req_details");
                         String path = obj.getString("image");
-                        if(obj.isNull("image"))
+                        if (obj.isNull("image"))
                             path = "";
 
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                if(!req_status.equalsIgnoreCase("cancel")){
+                                if (!req_status.equalsIgnoreCase("cancel")) {
                                     RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
                                             , date, time, msg, req_date, req_time, req_status, path, req_details);
                                     repairList.add(repair);
@@ -261,6 +269,9 @@ public class RequestListsActivity extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
+                progressBar.setVisibility(View.GONE);
+                progress.dismiss();
+                refresh.setRefreshing(false);
                 if (error instanceof TimeoutError)
                     Toast.makeText(RequestListsActivity.this, "Server took too long to respond, check your connection", Toast.LENGTH_SHORT).show();
                 else
@@ -270,6 +281,62 @@ public class RequestListsActivity extends AppCompatActivity {
     }
 
     private void loadRequestPeripherals() {
+        //statuses = pending, confirmed, approved, issued(dito plang pwedeng ireceive ni custodian), received
+        //if confirmed, pending pa rin, if naapproved na after confirmation may button na lalabas na issue
+        volley.sendStringRequestGet(AppConfig.GET_PERIPHERALS
+                , new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                int req_id = obj.getInt("req_id");
+                                String status = obj.getString("req_status");
+                                String room_name = obj.getString("room_name");
+                                String tech_id = obj.getString("tech_id");
+                                String cust_id = obj.getString("cust_id");
+                                String user_id = SharedPrefManager.getInstance(RequestListsActivity.this).getUserId();
 
+                                if (!status.equalsIgnoreCase("received")) {
+                                    if (cust_id.equals(user_id)) {
+                                        RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                        peripheralsList.add(peripherals);
+                                    }else if(tech_id.equals(user_id)){
+                                        if (!status.equalsIgnoreCase("cancel")){
+                                            RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                            peripheralsList.add(peripherals);
+                                        }
+                                    }
+                                }
+                            }
+                            if (!peripheralsList.isEmpty()) {
+                                peripheralAdapter = new PeripheralAdapter(peripheralsList, RequestListsActivity.this, RequestListsActivity.this, refresh);
+                                recyclerView.setAdapter(peripheralAdapter);
+                            } else {
+                                Toast.makeText(RequestListsActivity.this, "No Requests", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(RequestListsActivity.this, "Error retrieving data", Toast.LENGTH_SHORT).show();
+                        }
+                        progressBar.setVisibility(View.GONE);
+                        progress.dismiss();
+                        refresh.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressBar.setVisibility(View.GONE);
+                        progress.dismiss();
+                        refresh.setRefreshing(false);
+                        if (error instanceof TimeoutError) {
+                            Toast.makeText(RequestListsActivity.this, "Server took too long to response", Toast.LENGTH_SHORT).show();
+                        } else
+                            Toast.makeText(RequestListsActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
     }
 }

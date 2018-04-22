@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 
 import com.example.avendano.cp_scan.Activities.ViewInventoryReport;
 import com.example.avendano.cp_scan.Activities.ViewRepairReport;
+import com.example.avendano.cp_scan.Activities.ViewRequestPeripheralsDetails;
 import com.example.avendano.cp_scan.Model.Reports;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.RecyclerHolder.RecyclerHolder;
@@ -58,10 +59,16 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
                 Intent intent = null;
                 if(reportList.get(position).getCategory().contains("Repair")){
                     intent = new Intent(mCtx, ViewRepairReport.class);
-                }else{
+                    intent.putExtra("rep_id", reportList.get(position).getRep_id());
+                }else if(reportList.get(position).getCategory().contains("Inventory")){
                     intent = new Intent(mCtx, ViewInventoryReport.class);
+                    intent.putExtra("rep_id", reportList.get(position).getRep_id());
+                }else{
+                    //peripherals
+                    intent = new Intent(mCtx, ViewRequestPeripheralsDetails.class);
+                    intent.putExtra("req_id", reportList.get(position).getRep_id());
+                    intent.putExtra("status", "received");
                 }
-                intent.putExtra("rep_id", reportList.get(position).getRep_id());
                 act.startActivity(intent);
             }
         });

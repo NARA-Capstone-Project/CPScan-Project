@@ -40,7 +40,7 @@ import dmax.dialog.SpotsDialog;
  * Created by Avendano on 9 Apr 2018.
  */
 
-public class SchedulesActivity extends AppCompatActivity {
+public class RequestScheduleActivity extends AppCompatActivity {
 
     String TAG = "TASK";
     Spinner list_type;
@@ -142,7 +142,7 @@ public class SchedulesActivity extends AppCompatActivity {
 
                                     if (status.equalsIgnoreCase("accepted") ||
                                             status.equalsIgnoreCase("done")) {
-                                        if (SharedPrefManager.getInstance(SchedulesActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
+                                        if (SharedPrefManager.getInstance(RequestScheduleActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
                                             Task task = new Task(set_date, set_time, msg,
                                                     "Inventory", room_id, req_id, status);
                                             taskList.add(task);
@@ -151,13 +151,13 @@ public class SchedulesActivity extends AppCompatActivity {
 
                                 }
                                 if (taskList.size() != 0) {
-                                    taskAdapter = new TaskAdapter(SchedulesActivity.this, SchedulesActivity.this, taskList, swiper);
+                                    taskAdapter = new TaskAdapter(RequestScheduleActivity.this, RequestScheduleActivity.this, taskList, swiper);
                                     recyclerView.setAdapter(taskAdapter);
                                 } else {
-                                    Toast.makeText(SchedulesActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(RequestScheduleActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                Toast.makeText(SchedulesActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RequestScheduleActivity.this, "No Inventory Schedule", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -198,7 +198,7 @@ public class SchedulesActivity extends AppCompatActivity {
 
                                     if (status.equalsIgnoreCase("accepted") ||
                                             status.equalsIgnoreCase("done")) {
-                                        if (SharedPrefManager.getInstance(SchedulesActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
+                                        if (SharedPrefManager.getInstance(RequestScheduleActivity.this).getUserId().equalsIgnoreCase(tech_id)) {
                                             Task task = new Task(set_date, set_time, msg,
                                                     "Repair", comp_id, req_id, status);
                                             taskList.add(task);
@@ -207,13 +207,13 @@ public class SchedulesActivity extends AppCompatActivity {
 
                                 }
                                 if (taskList.size() != 0) {
-                                    taskAdapter = new TaskAdapter(SchedulesActivity.this, SchedulesActivity.this, taskList, swiper);
+                                    taskAdapter = new TaskAdapter(RequestScheduleActivity.this, RequestScheduleActivity.this, taskList, swiper);
                                     recyclerView.setAdapter(taskAdapter);
                                 } else {
-                                    Toast.makeText(SchedulesActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(RequestScheduleActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                Toast.makeText(SchedulesActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RequestScheduleActivity.this, "No Repair Schedule", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -235,6 +235,6 @@ public class SchedulesActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        SchedulesActivity.this.finish();
+        RequestScheduleActivity.this.finish();
     }
 }

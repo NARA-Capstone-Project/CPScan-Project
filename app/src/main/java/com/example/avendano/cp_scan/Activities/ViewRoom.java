@@ -158,6 +158,8 @@ public class ViewRoom extends AppCompatActivity {
                                         Intent intent = new Intent(ViewRoom.this, RequestPeripherals.class);
                                         intent.putExtra("room_name", room.getText().toString().trim());
                                         intent.putExtra("room_id", room_id);
+                                        intent.putExtra("req_id", 0);
+                                        intent.putExtra("method", "request");
                                         startActivity(intent);
                                         break;
                                     }

@@ -11,8 +11,10 @@ import android.util.Log;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
+import com.example.avendano.cp_scan.Network_Handler.HttpURLCon;
 import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
 import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
+import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -80,34 +83,13 @@ public class GetNewRepairRequest extends Service {
 
             @Override
             protected String doInBackground(Void... voids) {
-                URL url;
                 String response = "";
+                Map<String, String> param = new HashMap<>();
+                param.put("user_id", SharedPrefManager.getInstance(GetNewRepairRequest.this).getUserId());
 
-                StringBuilder sb = null;
-                try {
-                    url = new URL(AppConfig.COUNT_REQ);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setReadTimeout(30000);
-                    conn.setConnectTimeout(30000);
-                    conn.setRequestMethod("GET");
+                HttpURLCon con = new HttpURLCon();
+                response = con.sendPostRequest(AppConfig.COUNT_REQ, param);
 
-                    int responseCode = conn.getResponseCode();
-
-                    if (responseCode == HttpsURLConnection.HTTP_OK) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        sb = new StringBuilder();
-                        String res;
-
-                        while ((res = br.readLine()) != null) {
-                            sb.append(res);
-                        }
-                        response = sb.toString();
-                    }
-
-                } catch (Exception e) {
-                    Log.e("REQSERVIEC", "error");
-                    e.printStackTrace();
-                }
                 return response;
             }
 

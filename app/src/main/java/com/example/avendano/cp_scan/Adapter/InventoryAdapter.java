@@ -268,7 +268,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             category = (TextView) itemView.findViewById(R.id.category);
             location = (TextView) itemView.findViewById(R.id.location);
             accept = (Button) itemView.findViewById(R.id.accept);
-            ignore = (Button) itemView.findViewById(R.id.ignore);
+            ignore = (Button) itemView.findViewById(R.id.negative);
             card = (CardView) itemView.findViewById(R.id.cardview);
             btn_container = (LinearLayout) itemView.findViewById(R.id.linear);
             status = (TextView) itemView.findViewById(R.id.req_status);

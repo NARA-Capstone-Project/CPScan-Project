@@ -74,7 +74,8 @@ public class ReportActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         list_type = (Spinner) findViewById(R.id.list_type);
-        String[] items = new String[]{"Inventory Reports", "Repair Reports"};
+        String[] items = new String[]{"Inventory Reports", "Repair Reports", "Peripheral Requests"};
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         list_type.setAdapter(adapter);
         list_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -117,7 +118,8 @@ public class ReportActivity extends AppCompatActivity {
                 loadReports("Inventory");
             } else if (list_type.getSelectedItem().toString().equalsIgnoreCase("Repair Reports")) { // repair
                 loadReports("Repair");
-            }
+            } else
+                loadReports("Peripherals");
             return null;
         }
 
@@ -138,63 +140,120 @@ public class ReportActivity extends AppCompatActivity {
 
     private void loadReports(final String category) {
         reportsList.clear();
-        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
-                , new VolleyCallback() {
-                    @Override
-                    public void onSuccessResponse(String response) {
-                        Log.e("RESPONSE", response);
-                        try {
-                            JSONArray array = new JSONArray(response);
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject obj = array.getJSONObject(i);
+        if (category.equalsIgnoreCase("peripherals")) {
+            //load peripherals na received ung stat
+            volley.sendStringRequestGet(AppConfig.GET_PERIPHERALS
+                    , new VolleyCallback() {
+                        @Override
+                        public void onSuccessResponse(String response) {
+                            Log.e("RESPONSE", response);
+                            try {
+                                JSONArray array = new JSONArray(response);
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject obj = array.getJSONObject(i);
+                                    int req_id = obj.getInt("req_id");
+                                    String status = obj.getString("req_status");
+                                    String room_name = obj.getString("room_name");
+                                    String tech_id = obj.getString("tech_id");
+                                    String cust_id = obj.getString("cust_id");
+                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
+                                    String date_req = obj.getString("date_req");
 
-                                String date = obj.getString("date");
-                                String time = obj.getString("time");
-                                String cat = obj.getString("cat");
-                                String cust_id = obj.getString("cust_id");
-                                String tech_id = obj.getString("tech_id");
-                                int rep_id = obj.getInt("rep_id");
-                                String room_name = obj.getString("room_name");
-                                int room_id = obj.getInt("room_id");
-
-                                String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
-                                if (category.equalsIgnoreCase("repair")) {
-                                    if (cat.contains("Repair")) {
-                                        if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
-                                            String pc_name = "PC " + obj.getString("pc_no") + " of " + room_name;
-                                            Reports reports = new Reports(date + " " + time, cat, pc_name, room_id, rep_id);
-                                            reportsList.add(reports);
-                                        }
-                                    }
-                                } else {
-                                    if (cat.contains("Inventory")) {
-                                        if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
-                                            Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
+                                    if (!status.equalsIgnoreCase("received")) {
+                                        if (cust_id.equals(user_id) || tech_id.equals(user_id)) {
+                                            Reports reports = new Reports(date_req, "Peripherals", room_name, 0, req_id);
                                             reportsList.add(reports);
                                         }
                                     }
                                 }
+                                if (!reportsList.isEmpty()) {
+                                    reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
+                                    recyclerView.setAdapter(reportAdapter);
+                                    reportAdapter.notifyDataSetChanged();
+                                } else {
+                                    Toast.makeText(ReportActivity.this, "No Requests", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(ReportActivity.this, "Error retrieving data", Toast.LENGTH_SHORT).show();
                             }
-                            if (reportsList.size() != 0) {
-                                reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
-                                recyclerView.setAdapter(reportAdapter);
-                                reportAdapter.notifyDataSetChanged();
-                            } else {
-                                Toast.makeText(ReportActivity.this, "No Reports", Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            progressBar.setVisibility(View.GONE);
+                            progress.dismiss();
+                            swiper.setRefreshing(false);
                         }
-                    }
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        if (error instanceof TimeoutError)
-                            Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
-                        else
-                            Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            progressBar.setVisibility(View.GONE);
+                            progress.dismiss();
+                            swiper.setRefreshing(false);
+                            if (error instanceof TimeoutError) {
+                                Toast.makeText(ReportActivity.this, "Server took too long to response", Toast.LENGTH_SHORT).show();
+                            } else
+                                Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
+        } else {
+            volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REPORTS
+                    , new VolleyCallback() {
+                        @Override
+                        public void onSuccessResponse(String response) {
+                            Log.e("RESPONSE", response);
+                            try {
+                                JSONArray array = new JSONArray(response);
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject obj = array.getJSONObject(i);
+
+                                    String date = obj.getString("date");
+                                    String time = obj.getString("time");
+                                    String cat = obj.getString("cat");
+                                    String cust_id = obj.getString("cust_id");
+                                    String tech_id = obj.getString("tech_id");
+                                    int rep_id = obj.getInt("rep_id");
+                                    String room_name = obj.getString("room_name");
+                                    int room_id = obj.getInt("room_id");
+
+                                    String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
+                                    if (category.equalsIgnoreCase("repair")) {
+                                        if (cat.contains("Repair")) {
+                                            if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                                String pc_name = "PC " + obj.getString("pc_no") + " of " + room_name;
+                                                Reports reports = new Reports(date + " " + time, cat, pc_name, room_id, rep_id);
+                                                reportsList.add(reports);
+                                            }
+                                        }
+                                    } else {
+                                        if (cat.contains("Inventory")) {
+                                            if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                                Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
+                                                reportsList.add(reports);
+                                            }
+                                        }
+                                    }
+                                }
+                                if (reportsList.size() != 0) {
+                                    reportAdapter = new ReportAdapter(ReportActivity.this, ReportActivity.this, reportsList, swiper);
+                                    recyclerView.setAdapter(reportAdapter);
+                                    reportAdapter.notifyDataSetChanged();
+                                } else {
+                                    Toast.makeText(ReportActivity.this, "No Reports", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(ReportActivity.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            if (error instanceof TimeoutError)
+                                Toast.makeText(ReportActivity.this, "Server took too long to respond", Toast.LENGTH_SHORT).show();
+                            else
+                                Toast.makeText(ReportActivity.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+
     }
 }

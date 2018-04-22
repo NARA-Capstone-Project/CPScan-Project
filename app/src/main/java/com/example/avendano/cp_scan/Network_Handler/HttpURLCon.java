@@ -28,7 +28,7 @@ public class HttpURLCon {
 
         StringBuilder sb = null;
         try {
-            url = new URL(AppConfig.COUNT_REQ);
+            url = new URL(requestUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(30000);
             conn.setConnectTimeout(30000);
@@ -45,10 +45,12 @@ public class HttpURLCon {
                     sb.append(res);
                 }
                 response = sb.toString();
+            }else{
+                Log.e("RESPONSECODE", "" + responseCode);
+                response = "ERROR";
             }
 
         } catch (Exception e) {
-            Log.e("REQSERVIEC", "error");
             e.printStackTrace();
         }
         return response;
@@ -87,6 +89,9 @@ public class HttpURLCon {
                 while ((response = br.readLine()) != null) {
                     sb.append(response);
                 }
+            }else{
+                sb = new StringBuilder();
+                sb.append("ERROR");
             }
 
         } catch (Exception e) {

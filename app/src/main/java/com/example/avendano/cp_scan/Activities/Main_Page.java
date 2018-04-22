@@ -1,16 +1,10 @@
 package com.example.avendano.cp_scan.Activities;
 
-import android.app.Service;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.os.Binder;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
@@ -25,10 +19,8 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Network_Handler.NetworkStateChange;
-import com.example.avendano.cp_scan.Database.AddCompFrmServer;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.BackgroundServices.GetNewRepairRequest;
-import com.example.avendano.cp_scan.Database.SQLiteHandler;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
 import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
 import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
@@ -47,8 +39,6 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Main_Page extends AppCompatActivity {
     NotificationBadge badge;
@@ -61,6 +51,7 @@ public class Main_Page extends AppCompatActivity {
     BroadcastReceiver reqCountReceiver;
 
     int position = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,7 +104,7 @@ public class Main_Page extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         //satrtactivityforresult
-                        Intent i = new Intent(Main_Page.this, SchedulesActivity.class);
+                        Intent i = new Intent(Main_Page.this, RequestScheduleActivity.class);
                         startActivity(i);
                     }
                 });
@@ -350,11 +341,11 @@ public class Main_Page extends AppCompatActivity {
                                     intent.putExtra("comp_id", comp_id);
                                     Main_Page.this.startActivity(intent);
                                     break;
-                                }else{
+                                } else {
                                     counter++;
                                 }
                             }
-                            if(counter == array.length())
+                            if (counter == array.length())
                                 Toast.makeText(Main_Page.this, "Scanned computer not recognized", Toast.LENGTH_SHORT).show();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -375,8 +366,12 @@ public class Main_Page extends AppCompatActivity {
         String role = SharedPrefManager.getInstance(this).getUserRole();
 
         if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                role.equalsIgnoreCase("admin")){
-            unregisterReceiver(reqCountReceiver);
+                role.equalsIgnoreCase("admin")) {
+            try {
+                unregisterReceiver(reqCountReceiver);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             stopService(receiverIntent);
         }
     }
@@ -388,8 +383,12 @@ public class Main_Page extends AppCompatActivity {
         String role = SharedPrefManager.getInstance(this).getUserRole();
 
         if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                role.equalsIgnoreCase("admin")){
-            unregisterReceiver(reqCountReceiver);
+                role.equalsIgnoreCase("admin")) {
+            try {
+                unregisterReceiver(reqCountReceiver);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             stopService(receiverIntent);
         }
     }
@@ -397,9 +396,9 @@ public class Main_Page extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(!SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")
-                || SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("main technician") ||
-                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")){
+        String role = SharedPrefManager.getInstance(this).getUserRole();
+        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
+                role.equalsIgnoreCase("admin")) {
             startService(receiverIntent);
             registerReceiver(reqCountReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
         }

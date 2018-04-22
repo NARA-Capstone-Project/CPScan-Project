@@ -159,7 +159,14 @@ public class RoomActivity extends AppCompatActivity {
                             String cust_id = obj.getString("cust_id");
                             String tech_id = obj.getString("tech_id");
 
-                            if (tech_id.equals(finalUser_id) || cust_id.equals(finalUser_id)) {
+                            if(SharedPrefManager.getInstance(RoomActivity.this).getUserRole().equalsIgnoreCase("custodian")||
+                                    SharedPrefManager.getInstance(RoomActivity.this).getUserRole().equalsIgnoreCase("technician")){
+                                if (tech_id.equals(finalUser_id) || cust_id.equals(finalUser_id)) {
+                                    Rooms rooms = new Rooms(room_id, room_cust,
+                                            room_tech, room_name, building);
+                                    roomsList.add(rooms);
+                                }
+                            }else{  //if admin or main tech
                                 Rooms rooms = new Rooms(room_id, room_cust,
                                         room_tech, room_name, building);
                                 roomsList.add(rooms);
@@ -220,11 +227,19 @@ public class RoomActivity extends AppCompatActivity {
                             String cust_id = obj.getString("cust_id");
                             String tech_id = obj.getString("tech_id");
 
-                            if (tech_id.equals(finalUser_id) || cust_id.equals(finalUser_id)) {
+                            if(SharedPrefManager.getInstance(RoomActivity.this).getUserRole().equalsIgnoreCase("custodian")||
+                                    SharedPrefManager.getInstance(RoomActivity.this).getUserRole().equalsIgnoreCase("technician")){
+                                if (tech_id.equals(finalUser_id) || cust_id.equals(finalUser_id)) {
+                                    Rooms rooms = new Rooms(room_id, room_cust,
+                                            room_tech, room_name, building);
+                                    roomsList.add(rooms);
+                                }
+                            }else{  //if admin or main tech
                                 Rooms rooms = new Rooms(room_id, room_cust,
                                         room_tech, room_name, building);
                                 roomsList.add(rooms);
                             }
+
                         }
                         Log.e("ROOMSLIST", "" + roomsList.size());
                         if(roomsList.size() != 0 ){
