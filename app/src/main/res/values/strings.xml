@@ -3,7 +3,5 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="title_activity_schedule">ScheduleActivity</string>
-    <string name="underlined_edit"><u>Edit</u></string>
-    <string name="underlined_delete"><u>Delete</u></string>
     <string name="underlined_image"><u>View Image</u></string>
 </resources>

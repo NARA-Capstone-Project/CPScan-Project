@@ -134,7 +134,6 @@
         android:layout_height="match_parent">
         <ScrollView
             android:layout_above="@+id/remark"
-            android:id="@+id/scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fadeScrollbars="false">

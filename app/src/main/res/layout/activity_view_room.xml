@@ -36,7 +36,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/pc_container"
             android:layout_marginRight="9dp"
             android:layout_toLeftOf="@+id/sched_container"
             android:layout_width="wrap_content"

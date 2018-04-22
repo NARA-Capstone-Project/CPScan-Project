@@ -304,7 +304,7 @@ public class RequestListsActivity extends AppCompatActivity {
                                         RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
                                         peripheralsList.add(peripherals);
                                     }else if(tech_id.equals(user_id)){
-                                        if (!status.equalsIgnoreCase("cancel")){
+                                        if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")){
                                             RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
                                             peripheralsList.add(peripherals);
                                         }
@@ -338,5 +338,13 @@ public class RequestListsActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!request_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Request")) {
+            new LoadRequests().execute();
+        }
     }
 }

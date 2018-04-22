@@ -45,4 +45,6 @@ public class AppConfig {
     public static String SEND_SMS = ROOT + "send_alert_sms.php";
     public static String GET_PERIPHERALS = ROOT + "get_peripheral_requests.php";
     public static String GET_PERIPHERALS_DETAILS = ROOT + "get_peripheral_details.php";
+    public static String EDIT_PERIPHERALS = ROOT + "update_request_peripherals.php";
+    public static String ISSUE_PERIPHERALS = ROOT + "issue_peripherals.php";
 }

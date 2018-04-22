@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Activities;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.service.autofill.SaveRequest;
 import android.support.design.widget.FloatingActionButton;
@@ -25,9 +26,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.PeripheralAdapter;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Network_Handler.HttpURLCon;
+import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
+import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import com.michaelmuenzer.android.scrollablennumberpicker.ScrollableNumberPicker;
@@ -37,6 +42,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.file.attribute.AclEntryPermission;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,7 +71,7 @@ public class RequestPeripherals extends AppCompatActivity {
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Request Peripherals");
+
 
         room_name = getIntent().getStringExtra("room_name");
         room_id = getIntent().getIntExtra("room_id", 0);
@@ -84,9 +90,12 @@ public class RequestPeripherals extends AppCompatActivity {
                     Toast.makeText(RequestPeripherals.this, "You have already selected all peripherals", Toast.LENGTH_SHORT).show();
             }
         });
-        if (method.equalsIgnoreCase("request"))
+        if (method.equalsIgnoreCase("request")) {
+            getSupportActionBar().setTitle("Request Peripherals");
             showPeripherals();
-        else {
+        } else {
+            getSupportActionBar().setTitle("Edit Request");
+            purpose.setText(room_name);
             getPeripheralRequest();
         }
     }
@@ -115,7 +124,7 @@ public class RequestPeripherals extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                         if (choices.isEmpty())
-                            RequestPeripherals.this.finish();
+                            finish();
                     }
                 })
                 .setCancelable(false);
@@ -248,12 +257,13 @@ public class RequestPeripherals extends AppCompatActivity {
                     } else {
                         if (method.equalsIgnoreCase("request"))
                             savePeripheralRequest();
-                        //else editperipheralrequest
+                        else
+                            editPeripheralRequest();
                     }
                 }
                 break;
             case R.id.cancel:
-                this.finish();
+                finish();
                 break;
         }
 
@@ -316,7 +326,7 @@ public class RequestPeripherals extends AppCompatActivity {
                     if (!obj.getBoolean("error")) {
                         Toast.makeText(RequestPeripherals.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         Log.e("MSG", obj.getString("msg"));
-                        RequestPeripherals.this.finish();
+                        finish();
                     } else {
                         Log.e("MSG", obj.getString("msg"));
                         Toast.makeText(RequestPeripherals.this, "Request Not Sent!", Toast.LENGTH_SHORT).show();
@@ -328,6 +338,55 @@ public class RequestPeripherals extends AppCompatActivity {
         }
 
         new SaveRequest().execute();
+    }
+
+    private void editPeripheralRequest() {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < choices.size(); i++) {
+            JSONObject obj = new JSONObject();
+            try {
+                //qty, peripherals_desc (choices), unit, qty_issued
+                obj.put("qty", String.valueOf(quantity.get(i)));
+                obj.put("desc", choices.get(i));
+                obj.put("unit", unitValue.get(i));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            array.put(obj);
+        }
+        String details = array.toString();
+        Map<String, String> param = new HashMap<>();
+        param.put("purpose", purpose.getText().toString().trim());
+        param.put("details", details);
+        param.put("req_id", String.valueOf(req_id));
+
+        VolleyRequestSingleton volley = new VolleyRequestSingleton(this);
+        volley.sendStringRequestPost(AppConfig.EDIT_PERIPHERALS,
+                new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("EDIT", response);
+                        try{
+                            JSONObject obj = new JSONObject(response);
+                            if(!obj.getBoolean("error")){
+                                Toast.makeText(RequestPeripherals.this, "Updated!", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }else{
+                                Toast.makeText(RequestPeripherals.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            Toast.makeText(RequestPeripherals.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String string= (error instanceof TimeoutError) ? "Server took too long to respond" : "Can't connect to the server";
+                        Toast.makeText(RequestPeripherals.this, string, Toast.LENGTH_SHORT).show();
+                    }
+                }, param);
     }
 
     private void getPeripheralRequest() {
@@ -395,6 +454,7 @@ public class RequestPeripherals extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        this.finish();
+        finish();
     }
+
 }

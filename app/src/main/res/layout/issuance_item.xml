@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/white">
+
+    <TextView
+        android:textSize="15dp"
+        android:id="@+id/peripheral"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:text="TextView"
+        android:layout_marginBottom="3dp"/>
+
+    <TextView
+        android:id="@+id/qty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Qty.:   "
+        android:layout_below="@id/peripheral"/>
+
+<TextView
+    android:id="@+id/txt"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Issue QTY.: "
+    android:layout_alignParentRight="true"
+    android:layout_alignParentTop="true"/>
+
+    <com.michaelmuenzer.android.scrollablennumberpicker.ScrollableNumberPicker
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/txt"
+        android:layout_marginTop="3dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/qty_issue"
+        app:snp_buttonIconLeft="@drawable/ic_leftarrow"
+        app:snp_buttonIconRight="@drawable/ic_rightarrow"
+        app:snp_maxValue="20"
+        app:snp_minValue="0"
+        app:snp_value="1"
+        app:snp_stepSize="1"
+        app:snp_updateInterval="10"/>
+</RelativeLayout>

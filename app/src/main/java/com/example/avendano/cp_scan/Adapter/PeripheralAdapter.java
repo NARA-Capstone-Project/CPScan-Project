@@ -61,7 +61,6 @@ public class PeripheralAdapter extends RecyclerView.Adapter<PeripheralAdapter.Ad
                 //intent to peripheral details
                 Intent intent = new Intent(mCtx, ViewRequestPeripheralsDetails.class);
                 intent.putExtra("req_id", requestPeripherals.getReq_id());
-                intent.putExtra("status", requestPeripherals.getStatus());
                 act.startActivity(intent);
             }
         });

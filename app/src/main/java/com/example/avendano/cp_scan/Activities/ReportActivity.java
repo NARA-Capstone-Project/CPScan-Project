@@ -159,7 +159,7 @@ public class ReportActivity extends AppCompatActivity {
                                     String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
                                     String date_req = obj.getString("date_req");
 
-                                    if (!status.equalsIgnoreCase("received")) {
+                                    if (status.equalsIgnoreCase("received")) {
                                         if (cust_id.equals(user_id) || tech_id.equals(user_id)) {
                                             Reports reports = new Reports(date_req, "Peripherals", room_name, 0, req_id);
                                             reportsList.add(reports);
@@ -177,16 +177,10 @@ public class ReportActivity extends AppCompatActivity {
                                 e.printStackTrace();
                                 Toast.makeText(ReportActivity.this, "Error retrieving data", Toast.LENGTH_SHORT).show();
                             }
-                            progressBar.setVisibility(View.GONE);
-                            progress.dismiss();
-                            swiper.setRefreshing(false);
                         }
 
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            progressBar.setVisibility(View.GONE);
-                            progress.dismiss();
-                            swiper.setRefreshing(false);
                             if (error instanceof TimeoutError) {
                                 Toast.makeText(ReportActivity.this, "Server took too long to response", Toast.LENGTH_SHORT).show();
                             } else

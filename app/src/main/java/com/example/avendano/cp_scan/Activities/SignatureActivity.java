@@ -99,6 +99,8 @@ public class SignatureActivity extends AppCompatActivity {
                     intent.putExtra("rep_id", rep_id);
                     startActivity(intent);
                     finish();
+                }else if (from.equalsIgnoreCase("request")){
+                    SignatureActivity.this.finish();
                 }
             }
         });
@@ -125,7 +127,11 @@ public class SignatureActivity extends AppCompatActivity {
                             if (!obj.getBoolean("error")) {
                                 Log.e("IMAGE", obj.getString("image"));
                                 if (obj.getString("image").equalsIgnoreCase("inserted"))
+                                if (from.equalsIgnoreCase("request")){
+                                    SignatureActivity.this.finish();
+                                }else{
                                     updateSignedStatus();
+                                }
                                 else {
                                     progress.dismiss();
                                     Toast.makeText(SignatureActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
@@ -317,6 +323,19 @@ public class SignatureActivity extends AppCompatActivity {
             dirtyRect.right = Math.max(lastTouchX, eventX);
             dirtyRect.top = Math.min(lastTouchY, eventY);
             dirtyRect.bottom = Math.max(lastTouchY, eventY);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (from.equalsIgnoreCase("report")) {
+            Intent intent = new Intent(SignatureActivity.this, ViewInventoryReport.class);
+            intent.putExtra("rep_id", rep_id);
+            startActivity(intent);
+            finish();
+        }else if (from.equalsIgnoreCase("request")){
+            SignatureActivity.this.finish();
         }
     }
 }

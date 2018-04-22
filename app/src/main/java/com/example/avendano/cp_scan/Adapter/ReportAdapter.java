@@ -51,7 +51,7 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
         //pc no
         holder.midTxt.setText(reportList.get(position).getName());
         holder.subTxt.setText("Date: " + reportList.get(position).getDate());
-        holder.img.setBackgroundResource(R.drawable.ic_report_orange);
+        holder.img.setBackgroundResource(R.drawable.ic_report);
         holder.card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,7 +67,6 @@ public class ReportAdapter extends RecyclerView.Adapter<RecyclerHolder>{
                     //peripherals
                     intent = new Intent(mCtx, ViewRequestPeripheralsDetails.class);
                     intent.putExtra("req_id", reportList.get(position).getRep_id());
-                    intent.putExtra("status", "received");
                 }
                 act.startActivity(intent);
             }

@@ -251,6 +251,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
         String timeString = new SimpleDateFormat("hh:mm a").format(getTime);
+        //check available time ng technician
         time.setText(timeString);
     }
 

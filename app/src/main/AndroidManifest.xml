@@ -72,7 +72,8 @@
             android:name=".Activities.EditRequestSchedule"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.ViewRepairReport"
+        <activity
+            android:name=".Activities.ViewRepairReport"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity android:name=".Activities.SignatureActivity" />
@@ -85,33 +86,40 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activities.ProfileActivity"
+        <activity
+            android:name=".Activities.ProfileActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.RoomActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait"  />
-        <activity android:name=".Activities.RequestListsActivity"
+        <activity
+            android:name=".Activities.RoomActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.RequestScheduleActivity"
+        <activity
+            android:name=".Activities.RequestListsActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.ReportActivity"
+        <activity
+            android:name=".Activities.RequestScheduleActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.InventoryActivty"
+        <activity
+            android:name=".Activities.ReportActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.AssessPc"
+        <activity
+            android:name=".Activities.InventoryActivty"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.RequestPeripherals"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.AssessPc"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".Activities.ViewRequestPeripheralsDetails"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestPeripherals"
             android:configChanges="orientation"
-            android:screenOrientation="landscape"></activity>
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activities.ViewRequestPeripheralsDetails" />
+        <activity android:name=".Activities.PeripheralsIssuance"></activity>
     </application>
 
 </manifest>
