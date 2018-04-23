@@ -122,7 +122,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     //create
     String createComputers = "CREATE TABLE " + TABLE_COMPUTERS + "("
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COMP_ID + " INTEGER, " //FOREIGN KEY
+            + COMP_ID + " INTEGER, " //PRIMARY KEY
             + ROOMS_ID + " INTEGER, "
             + COMP_OS + " VARCHAR, "
             + COMP_NAME + " INTEGER, " // pc_no
@@ -141,7 +141,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + " );";
     String createRooms = "CREATE TABLE " + TABLE_ROOMS + "("
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + ROOMS_ID + " INTEGER,"
+            + ROOMS_ID + " INTEGER,"    //PRIMARY KEY
             + ROOMS_NAME + " VARCHAR,"  //dept + room name
             + ROOMS_BUILDING + " VARCHAR,"
             + ROOMS_FLOOR + " INTEGER, "
@@ -157,7 +157,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + ")";//to sync check kung ung room_id na nasa server is wala sa local
     String createReport = "CREATE TABLE " + TABLE_ASSESSMENT_REPORT + " ( "
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + REPORT_ID + " INTEGER ,"
+            + REPORT_ID + " INTEGER ,"  //PRIMARY KEY
             + ROOMS_ID + " INTEGER,"
             + ROOMS_NAME + " varchar, "
             + COLUMN_CUST_ID + " VARCHAR,"
@@ -193,7 +193,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     //req_id, rep_id, comp_id, cust_id, tech_id, date, time, msg, images,status
     String createRequestRepair = "CREATE TABLE " + TABLE_REQ_REPAIR + "("
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + REQ_ID + " INTEGER, "
+            + REQ_ID + " INTEGER, " //PRIMARY KEY
             + REPORT_ID + " INTEGER, "
             + COMP_ID + " INTEGER, "
             + COLUMN_CUST_ID + " VARCHAR, "
@@ -211,7 +211,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     //req_id, rep_id, room_id, cust_id, tech_id, date, time, msg, status
     String createRequestInventory = "CREATE TABLE " + TABLE_REQ_INVENTORY + "("
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + REQ_ID + " INTEGER, "
+            + REQ_ID + " INTEGER, " //PRIMARY KEY
             + REPORT_ID + " INTEGER, "
             + ROOMS_ID + " INTEGER, "
             + COLUMN_CUST_ID + " VARCHAR, "
@@ -240,7 +240,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     String createReqPeripherals = "CREATE TABLE " + TABLE_REQ_PERIPHERALS + " ( "
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + REQ_ID + " INTEGER, "
+            + REQ_ID + " INTEGER, " //PRIMARY KEY
             + DEPT_ID + " INTEGER,"
             + COLUMN_CUST_ID + " VARCHAR,"
             + COLUMN_TECH_ID + " VARCHAR,"
@@ -297,7 +297,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + " );";
     //DB DETAILS
     public static final String DB_NAME = "mySQL";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public SQLiteHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -333,6 +333,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + ASSESSED_PC);
         onCreate(db);
     }
+
+
 
     //computers
     public void addComputers(int comp_id, int room_id, String os, int comp_name

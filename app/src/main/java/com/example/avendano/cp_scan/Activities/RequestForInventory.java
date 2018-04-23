@@ -3,6 +3,7 @@ package com.example.avendano.cp_scan.Activities;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +22,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHandler;
@@ -30,6 +32,7 @@ import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.TimePicker;
 import com.example.avendano.cp_scan.R;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -56,6 +59,8 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
     String tech_id;
     String room_name;
     VolleyRequestSingleton volley;
+    boolean dateSet = false, timeSet = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,10 +90,12 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 switch (position) {
                     case 0: {
                         date.setVisibility(View.GONE);
+                        dateSet = false;
                         break;
                     }
                     case 1: {
-                        date.setVisibility(View.VISIBLE);
+                        DialogFragment datePicker = new DatePicker();
+                        datePicker.show(getSupportFragmentManager(), "date picker");
                         break;
                     }
                 }
@@ -127,10 +134,10 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.save: {
-                if(checkSchedule()){
+                if (checkSchedule()) {
                     //check tech sched
                     saveInventoryRequest();
-                }else{
+                } else {
                     progress.dismiss();
                 }
                 Log.w("SEND REQUEST", "User request for inventory");
@@ -155,21 +162,21 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         } else if (time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             time.setError("Set date!");
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-    private void saveInventoryRequest(){
+    private void saveInventoryRequest() {
         String setDate = "";
         String setTime = "";
         final String msg = message.getText().toString().trim();
-        if(date_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
+        if (date_type.getSelectedItem().toString().equalsIgnoreCase("anytime"))
             setDate = "Anytime";
         else
-            setDate =  date.getText().toString();
+            setDate = date.getText().toString();
 
-        setTime =  time.getText().toString();
+        setTime = time.getText().toString();
 
         final String finalSetDate = setDate;
         final String finalSetTime = setTime;
@@ -180,7 +187,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         Map<String, String> params = new HashMap<>();
         params.put("room_id", String.valueOf(room_id));
         params.put("set_time", finalSetTime);
-        params.put("set_date",finalSetDate );
+        params.put("set_date", finalSetDate);
         params.put("message", msg);
         params.put("date_req", date_req);
         params.put("time_req", time_req);
@@ -191,7 +198,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 Log.e("RESPONSe", response);
                 try {
                     JSONObject obj = new JSONObject(response);
-                    if(!obj.getBoolean("error")){
+                    if (!obj.getBoolean("error")) {
                         Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         Handler h = new Handler();
                         h.postDelayed(new Runnable() {
@@ -201,7 +208,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                                 goToViewRoom();
                             }
                         }, 2000);
-                    }else{
+                    } else {
                         progress.dismiss();
                         Toast.makeText(RequestForInventory.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                     }
@@ -241,18 +248,107 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         Date getdate = c.getTime();
         String dateString = new SimpleDateFormat("yyyy-MM-dd").format(getdate);
-        date.setText(dateString);
+        if (date.getVisibility() == View.GONE) {
+            date.setVisibility(View.VISIBLE);
+            date.setText(dateString);
+        }
+        dateSet = true;
     }
 
     @Override
     public void onTimeSet(android.widget.TimePicker view, int hourOfDay, int minute) {
+        timeSet = true;
         Calendar c = Calendar.getInstance();
         c.set(Calendar.HOUR_OF_DAY, hourOfDay);
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
-        String timeString = new SimpleDateFormat("hh:mm a").format(getTime);
-        //check available time ng technician
-        time.setText(timeString);
+        String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
+        Date pickedTime ;
+        try{
+            pickedTime = new SimpleDateFormat("HH:mm:ss").parse(timeString);
+
+            Date am = new SimpleDateFormat("HH:mm:ss").parse("07:59:00");
+            Date pm = new SimpleDateFormat("HH:mm:ss").parse("16:01:00");
+
+            Log.e("TIME", "GETTIME: " + pickedTime);
+            Log.e("TIME", "AM: " + am);
+            Log.e("TIME", "PM: " + pm);
+            Log.e("TIME", "TIME B4 AM: " + pickedTime.before(am));
+            Log.e("TIME", "AM B4 TIME: " + am.before(pickedTime));
+            Log.e("TIME", "TIME after AM: " + pickedTime.after(am));
+            Log.e("TIME", "AM after TIME: " + am.after(pickedTime));
+            Log.e("TIME", "TIME B4 PM: " + pickedTime.before(pm));
+            Log.e("TIME", "PM B4 TIME: " + pm.before(pickedTime));
+            Log.e("TIME", "TIME after PM: " + pickedTime.after(pm));
+            Log.e("TIME", "PM after TIME: " + pm.after(pickedTime));
+
+            if (pickedTime.after(am) && pickedTime.before(pm)) {
+                if (dateSet)    //hindi anytime ung time
+                    checkTime(pickedTime, date.getText().toString());
+                else
+                    time.setText(new SimpleDateFormat("HH:mm:ss").format(pickedTime));
+            }else{
+                Toast.makeText(this, "Pick time between 8AM and 4PM", Toast.LENGTH_SHORT).show();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void checkTime(final Date pickedTime, final String date) {
+        final Calendar pickCal = Calendar.getInstance();
+        final Calendar setTimePlusHour = Calendar.getInstance();
+        pickCal.setTime(pickedTime);
+        final Date picked = pickCal.getTime();
+        final Calendar setCal = Calendar.getInstance();
+
+        volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REQ,
+                new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            int count=0;
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                int room = obj.getInt("room_id");
+
+                                if (room_id == room) {
+                                    if (obj.getString("req_status").equalsIgnoreCase("accepted")) {
+                                        String setDate = obj.getString("date");
+                                        if (setDate.equals(date)) {
+                                            String time = obj.getString("time");
+                                            Date setTime = new SimpleDateFormat("HH:mm:ss").parse(time);
+                                            setCal.setTime(setTime);
+                                            setTimePlusHour.setTime(setTime);
+                                            setTimePlusHour.add(Calendar.HOUR_OF_DAY, 1);
+
+                                            if (picked.after(setCal.getTime()) && picked.before(setTimePlusHour.getTime())) {
+                                                Toast.makeText(RequestForInventory.this, "Set time is not available", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            }else{
+                                                count++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if(count == array.length()){
+                                time.setText(new SimpleDateFormat("HH:mm:ss").format(pickedTime));
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(RequestForInventory.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        String string = (error instanceof TimeoutError) ? "Server took too long to respond" : "Can't Connect to the server";
+                        Toast.makeText(RequestForInventory.this, string, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
 }

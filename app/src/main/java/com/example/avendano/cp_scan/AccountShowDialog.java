@@ -90,14 +90,14 @@ public class AccountShowDialog extends AppCompatDialogFragment {
             @Override
             public void onClick(View v) {
                 if (confirmation.getText().toString().trim().length() == 0) {
+                    Log.e("CONFIRMATION", "EMPTY");
                     confirmation.setError("Empty Field");
                 } else if (new_data.getText().toString().length() == 0) {
+                    Log.e(" NEW DATA", "EMPTY");
                     new_data.setError("Empty Field");
                 } else if (current_data.equals(new_data.getText().toString().trim()))
                     Toast.makeText(getContext(), "New " + data_to_change + " is same as your current " + data_to_change
                             , Toast.LENGTH_LONG).show();
-                else if(current.isShown())
-                    Log.w("CURRENT", "ISSHOWN");
                 else
                     validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
             }
@@ -119,7 +119,7 @@ public class AccountShowDialog extends AppCompatDialogFragment {
         if (data_to_change.equalsIgnoreCase("name") ||
                 data_to_change.equalsIgnoreCase("phone"))
             table = "users";
-        else
+        else //USERNAME PASSWORD
             table = "accounts";
         new EditProfile().execute(table.trim(), data_to_change.trim(), new_data.trim(),
                 SharedPrefManager.getInstance(getContext()).getUserId().trim(), password.trim());

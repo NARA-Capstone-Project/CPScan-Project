@@ -89,6 +89,7 @@ public class RequestActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         hideDialog();
+                        Log.e("RESPONSE", response);
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             if (!jsonObject.getBoolean("error")) {
@@ -99,6 +100,7 @@ public class RequestActivity extends AppCompatActivity {
                             }
                         } catch (JSONException e) {
                             Log.e("JSON ERROR request: ", e.getMessage());
+                            Toast.makeText(RequestActivity.this, "An error occurred while processing your request", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -128,7 +130,7 @@ public class RequestActivity extends AppCompatActivity {
         int id_lth = id.getText().toString().trim().length();
         int user_lth = id.getText().toString().trim().length();
         int pass_lth = id.getText().toString().trim().length();
-        if (id_lth > 0 && id_lth < 9) {
+        if (id_lth > 0) {
             if (user_lth > 0 && user_lth <= 16) {
                 if (pass_lth > 0 && pass_lth <= 16) {
                     return true;

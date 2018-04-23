@@ -13,7 +13,7 @@ import java.util.Calendar;
  * Created by Avendano on 25 Mar 2018.
  */
 
-public class DatePicker extends DialogFragment {
+public class DatePicker extends DialogFragment{
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -29,7 +29,6 @@ public class DatePicker extends DialogFragment {
         long oneMonthAhead = c.getTimeInMillis();
         datePicker.setMaxDate(oneMonthAhead);
         datePicker.setMinDate(System.currentTimeMillis() - 1000);
-
         return datePickerDialog;
     }
 }

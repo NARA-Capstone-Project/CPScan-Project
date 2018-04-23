@@ -7,8 +7,8 @@ package com.example.avendano.cp_scan.Network_Handler;
 public class AppConfig {
 
 //    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
-    public static String ROOT_URL = "http://192.168.0.15/android_api/"; // genymotion
-    public static String ROOT = "http://192.168.0.15/api/";
+    public static String ROOT_URL = "http://192.168.0.179/android_api/"; // genymotion
+    public static String ROOT = "http://192.168.0.179/api/";
 
     public static String URL_REQUEST_ACCOUNT = ROOT_URL + "cict_request_account.php"; //request an account
     public static String URL_GET_ALL_PC = ROOT_URL + "cict_get_all_pc.php"; //get all pc data of all pc
@@ -47,4 +47,5 @@ public class AppConfig {
     public static String GET_PERIPHERALS_DETAILS = ROOT + "get_peripheral_details.php";
     public static String EDIT_PERIPHERALS = ROOT + "update_request_peripherals.php";
     public static String ISSUE_PERIPHERALS = ROOT + "issue_peripherals.php";
+    public static String SCAN = ROOT + "scanning.php";
 }

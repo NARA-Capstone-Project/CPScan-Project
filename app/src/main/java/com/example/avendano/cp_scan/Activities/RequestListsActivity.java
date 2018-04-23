@@ -158,7 +158,7 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_status = obj.getString("req_status");
                         String req_date = obj.getString("date_requested");
                         String req_time = obj.getString("time_requested");
-
+                    //pending cancel accepted ignored
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
                                 if (!req_status.equalsIgnoreCase("cancel")) {
@@ -281,7 +281,7 @@ public class RequestListsActivity extends AppCompatActivity {
     }
 
     private void loadRequestPeripherals() {
-        //statuses = pending, confirmed, approved, issued(dito plang pwedeng ireceive ni custodian), received
+        //statuses = pending, confirmed, approved, issued(dito plang pwedeng ireceive ni custodian), received - cancel ignored
         //if confirmed, pending pa rin, if naapproved na after confirmation may button na lalabas na issue
         volley.sendStringRequestGet(AppConfig.GET_PERIPHERALS
                 , new VolleyCallback() {

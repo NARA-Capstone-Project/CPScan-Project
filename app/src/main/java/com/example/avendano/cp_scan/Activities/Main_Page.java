@@ -68,8 +68,7 @@ public class Main_Page extends AppCompatActivity {
         } else {
             //check if not a custodian
             String role = SharedPrefManager.getInstance(this).getUserRole();
-            if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                    role.equalsIgnoreCase("admin")) {
+            if (role.equalsIgnoreCase("technician")) {
 
                 setContentView(R.layout.main_page_technician);
                 req_sched = (CardView) findViewById(R.id.req_sched);
@@ -365,30 +364,8 @@ public class Main_Page extends AppCompatActivity {
         db.close();
         String role = SharedPrefManager.getInstance(this).getUserRole();
 
-        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                role.equalsIgnoreCase("admin")) {
-            try {
-                unregisterReceiver(reqCountReceiver);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            stopService(receiverIntent);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        String role = SharedPrefManager.getInstance(this).getUserRole();
-
-        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                role.equalsIgnoreCase("admin")) {
-            try {
-                unregisterReceiver(reqCountReceiver);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (role.equalsIgnoreCase("technician")) {
+            unregisterReceiver(reqCountReceiver);
             stopService(receiverIntent);
         }
     }
@@ -396,13 +373,13 @@ public class Main_Page extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Toast.makeText(this, "RESUME", Toast.LENGTH_SHORT).show();
         String role = SharedPrefManager.getInstance(this).getUserRole();
-        if (!role.equalsIgnoreCase("custodian") || role.equalsIgnoreCase("main technician") ||
-                role.equalsIgnoreCase("admin")) {
+        if (role.equalsIgnoreCase("technician")) {
+            Toast.makeText(this, "REGISTERED", Toast.LENGTH_SHORT).show();
             startService(receiverIntent);
             registerReceiver(reqCountReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
         }
-
     }
 
     private void clearDb() {

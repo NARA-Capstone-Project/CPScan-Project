@@ -133,14 +133,13 @@ public class LogInActivity extends AppCompatActivity {
                                         obj.getString("date_expire"),
                                         obj.getString("acc_status")
                                 );
-
                         startActivity(new Intent(getApplicationContext(), Main_Page.class));
                         finish();
                     } else {
                         error_alert.setVisibility(View.VISIBLE);
                         String msg = obj.getString("message");
                         error_alert.setText(msg);
-//                        if (obj.getString("message").contains("deactivated"))
+//                        if (obj.getString("message").contains("inactive"))
 //                            reactivateAccount(obj.getString("user_id"));
 //                        else
 //                            Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
@@ -170,7 +169,7 @@ public class LogInActivity extends AppCompatActivity {
 
     private void reactivateAccount(final String user_id) {
         AlertDialog.Builder builder = new AlertDialog.Builder(LogInActivity.this);
-        builder.setMessage("Your account has been deactivated or expired, send request to reactivate account?")
+        builder.setMessage("Your account has been deactivated or inactive, send request to reactivate account?")
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

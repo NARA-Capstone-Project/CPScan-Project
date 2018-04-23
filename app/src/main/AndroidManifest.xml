@@ -47,6 +47,9 @@
         <service
             android:name=".BackgroundServices.SyncingService"
             android:label="@string/app_name" />
+        <service
+            android:name=".BackgroundServices.QRCodeScan"
+            android:label="@string/app_name" />
 
         <activity
             android:name=".Activities.ViewPc"

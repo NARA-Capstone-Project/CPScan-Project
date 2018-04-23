@@ -41,20 +41,9 @@ import javax.net.ssl.HttpsURLConnection;
  */
 
 public class GetNewRepairRequest extends Service {
-    private Timer timer = new Timer();
-    public static boolean isRunning = false;
-    private static final String TAG = "BroadcastService";
     public static final String BROADCAST_ACTION = "com.example.avendano.GET_REQ_COUNT";
     private final Handler handler = new Handler();
     Intent intent;
-    int counter = 0;
-
-//    private IBinder mBinder = new LocalBinder();
-//    public class LocalBinder extends Binder{
-//        public GetNewRepairRequest getService(){
-//            return GetNewRepairRequest.this;
-//        }
-//    }
 
     @Nullable
     @Override
@@ -69,6 +58,7 @@ public class GetNewRepairRequest extends Service {
         handler.removeCallbacks(sendUpdatesToUI);
         handler.postDelayed(sendUpdatesToUI, 1000); // 1 second
     }
+
 
     private Runnable sendUpdatesToUI = new Runnable() {
         @Override

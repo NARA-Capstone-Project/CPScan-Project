@@ -19,12 +19,12 @@ import org.json.JSONObject;
  * Created by Avendano on 6 Mar 2018.
  */
 
-public class AddCompFrmServer {
+public class SyncComputers {
 
     Context mCtx;
     SQLiteHandler db;
 
-    public AddCompFrmServer(Context mCtx, SQLiteHandler db) {
+    public SyncComputers(Context mCtx, SQLiteHandler db) {
         this.mCtx = mCtx;
         this.db = db;
     }
