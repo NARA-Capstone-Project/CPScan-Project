@@ -75,7 +75,6 @@ public class AccountShowDialog extends AppCompatDialogFragment {
             });
         if (data_to_change.equalsIgnoreCase("password")) {
             current.setVisibility(View.GONE);
-            current.setText("Current " + data_to_change + ":");
             new_data.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             new_data.setTransformationMethod(PasswordTransformationMethod.getInstance());
         } else {
@@ -95,11 +94,16 @@ public class AccountShowDialog extends AppCompatDialogFragment {
                 } else if (new_data.getText().toString().length() == 0) {
                     Log.e(" NEW DATA", "EMPTY");
                     new_data.setError("Empty Field");
-                } else if (current_data.equals(new_data.getText().toString().trim()))
-                    Toast.makeText(getContext(), "New " + data_to_change + " is same as your current " + data_to_change
-                            , Toast.LENGTH_LONG).show();
-                else
-                    validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
+                } else {
+                    if (current.getVisibility() == View.VISIBLE)
+                        if (current_data.equals(new_data.getText().toString().trim()))
+                            Toast.makeText(getContext(), "New " + data_to_change + " is same as your current " + data_to_change
+                                    , Toast.LENGTH_LONG).show();
+                        else
+                            validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
+                    else
+                        validate(confirmation.getText().toString().trim(), new_data.getText().toString().trim(), data_to_change);
+                }
             }
         });
         cancel.setOnClickListener(new View.OnClickListener() {

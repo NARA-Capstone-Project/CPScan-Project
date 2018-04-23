@@ -48,9 +48,9 @@ public class EditProfileActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //check kung ung signature ung nakiclick
-                if (position == 4) {
+                if (position == 5) {
                     //canvas to capture signature
-                }else if(position == 3){ // update password
+                }else if(position == 4){ // update password
                     AccountShowDialog dialog = new AccountShowDialog(titles[position], "");
                     dialog.show(getSupportFragmentManager(), "");
                 }
