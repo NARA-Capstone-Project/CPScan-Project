@@ -54,7 +54,7 @@ public class SignatureActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signature);
 
-        from = getIntent().getStringExtra("from");
+        from = getIntent().getStringExtra("from"); //request(startactivityforresult), report, profile
         rep_id = getIntent().getIntExtra("rep_id", 0);
 
         volley = new VolleyRequestSingleton(this);
@@ -77,10 +77,7 @@ public class SignatureActivity extends AppCompatActivity {
                 view.setDrawingCacheEnabled(true);
                 imageToString = mSignature.save(view);
                 Toast.makeText(SignatureActivity.this, "save Clicked!", Toast.LENGTH_SHORT).show();
-                if (from.equalsIgnoreCase("report")) {
-                    saveSignature(imageToString);
-                }
-                //check kung gustong isave if galing sa report then update ung sign status
+                saveSignature(imageToString);
             }
         });
         mClear.setOnClickListener(new View.OnClickListener() {
@@ -99,7 +96,11 @@ public class SignatureActivity extends AppCompatActivity {
                     intent.putExtra("rep_id", rep_id);
                     startActivity(intent);
                     finish();
-                }else if (from.equalsIgnoreCase("request")){
+                } else if (from.equalsIgnoreCase("profile")) {
+                    Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
                     SignatureActivity.this.finish();
                 }
             }
@@ -126,13 +127,17 @@ public class SignatureActivity extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
                                 Log.e("IMAGE", obj.getString("image"));
-                                if (obj.getString("image").equalsIgnoreCase("inserted"))
-                                if (from.equalsIgnoreCase("request")){
-                                    SignatureActivity.this.finish();
-                                }else{
-                                    updateSignedStatus();
-                                }
-                                else {
+                                if (obj.getString("image").equalsIgnoreCase("inserted")) {
+                                    if (from.equalsIgnoreCase("request")) {
+                                        SignatureActivity.this.finish();
+                                    } else if(from.equalsIgnoreCase("profile")){
+                                        Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }else {
+                                        updateSignedStatus();
+                                    }
+                                } else {
                                     progress.dismiss();
                                     Toast.makeText(SignatureActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
                                 }
@@ -334,8 +339,14 @@ public class SignatureActivity extends AppCompatActivity {
             intent.putExtra("rep_id", rep_id);
             startActivity(intent);
             finish();
-        }else if (from.equalsIgnoreCase("request")){
+        } else if (from.equalsIgnoreCase("request")) {
             SignatureActivity.this.finish();
+        } else {
+            //profile
+            Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
+            startActivity(intent);
+            finish();
+
         }
     }
 }

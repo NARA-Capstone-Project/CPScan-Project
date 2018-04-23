@@ -310,9 +310,9 @@ public class Main_Page extends AppCompatActivity {
             if (result.getContents() == null) {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
-                String content = result.getContents();
-                String[] parts = content.split("#");
-                String serial = parts[0];
+                String serial = result.getContents();
+//                String[] parts = content.split("#");
+//                String serial = parts[0];
                 checkComputer(serial);
             }
         } else {

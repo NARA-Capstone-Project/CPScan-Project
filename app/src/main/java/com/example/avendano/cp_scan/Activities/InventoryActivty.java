@@ -1,7 +1,10 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,8 +25,12 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cp_scan.Adapter.AssessAdapter;
+import com.example.avendano.cp_scan.Adapter.InventoryAdapter;
+import com.example.avendano.cp_scan.BackgroundServices.GetNewRepairRequest;
+import com.example.avendano.cp_scan.BackgroundServices.QRCodeScan;
 import com.example.avendano.cp_scan.Network_Handler.AppConfig;
 import com.example.avendano.cp_scan.Database.SQLiteHelper;
+import com.example.avendano.cp_scan.Network_Handler.HttpURLCon;
 import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
 import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Model.Assess_Computers;
@@ -49,6 +56,9 @@ import dmax.dialog.SpotsDialog;
 
 public class InventoryActivty extends AppCompatActivity {
 
+
+    Intent receiverIntent;
+    BroadcastReceiver qrScanReceiver;
     SQLiteHelper dbHelper;
     Toolbar toolbar;
     Button scan;
@@ -226,22 +236,16 @@ public class InventoryActivty extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
                 //split # offline or online
-                String content = result.getContents();
-                String[] parts = content.split("#");
-                String serial = parts[0];
-                String conn = parts[1];
+                String serial = result.getContents();
+//                String[] parts = content.split("#");
+//                String serial = parts[0];
+//                String conn = parts[1];
                 if (checkSerial(serial)) {
                     if (!checkIfScanned(serial)) {
-                        int comp_id = getCompId(serial);
-                        if (comp_id != 0) {
-                            Intent intent = new Intent(InventoryActivty.this, AssessPc.class);
-                            intent.putExtra("comp_id", comp_id);
-                            intent.putExtra("room_id", room_id);
-                            intent.putExtra("req_id", req_id);
-                            startActivity(intent);
-                            finish();
-                        }
+                        //send serial to db
+                        sendSerialToTrigger(serial);
                     } else {
+                        //unregister receiver
                         Toast.makeText(InventoryActivty.this, "PC already assessed", Toast.LENGTH_SHORT).show();
                     }
                 } else {
@@ -252,6 +256,83 @@ public class InventoryActivty extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void sendSerialToTrigger(final String serial) {
+        class sendSerial extends AsyncTask<Void, Void, String> {
+            android.app.AlertDialog prog ;
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                prog = new SpotsDialog(InventoryActivty.this, "Loading...");
+                prog.setCancelable(false);
+                prog.show();
+            }
+
+            @Override
+            protected String doInBackground(Void... voids) {
+                HttpURLCon con = new HttpURLCon();
+                Map<String, String> param = new HashMap<>();
+                param.put("serial", serial);
+
+                String response = con.sendPostRequest(AppConfig.SEND_SERIAL, param);
+                return response;
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                Log.e("RESPONSe", s);
+                try {
+                    JSONObject obj = new JSONObject(s);
+                    if (!obj.getBoolean("error")) {
+                        prog.dismiss();
+                        //register receiver
+                        receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
+                        receiverIntent.putExtra("content", serial);
+                        qrScanReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                int comp_id = getCompId(serial);
+                                if (comp_id != 0) {
+                                    //unregister receiver
+                                    unregisterReceiver(qrScanReceiver);
+                                    stopService(receiverIntent);
+                                    Intent i = new Intent(InventoryActivty.this, AssessPc.class);
+                                    i.putExtra("comp_id", comp_id);
+                                    i.putExtra("room_id", room_id);
+                                    i.putExtra("req_id", req_id);
+                                    startActivity(i);
+                                    finish();
+                                }
+                            }
+                        };
+
+                        startService(receiverIntent);
+                        registerReceiver(qrScanReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
+
+                    } else {
+                        prog.dismiss();
+                        Toast.makeText(InventoryActivty.this, "Error occurred while getting computer info using QR", Toast.LENGTH_SHORT).show();
+                        int comp_id = getCompId(serial);
+                        if (comp_id != 0) {
+                            //unregister receiver
+                            Intent intent = new Intent(InventoryActivty.this, AssessPc.class);
+                            intent.putExtra("comp_id", comp_id);
+                            intent.putExtra("room_id", room_id);
+                            intent.putExtra("req_id", req_id);
+                            startActivity(intent);
+                            finish();
+                        }
+                    }
+                } catch (Exception e) {
+                    prog.dismiss();
+                    e.printStackTrace();
+                    Toast.makeText(InventoryActivty.this, "An error occured", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        new sendSerial().execute();
     }
 
     private boolean checkIfScanned(String serial) {
@@ -367,7 +448,7 @@ public class InventoryActivty extends AppCompatActivity {
                                 }
                             }
                             if (x == len)
-                                showAlert("Computer not found in database", false, 0, "",0);
+                                showAlert("Computer not found in database", false, 0, "", 0);
                         } catch (Exception e) {
                             Log.e("ERROR", e.getMessage());
                         }
@@ -387,7 +468,7 @@ public class InventoryActivty extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //send sms to custodians
-                        if(sendSMS){
+                        if (sendSMS) {
                             sendSms(pc_room_id, pc_room_name, pc_no);
                         }
                         serial_edttxt.setText("");
@@ -415,14 +496,14 @@ public class InventoryActivty extends AppCompatActivity {
                     @Override
                     public void onSuccessResponse(String response) {
                         Log.e("RESPONSE", response);
-                        try{
+                        try {
                             JSONObject obj = new JSONObject(response);
-                            if(obj.getString("sms").equalsIgnoreCase("not sent!")){
+                            if (obj.getString("sms").equalsIgnoreCase("not sent!")) {
                                 Log.e("SMS", "NOT SENT!");
-                            }else{
+                            } else {
                                 Log.e("SMS", obj.getString("sms"));
                             }
-                        }catch(Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -508,7 +589,7 @@ public class InventoryActivty extends AppCompatActivity {
 
                 Log.e("JSONARRAY", details.toString());
 
-                volley.sendStringRequestPost(AppConfig.SAVE_INVENTORY,new VolleyCallback() {
+                volley.sendStringRequestPost(AppConfig.SAVE_INVENTORY, new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
                         Log.e("RESPONSE", response);
@@ -530,6 +611,7 @@ public class InventoryActivty extends AppCompatActivity {
                             Toast.makeText(InventoryActivty.this, "Something went wrong in saving report", Toast.LENGTH_SHORT).show();
                         }
                     }
+
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
