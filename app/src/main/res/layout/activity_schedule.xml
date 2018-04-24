@@ -11,30 +11,12 @@
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar"/>
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:layout_margin="5dp"
-        android:background="@drawable/bg_spinner">
-        <Spinner
-            android:id="@+id/spinner"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/container"
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="10dp"
-        android:orientation="vertical">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/sched_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"></android.support.v7.widget.RecyclerView>
-
-    </LinearLayout>
-
+        android:id="@+id/room_sched"
+        android:background="@drawable/ic_image"
+        />
 
 </LinearLayout>

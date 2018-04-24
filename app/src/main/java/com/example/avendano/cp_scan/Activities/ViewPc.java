@@ -44,7 +44,6 @@ import dmax.dialog.SpotsDialog;
 public class ViewPc extends AppCompatActivity {
 
     private int comp_id, room_id, req_id;
-    SQLiteHandler db;
     android.app.AlertDialog progressDialog;
 
     VolleyRequestSingleton volley;
@@ -71,11 +70,10 @@ public class ViewPc extends AppCompatActivity {
         comp_id = getIntent().getIntExtra("comp_id", 0);
         room_id = getIntent().getIntExtra("room_id", 0);
         make_request_report = getIntent().getIntExtra("request", 0);
-        req_id =  getIntent().getIntExtra("req_id", 0);
+        req_id = getIntent().getIntExtra("req_id", 0);
 
         volley = new VolleyRequestSingleton(this);
         connection_detector = new Connection_Detector(this);
-        db = new SQLiteHandler(this);
         progressDialog = new SpotsDialog(this, "Loading...");
         progressDialog.setCancelable(false);
         remark = (EditText) findViewById(R.id.remark);
@@ -317,43 +315,16 @@ public class ViewPc extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             loadPcDetails();
-            getRoomDetails();
             checkLastReqRepair(false);
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            hideDialog();
+        }
     }
-
-    private void getRoomDetails() {
-        volley.sendStringRequestGet(AppConfig.GET_ROOMS
-                , new VolleyCallback() {
-                    @Override
-                    public void onSuccessResponse(String response) {
-                        try{
-                            JSONArray array = new JSONArray(response);
-                            for (int i = 0; i < array.length() ; i++){
-                                JSONObject obj = array.getJSONObject(i);
-                                int id = obj.getInt("room_id");
-                                if(room_id == id){
-                                    if(obj.isNull("dept_id"))
-                                        room_name.setText(obj.getString("room_name"));
-                                    else
-                                        room_name.setText(obj.getString("dept_name") + " " + obj.getString("room_name"));
-                                    break;
-                                }
-                            }
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("ROOMS", "error getting room details");
-                        error.printStackTrace();
-                    }
-                });
-    }
-
     private void saveRequestReport() {
         class Getter extends AsyncTask<Void, Void, Void> {
 
@@ -362,6 +333,7 @@ public class ViewPc extends AppCompatActivity {
                 saveReport();
                 return null;
             }
+
             private JSONArray details() {
                 int idx;
                 RadioButton btn;
@@ -493,7 +465,7 @@ public class ViewPc extends AppCompatActivity {
                 return array;
             }
 
-            private void saveReport(){
+            private void saveReport() {
                 Map<String, String> params = new HashMap<>();
                 JSONArray details = details();
                 String rem = remark.getText().toString().trim();
@@ -502,7 +474,7 @@ public class ViewPc extends AppCompatActivity {
                 params.put("details", details.toString());
                 params.put("remarks", rem);
 
-                volley.sendStringRequestPost(AppConfig.SAVE_REPAIR,new VolleyCallback() {
+                volley.sendStringRequestPost(AppConfig.SAVE_REPAIR, new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
                         Log.e("RESPONSE", response);
@@ -524,6 +496,7 @@ public class ViewPc extends AppCompatActivity {
                             Toast.makeText(ViewPc.this, "Something went wrong in saving report", Toast.LENGTH_SHORT).show();
                         }
                     }
+
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
@@ -699,7 +672,7 @@ public class ViewPc extends AppCompatActivity {
                         cancelRequestRepair(req_id);
                     }
                 });
-        if(!req_status.equalsIgnoreCase("accepted")){
+        if (!req_status.equalsIgnoreCase("accepted")) {
             builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -783,7 +756,6 @@ public class ViewPc extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             //update sqlite
                             if (!obj.getBoolean("error")) {
-                                updateSQlite(req_id, "Cancel");
                                 new loadDetails().execute();
                                 Handler handler = new Handler();
                                 handler.postDelayed(new Runnable() {
@@ -823,100 +795,58 @@ public class ViewPc extends AppCompatActivity {
         new cancel().callCancel();
     }
 
-    private void updateSQlite(int req_id, String status) {
-        db.updateReqRepStatus(req_id, status);
-    }
-
     private void loadPcDetails() {
-        StringRequest str = new StringRequest(Request.Method.GET
-                , AppConfig.URL_GET_ALL_PC
-                , new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject obj = array.getJSONObject(i);
-                        int comp_id = obj.getInt("comp_id");
-                        int room_id = 0;    //walang nakaassign na room
-                        if (!obj.isNull("room_id")) {
-                            room_id = obj.getInt("room_id");
-                        }
-                        if (comp_id == ViewPc.this.comp_id) {
-                            //textview settext
-                            if (room_id == 0) {
-                                ViewPc.this.room_name.setText("No Assign Room");
-                            } else {
-                                getRoomName(room_id);
+        volley.sendStringRequestGet(AppConfig.GET_COMPUTERS,
+                new VolleyCallback() {
+                    @Override
+                    public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        try {
+                            JSONArray array = new JSONArray(response);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                int comp_id = obj.getInt("comp_id");
+                                if (comp_id == ViewPc.this.comp_id) {
+
+                                    int room_id = 0;    //walang nakaassign na room
+                                    String room = "";
+                                    if (!obj.isNull("room_id")) {
+                                        room = obj.getString("room_name");
+                                    }else{
+                                        room = "Not assigned in any Room";
+                                    }
+                                    room_name.setText(room);
+                                    if(obj.isNull("pc_no"))
+                                        pcno.setText("Not Assigned");
+                                    //pc = obj.getInt("pc_no");
+                                    else
+                                        pcno.setText("PC " + obj.getInt("pc_no"));
+                                    pc_model.setText(obj.getString("model"));
+                                    pc_processor.setText(obj.getString("pr"));
+                                    pc_mb.setText(obj.getString("mb"));
+                                    pc_monitor.setText(obj.getString("monitor"));
+                                    pc_ram.setText(obj.getString("ram"));
+                                    pc_kb.setText(obj.getString("kboard"));
+                                    pc_mouse.setText(obj.getString("mouse"));
+                                    pc_vga.setText(obj.getString("vga"));
+                                    pc_hdd.setText(obj.getString("hdd"));
+                                    comp_status.setText(obj.getString("comp_status"));
+                                    pc_os.setText(obj.getString("os"));
+                                    break;
+                                }
                             }
-                            pc = obj.getInt("pc_no");
-                            pcno.setText("PC " + obj.getInt("pc_no"));
-                            pc_model.setText(obj.getString("model"));
-                            pc_processor.setText(obj.getString("pr"));
-                            pc_mb.setText(obj.getString("mb"));
-                            pc_monitor.setText(obj.getString("monitor"));
-                            pc_ram.setText(obj.getString("ram"));
-                            pc_kb.setText(obj.getString("kboard"));
-                            pc_mouse.setText(obj.getString("mouse"));
-                            pc_vga.setText(obj.getString("vga"));
-                            pc_hdd.setText(obj.getString("hdd"));
-                            comp_status.setText(obj.getString("comp_status"));
-                            pc_os.setText(obj.getString("os"));
-                            break;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.e("json error", "viewpc: " + e.getMessage());
                         }
                     }
-                } catch (JSONException e) {
-                    Log.e("json error", "viewpc: " + e.getMessage());
-                    loadLocalPc();
-                }
-                hideDialog();
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                loadLocalPc();
-            }
-        });
-        RequestQueueHandler.getInstance(this).addToRequestQueue(str);
-    }
 
-    private void getRoomName(int room_id) {
-        Cursor c = db.getRoomDetails(room_id);
-        if (c.moveToFirst()) {
-            room_name.setText(c.getString(c.getColumnIndex(db.ROOMS_NAME)));
-        }
-    }
-
-    private void loadLocalPc() {
-        Cursor c = db.getCompDetails(comp_id);
-        if (c.moveToFirst()) {
-            pcno.setText("PC " + c.getInt(c.getColumnIndex(db.COMP_NAME)));
-            pc_model.setText(c.getString(c.getColumnIndex(db.COMP_MODEL)));
-            pc_processor.setText(c.getString(c.getColumnIndex(db.COMP_PR)));
-            pc_mb.setText(c.getString(c.getColumnIndex(db.COMP_MB)));
-            pc_monitor.setText(c.getString(c.getColumnIndex(db.COMP_MONITOR)));
-            pc_ram.setText(c.getString(c.getColumnIndex(db.COMP_RAM)));
-            pc_kb.setText(c.getString(c.getColumnIndex(db.COMP_KBOARD)));
-            pc_mouse.setText(c.getString(c.getColumnIndex(db.COMP_MOUSE)));
-            pc_vga.setText(c.getString(c.getColumnIndex(db.COMP_VGA)));
-            pc_hdd.setText(c.getString(c.getColumnIndex(db.COMP_HDD)));
-            comp_status.setText(c.getString(c.getColumnIndex(db.COMP_STATUS)));
-            pc_os.setText(c.getString(c.getColumnIndex(db.COMP_OS)));
-        } else {
-            pcno.setText("PC --");
-            pc_model.setText("--");
-            pc_processor.setText("--");
-            pc_mb.setText("--");
-            pc_monitor.setText("--");
-            pc_ram.setText("--");
-            pc_kb.setText("--");
-            pc_mouse.setText("--");
-            pc_vga.setText("--");
-            pc_hdd.setText("--");
-            comp_status.setText("--");
-            pc_os.setText("--");
-        }
-        hideDialog();
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        Toast.makeText(ViewPc.this, "Error Loading computer details", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void showDialog() {
@@ -932,7 +862,6 @@ public class ViewPc extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        db.close();
     }
 
     @Override

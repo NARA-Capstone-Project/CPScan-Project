@@ -326,6 +326,8 @@ public class Main_Page extends AppCompatActivity {
                 , new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
+                        Log.e("RESPONSE", response);
+                        Toast.makeText(Main_Page.this, serial, Toast.LENGTH_SHORT).show();
                         try {
                             JSONArray array = new JSONArray(response);
                             int counter = 0;
@@ -392,6 +394,7 @@ public class Main_Page extends AppCompatActivity {
         volley.sendStringRequestGet(AppConfig.GET_COMPUTERS, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
+                Log.e("RESPONSE", response);
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
@@ -401,7 +404,6 @@ public class Main_Page extends AppCompatActivity {
                         if (!obj.isNull("room_id")) {
                             room_id = obj.getInt("room_id");
                         }
-                        int pc_no = obj.getInt("pc_no");
                         String model = obj.getString("model");
                         String mb = obj.getString("mb");
                         String pr = obj.getString("pr");
@@ -414,11 +416,13 @@ public class Main_Page extends AppCompatActivity {
                         String comp_status = obj.getString("comp_status");
 
                         if (room_id == id) {
+                            int pc_no = obj.getInt("pc_no");
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
                         }
                     }
                     goToAssessment(id, req_id);
                 } catch (JSONException e) {
+                    e.printStackTrace();
                     Toast.makeText(Main_Page.this, "Can't Connect to the server", Toast.LENGTH_SHORT).show();
                 }
 

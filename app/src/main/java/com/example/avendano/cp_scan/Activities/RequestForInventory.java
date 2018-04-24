@@ -263,8 +263,8 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
         String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
-        Date pickedTime ;
-        try{
+        Date pickedTime;
+        try {
             pickedTime = new SimpleDateFormat("HH:mm:ss").parse(timeString);
 
             Date am = new SimpleDateFormat("HH:mm:ss").parse("07:59:00");
@@ -284,13 +284,14 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
 
             if (pickedTime.after(am) && pickedTime.before(pm)) {
                 if (dateSet)    //hindi anytime ung time
+                {
                     checkTime(pickedTime, date.getText().toString());
-                else
+                } else
                     time.setText(new SimpleDateFormat("HH:mm:ss").format(pickedTime));
-            }else{
+            } else {
                 Toast.makeText(this, "Pick time between 8AM and 4PM", Toast.LENGTH_SHORT).show();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -308,7 +309,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                     public void onSuccessResponse(String response) {
                         try {
                             JSONArray array = new JSONArray(response);
-                            int count=0;
+                            int count = 0;
                             for (int i = 0; i < array.length(); i++) {
                                 JSONObject obj = array.getJSONObject(i);
                                 int room = obj.getInt("room_id");
@@ -316,24 +317,24 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                                 if (room_id == room) {
                                     if (obj.getString("req_status").equalsIgnoreCase("accepted")) {
                                         String setDate = obj.getString("date");
-                                        if (setDate.equals(date)) {
+                                        if (setDate.equals(date) || setDate.equalsIgnoreCase("Anytime")) {
                                             String time = obj.getString("time");
                                             Date setTime = new SimpleDateFormat("HH:mm:ss").parse(time);
                                             setCal.setTime(setTime);
                                             setTimePlusHour.setTime(setTime);
                                             setTimePlusHour.add(Calendar.HOUR_OF_DAY, 1);
 
-                                            if (picked.after(setCal.getTime()) && picked.before(setTimePlusHour.getTime())) {
+                                            if ((picked.after(setCal.getTime()) && picked.before(setTimePlusHour.getTime())) || (picked.equals(setCal) || picked.equals(setTimePlusHour))) {
                                                 Toast.makeText(RequestForInventory.this, "Set time is not available", Toast.LENGTH_SHORT).show();
                                                 break;
-                                            }else{
+                                            } else {
                                                 count++;
                                             }
                                         }
                                     }
                                 }
                             }
-                            if(count == array.length()){
+                            if (count == array.length()) {
                                 time.setText(new SimpleDateFormat("HH:mm:ss").format(pickedTime));
                             }
                         } catch (Exception e) {

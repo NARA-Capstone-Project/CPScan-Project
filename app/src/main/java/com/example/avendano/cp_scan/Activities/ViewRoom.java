@@ -1,5 +1,6 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -34,6 +35,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +52,7 @@ public class ViewRoom extends AppCompatActivity {
     TextView building, room, cust, floor, pc_count, pc_working, lastAssess;
     android.app.AlertDialog dialog;
     Connection_Detector connection_detector;
-    String image_path;
+    String image_path, sched_image;
     VolleyRequestSingleton volley;
 
     @Override
@@ -104,10 +106,26 @@ public class ViewRoom extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //Room Schedule
-                Intent intent = new Intent(getApplicationContext(), ScheduleActivity.class);
-                intent.putExtra("room_id", room_id);
-                startActivity(intent);
-                finish();
+                Bitmap bmp = null;
+                try {
+                    //Write file
+                    String filename = "bitmap.png";
+                    FileOutputStream stream = ViewRoom.this.openFileOutput(filename, Context.MODE_PRIVATE);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+
+                    //Cleanup
+                    stream.close();
+                    bmp.recycle();
+
+                    //Pop intent
+
+                    Intent intent = new Intent(getApplicationContext(), ScheduleActivity.class);
+                    intent.putExtra("room_id", room_id);
+                    intent.putExtra("image", sched_image);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
         room_computers = (ImageView) findViewById(R.id.computers);
@@ -180,6 +198,15 @@ public class ViewRoom extends AppCompatActivity {
                             });
                     AlertDialog alert = builder.create();
                     alert.show();
+                }
+            }
+        });
+
+        room_image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!image_path.isEmpty()){
+                    //zoom
                 }
             }
         });
@@ -425,8 +452,13 @@ public class ViewRoom extends AppCompatActivity {
                             if (obj.isNull("room_image"))
                                 image_path = "";
                             else {
-                                image_path = AppConfig.ROOT_URL + path;
+                                image_path = AppConfig.ROOT + path;
                                 getImage();
+                            }
+                            if (obj.isNull("room_sched"))
+                                sched_image = "";
+                            else {
+                                sched_image = AppConfig.ROOT + path;
                             }
                             ViewRoom.this.lastAssess.setText(obj.getString("last_assess"));
                             break;

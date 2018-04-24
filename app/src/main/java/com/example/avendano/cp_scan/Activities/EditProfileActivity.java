@@ -67,7 +67,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (position == 5) {
                     //canvas to capture signature
                     Intent intent = new Intent(EditProfileActivity.this, SignatureActivity.class);
-                    intent.putExtra("form", "profile");
+                    intent.putExtra("from", "profile");
                     startActivity(intent);
                     finish();
                 }else if(position == 4){ // update password
@@ -142,7 +142,7 @@ public class EditProfileActivity extends AppCompatActivity {
             TextView title = (TextView) convertView.findViewById(R.id.title);
             title.setText(titles[position]);
             final EditText user = (EditText) convertView.findViewById(R.id.userData);
-            if (title.getText().toString().equalsIgnoreCase("signature") ||
+            if (title.getText().toString().equalsIgnoreCase("add signature") ||
                     title.getText().toString().trim().equalsIgnoreCase("password")) {
                 user.setVisibility(View.GONE);
                 ImageView image = convertView.findViewById(R.id.arrow);

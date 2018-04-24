@@ -100,7 +100,10 @@ public class SignatureActivity extends AppCompatActivity {
                     Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
                     startActivity(intent);
                     finish();
-                } else {
+                } else { // request peripherals
+                    Intent intent = new Intent();
+                    intent.putExtra("result", 0);
+                    SignatureActivity.this.setResult(RESULT_CANCELED, intent);
                     SignatureActivity.this.finish();
                 }
             }
@@ -129,7 +132,10 @@ public class SignatureActivity extends AppCompatActivity {
                                 Log.e("IMAGE", obj.getString("image"));
                                 if (obj.getString("image").equalsIgnoreCase("inserted")) {
                                     if (from.equalsIgnoreCase("request")) {
-                                        SignatureActivity.this.finish();
+                                        Intent intent = new Intent();
+                                        intent.putExtra("result", 1);
+                                        setResult(RESULT_CANCELED, intent);
+                                        finish();
                                     } else if(from.equalsIgnoreCase("profile")){
                                         Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
                                         startActivity(intent);
@@ -340,6 +346,9 @@ public class SignatureActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         } else if (from.equalsIgnoreCase("request")) {
+            Intent intent = new Intent();
+            intent.putExtra("result", 0);
+            SignatureActivity.this.setResult(RESULT_CANCELED, intent);
             SignatureActivity.this.finish();
         } else {
             //profile

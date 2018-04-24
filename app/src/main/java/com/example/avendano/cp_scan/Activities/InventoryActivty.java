@@ -240,6 +240,7 @@ public class InventoryActivty extends AppCompatActivity {
 //                String[] parts = content.split("#");
 //                String serial = parts[0];
 //                String conn = parts[1];
+                Toast.makeText(this, "Serial: " + serial, Toast.LENGTH_SHORT).show();
                 if (checkSerial(serial)) {
                     if (!checkIfScanned(serial)) {
                         //send serial to db
@@ -251,7 +252,6 @@ public class InventoryActivty extends AppCompatActivity {
                 } else {
                     searchSerial(serial);
                 }
-
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -286,7 +286,6 @@ public class InventoryActivty extends AppCompatActivity {
                 try {
                     JSONObject obj = new JSONObject(s);
                     if (!obj.getBoolean("error")) {
-                        prog.dismiss();
                         //register receiver
                         receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
                         receiverIntent.putExtra("content", serial);
@@ -296,6 +295,7 @@ public class InventoryActivty extends AppCompatActivity {
                                 int comp_id = getCompId(serial);
                                 if (comp_id != 0) {
                                     //unregister receiver
+                                    prog.dismiss();
                                     unregisterReceiver(qrScanReceiver);
                                     stopService(receiverIntent);
                                     Intent i = new Intent(InventoryActivty.this, AssessPc.class);
