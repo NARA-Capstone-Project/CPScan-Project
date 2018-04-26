@@ -98,8 +98,8 @@ public class EditProfileActivity extends AppCompatActivity {
                                 titles = list.toArray(new String[list.size()]);
 
                                 List<String> data = new ArrayList<String>(Arrays.asList(userData));
-                                list.remove(idx);
-                                userData = list.toArray(new String[data.size()]);
+                                data.remove(idx);
+                                userData = data.toArray(new String[data.size()]);
                             }
                         } catch (JSONException e) {
                             Log.e("SIGN", response);

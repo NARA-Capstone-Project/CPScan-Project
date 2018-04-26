@@ -339,7 +339,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
                 try{
                     JSONObject obj = new JSONObject(response);
                     if(!obj.getBoolean("error")){
-                        Log.e("Id", " " + obj.getInt("id"));
+                        Log.e("SMS", obj.getString("sms"));
                         Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         finish();
                     }else{

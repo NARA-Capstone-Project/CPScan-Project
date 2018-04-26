@@ -143,18 +143,12 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void logout() {
-        db = new SQLiteHandler(ProfileActivity.this);
-        db.deleteAllComp();
-        db.deleteReport();
-        db.deleteReportDetails();
-        db.deleteRooms();
-        db.close();
-
-        SharedPreferences pref = ProfileActivity.this.getSharedPreferences("FRAGMENT", MODE_PRIVATE);
-        SharedPreferences.Editor edit = pref.edit();
-        edit.clear();
-        edit.apply();
-
+//        db = new SQLiteHandler(ProfileActivity.this);
+//        db.deleteAllComp();
+//        db.deleteReport();
+//        db.deleteReportDetails();
+//        db.deleteRooms();
+//        db.close();
         SharedPrefManager.getInstance(ProfileActivity.this).logout();
         startActivity(new Intent(ProfileActivity.this, LogInActivity.class));
         finish();
@@ -164,6 +158,8 @@ public class ProfileActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home: {
+                Intent i = new Intent(this, Main_Page.class);
+                startActivity(i);
                 ProfileActivity.this.finish();
                 return true;
             }
@@ -175,6 +171,8 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        Intent i = new Intent(this, Main_Page.class);
+        startActivity(i);
         ProfileActivity.this.finish();
     }
 }

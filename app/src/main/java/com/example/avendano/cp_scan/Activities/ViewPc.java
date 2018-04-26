@@ -680,6 +680,7 @@ public class ViewPc extends AppCompatActivity {
                         Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
                         intent.putExtra("type", "repair");
                         intent.putExtra("room_pc_id", comp_id);
+                        intent.putExtra("r_id", room_id);
                         intent.putExtra("id", req_id);
                         ViewPc.this.startActivity(intent);
                         finish();

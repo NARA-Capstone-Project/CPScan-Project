@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -73,32 +74,57 @@ public class InventoryActivty extends AppCompatActivity {
     String room_name, custodian, phone, cust_id;
     VolleyRequestSingleton volley;
     android.app.AlertDialog progress;
+    android.app.AlertDialog prog;
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
         long pc_to_assess = dbHelper.pcToAssessCount();
         long assessed_pc = dbHelper.assessedPcCount();
-        if (pc_to_assess != assessed_pc) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(room_name);
-            builder.setMessage("Some computer has not been assessed, continue to exit?")
-                    .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            InventoryActivty.this.finish();
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .setCancelable(false);
+        if (assessed_pc != 0) {
+            if (pc_to_assess != assessed_pc) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(room_name);
+                builder.setMessage("Some computer has not been assessed, continue to exit?")
+                        .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                InventoryActivty.this.finish();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setCancelable(false);
 
-            AlertDialog alert = builder.create();
-            alert.show();
+                AlertDialog alert = builder.create();
+                alert.show();
+            } else {
+                //if naassess na lahat pero mageexit
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("");
+                builder.setMessage("Assessed computers will be discarded once you exit. Continue?")
+                        .setPositiveButton("Exit", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                clearDb();
+                                InventoryActivty.this.finish();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setCancelable(false);
+
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
         } else {
             clearDb();
             InventoryActivty.this.finish();
@@ -188,6 +214,10 @@ public class InventoryActivty extends AppCompatActivity {
         loadPc();
         progress = new SpotsDialog(this, "Saving...");
         progress.setCancelable(false);
+
+        prog = new SpotsDialog(this, "Loading...");
+        prog.setCancelable(false);
+
     }
 
     private void getRoomName() {
@@ -236,14 +266,21 @@ public class InventoryActivty extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
                 //split # offline or online
-                String serial = result.getContents();
+                final String serial = result.getContents();
 //                String[] parts = content.split("#");
 //                String serial = parts[0];
 //                String conn = parts[1];
-                Toast.makeText(this, "Serial: " + serial, Toast.LENGTH_SHORT).show();
                 if (checkSerial(serial)) {
                     if (!checkIfScanned(serial)) {
                         //send serial to db
+                        receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
+                        receiverIntent.putExtra("content", serial);
+                        qrScanReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                sendDetailsToAssess(serial, intent);
+                            }
+                        };
                         sendSerialToTrigger(serial);
                     } else {
                         //unregister receiver
@@ -258,14 +295,69 @@ public class InventoryActivty extends AppCompatActivity {
         }
     }
 
+    private void sendDetailsToAssess(String serial, Intent intent) {
+        int comp_id = getCompId(serial);
+        if (comp_id != 0) {
+            //unregister receiver
+            ArrayList<String> details = new ArrayList<>();
+            details.add(intent.getStringExtra("mb_serial"));
+            details.add(intent.getStringExtra("hdd"));
+            details.add(intent.getStringExtra("mouse"));
+            details.add(intent.getStringExtra("ram"));
+            details.add(intent.getStringExtra("kboard"));
+            for (int i = 0; i < details.size(); i++) {
+                Log.e("DETAILSINV", details.get(i));
+            }
+            unregisterReceiver(qrScanReceiver);
+            stopService(receiverIntent);
+            deleteDataFromTemp(comp_id,details);
+        }
+    }
+
+    private void deleteDataFromTemp(final int comp_id, final ArrayList<String> details) {
+        class DeleteFunction extends AsyncTask<Void, Void, String> {
+
+            @Override
+            protected String doInBackground(Void... voids) {
+                HttpURLCon con = new HttpURLCon();
+                String query = "DELETE FROM temporary WHERE pc_serial = '" +details.get(0) +"'";
+                Map<String, String> param = new HashMap<>();
+                param.put("query", query);
+                String response = con.sendPostRequest(AppConfig.UPDATE_QUERY, param);
+                return response;
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                prog.dismiss();
+                try {
+                    JSONObject obj = new JSONObject(s);
+                    if (!obj.getBoolean("error")) {
+                        Intent i = new Intent(InventoryActivty.this, AssessPc.class);
+                        i.putExtra("comp_id", comp_id);
+                        i.putExtra("room_id", room_id);
+                        i.putExtra("req_id", req_id);
+                        i.putExtra("scanned", 1);
+                        i.putExtra("details", details);
+                        startActivity(i);
+                        finish();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(InventoryActivty.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        new DeleteFunction().execute();
+    }
+
     private void sendSerialToTrigger(final String serial) {
         class sendSerial extends AsyncTask<Void, Void, String> {
-            android.app.AlertDialog prog ;
+
+
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                prog = new SpotsDialog(InventoryActivty.this, "Loading...");
-                prog.setCancelable(false);
                 prog.show();
             }
 
@@ -282,41 +374,18 @@ public class InventoryActivty extends AppCompatActivity {
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                Log.e("RESPONSe", s);
+                Log.e("RESPONSe", "SCAN: " + s);
                 try {
                     JSONObject obj = new JSONObject(s);
                     if (!obj.getBoolean("error")) {
                         //register receiver
-                        receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
-                        receiverIntent.putExtra("content", serial);
-                        qrScanReceiver = new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                int comp_id = getCompId(serial);
-                                if (comp_id != 0) {
-                                    //unregister receiver
-                                    prog.dismiss();
-                                    unregisterReceiver(qrScanReceiver);
-                                    stopService(receiverIntent);
-                                    Intent i = new Intent(InventoryActivty.this, AssessPc.class);
-                                    i.putExtra("comp_id", comp_id);
-                                    i.putExtra("room_id", room_id);
-                                    i.putExtra("req_id", req_id);
-                                    startActivity(i);
-                                    finish();
-                                }
-                            }
-                        };
-
                         startService(receiverIntent);
-                        registerReceiver(qrScanReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
-
+                        registerReceiver(qrScanReceiver, new IntentFilter(QRCodeScan.BROADCAST_ACTION));
                     } else {
-                        prog.dismiss();
+                        progress.dismiss();
                         Toast.makeText(InventoryActivty.this, "Error occurred while getting computer info using QR", Toast.LENGTH_SHORT).show();
                         int comp_id = getCompId(serial);
                         if (comp_id != 0) {
-                            //unregister receiver
                             Intent intent = new Intent(InventoryActivty.this, AssessPc.class);
                             intent.putExtra("comp_id", comp_id);
                             intent.putExtra("room_id", room_id);
@@ -326,7 +395,7 @@ public class InventoryActivty extends AppCompatActivity {
                         }
                     }
                 } catch (Exception e) {
-                    prog.dismiss();
+                    progress.dismiss();
                     e.printStackTrace();
                     Toast.makeText(InventoryActivty.this, "An error occured", Toast.LENGTH_SHORT).show();
                 }
@@ -436,12 +505,27 @@ public class InventoryActivty extends AppCompatActivity {
                                 JSONObject obj = array.getJSONObject(i);
                                 String monitor = obj.getString("monitor");
                                 String mb = obj.getString("mb");
-                                int id = obj.getInt("room_id");
 
                                 if (serial.equals(monitor) || serial.equals(mb)) {
-                                    String room_name = obj.getString("room_name");
-                                    int pc_no = obj.getInt("pc_no");
-                                    showAlert("This is PC " + pc_no + " of " + room_name + " room", true, id, room_name, pc_no);
+                                    if (obj.isNull("room_id")) {
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(InventoryActivty.this);
+                                        builder.setMessage("This computer is not assigned to any room");
+                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                serial_edttxt.setText("");
+                                                dialog.dismiss();
+                                            }
+                                        });
+                                        AlertDialog alert = builder.create();
+                                        alert.show();
+
+                                    } else {
+                                        int id = obj.getInt("room_id");
+                                        String room_name = obj.getString("room_name");
+                                        int pc_no = obj.getInt("pc_no");
+                                        showAlert("This is PC " + pc_no + " of " + room_name + " room", true, id, room_name, pc_no);
+                                    }
                                     break;
                                 } else {
                                     x++;

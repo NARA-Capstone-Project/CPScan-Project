@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,7 +50,6 @@ import dmax.dialog.SpotsDialog;
  */
 
 public class RequestForInventory extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
-    SQLiteHandler db;
     EditText message;
     TextView date, time;
     Spinner date_type;
@@ -74,7 +74,6 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         volley = new VolleyRequestSingleton(this);
 
         progress = new SpotsDialog(this, "Requesting...");
-        db = new SQLiteHandler(this);
         room_id = getIntent().getIntExtra("room_id", 0);
 
         message = (EditText) findViewById(R.id.message);
@@ -199,6 +198,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 try {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
+                        Log.e("SMS", obj.getString("sms"));
                         Toast.makeText(RequestForInventory.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         Handler h = new Handler();
                         h.postDelayed(new Runnable() {
@@ -215,6 +215,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                 } catch (JSONException e) {
                     e.printStackTrace();
                     progress.dismiss();
+                    Toast.makeText(RequestForInventory.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -222,6 +223,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
                 progress.dismiss();
+                Toast.makeText(RequestForInventory.this, "Something went wrong", Toast.LENGTH_SHORT).show();
             }
         }, params);
 

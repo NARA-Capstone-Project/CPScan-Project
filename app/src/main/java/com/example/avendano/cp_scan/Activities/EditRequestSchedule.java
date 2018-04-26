@@ -65,9 +65,9 @@ import dmax.dialog.SpotsDialog;
  */
 
 public class EditRequestSchedule extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
-    private int id, room_pc_id;
+    private int id, room_pc_id, r_id; // r_id ffor viewpc
     String type, image_path;
-    SQLiteHandler db;
+    //    SQLiteHandler db;
     EditText message;
     TextView date, time, peripherals, label;
     Spinner date_type;
@@ -89,6 +89,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         id = getIntent().getIntExtra("id", 0);  //req_id
         room_pc_id = getIntent().getIntExtra("room_pc_id", 0);  //comp or room id
         type = getIntent().getStringExtra("type");
+        r_id = getIntent().getIntExtra("r_id", 0);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -97,13 +98,13 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         progress = new SpotsDialog(this, "Loading...");
         progress.show();
-        db = new SQLiteHandler(this);
+//        db = new SQLiteHandler(this);
         message = (EditText) findViewById(R.id.message);
         date = (TextView) findViewById(R.id.custom_date);
         time = (TextView) findViewById(R.id.custom_time);
         date_type = (Spinner) findViewById(R.id.date);
-        String[] type = new String[]{"Anytime", "Custom"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, type);
+        String[] item = new String[]{"Anytime", "Custom"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, item);
         date_type.setAdapter(adapter);
         date_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -146,16 +147,21 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         photo1 = (ImageView) findViewById(R.id.photo1);
         peripherals = (TextView) findViewById(R.id.peripherals);
-        label = (TextView) findViewById(R.id.label);
 
-        label.setVisibility(View.VISIBLE);
-        peripherals.setVisibility(View.VISIBLE);
+        if (type.equalsIgnoreCase("repair")) {
+
+            label = (TextView) findViewById(R.id.label);
+            label.setVisibility(View.VISIBLE);
+            peripherals.setVisibility(View.VISIBLE);
+        }
+
         peripherals.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 peripheralsDialog();
             }
         });
+
         image_path = "";
 
         photo1.setOnClickListener(new View.OnClickListener() {
@@ -301,8 +307,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     }
 
     private void getReqRepDetails() {
-        StringRequest str = new StringRequest(Request.Method.POST
-                , AppConfig.URL_GET_ALL_REPAIR_REQUEST
+        StringRequest str = new StringRequest(Request.Method.GET
+                , AppConfig.GET_REPAIR_REQ
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -311,14 +317,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         int req_id = obj.getInt("req_id");
-                        int rep_id = 0;
-                        if (!obj.isNull("rep_id"))
-                            rep_id = obj.getInt("rep_id");
-                        int comp_id = obj.getInt("comp_id");
-                        String cust_id = obj.getString("custodian");
-                        String tech_id = obj.getString("technician");
-                        String date = obj.getString("date");
-                        String time = obj.getString("time");
+                        String date = obj.getString("set_date");
+                        String time = obj.getString("set_time");
                         String msg = obj.getString("msg");
                         String req_details = obj.getString("req_details");
                         String path = obj.getString("image");
@@ -333,8 +333,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                             if (obj.isNull("image"))
                                 image_path = "";
                             else
-                                image_path = AppConfig.ROOT_URL + path;
-
+                                image_path = AppConfig.ROOT + path;
+                            EditRequestSchedule.this.time.setText(time);
                             Log.e("PATH", path + " IMAGE: " + image_path);
                             break;
                         }
@@ -349,7 +349,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                                 getImage();
                             progress.dismiss();
                         }
-                    }, 5000);
+                    }, 2000);
 
                 } catch (JSONException e) {
                     progress.dismiss();
@@ -362,14 +362,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 progress.dismiss();
                 Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("id", SharedPrefManager.getInstance(EditRequestSchedule.this).getUserId());
-                return param;
-            }
-        };
+        });
         RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
 
     }
@@ -455,15 +448,15 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     }
 
     private void goToViewPc() {
-        int room_id = 0;
+//        int room_id = 0;
         Intent intent = new Intent(EditRequestSchedule.this, ViewPc.class);
         intent.putExtra("comp_id", room_pc_id);
-        //search comp id by req_id
-        Cursor c = db.getCompDetails(room_pc_id);
-        if (c.moveToFirst()) {
-            room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
-        }
-        intent.putExtra("room_id", room_id);
+//        //search comp id by req_id
+//        Cursor c = db.getCompDetails(room_pc_id);
+//        if (c.moveToFirst()) {
+//            room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
+//        }
+        intent.putExtra("room_id", r_id);
         startActivity(intent);
         finish();
     }
@@ -523,7 +516,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     @Override
     protected void onStop() {
         super.onStop();
-        db.close();
+//        db.close();
     }
 
     @Override
@@ -547,13 +540,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 editRequestInventory();
             else if (type.equalsIgnoreCase("repair"))
                 editRequestRepair();
-            else
-                editSchedule();
             return null;
         }
-    }
-
-    private void editSchedule() {
     }
 
     private void editRequestRepair() {
@@ -593,12 +581,12 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                         h.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                updateReqRepDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
+//                                updateReqRepDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
                                 Toast.makeText(EditRequestSchedule.this, "Request Updated!", Toast.LENGTH_SHORT).show();
                                 progress.dismiss();
                                 goToViewPc();
                             }
-                        }, 5000);
+                        }, 2000);
                     } else
                         Toast.makeText(EditRequestSchedule.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
                 } catch (JSONException e) {
@@ -629,9 +617,9 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
     }
 
-    private void updateReqRepDetails(int id, String finalSetDate, String finalSetTime, String getMsg, String finalRep_msg) {
-        db.updateReqRepairDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
-    }
+//    private void updateReqRepDetails(int id, String finalSetDate, String finalSetTime, String getMsg, String finalRep_msg) {
+//        db.updateReqRepairDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
+//    }
 
 
     private String imageToString() {
@@ -653,9 +641,6 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         setTime = time.getText().toString();
 
-        final String finalSetDate = setDate;
-        final String finalSetTime = setTime;
-
         final String query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
                 + setTime + "', message = '" + getMsg + "' WHERE req_id = ?";
 
@@ -669,7 +654,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         //update sqlite
-                        updateSqliteInventory(finalSetDate, finalSetTime, getMsg);
+//                        updateSqliteInventory(finalSetDate, finalSetTime, getMsg);
                         Handler h = new Handler();
                         h.postDelayed(new Runnable() {
                             @Override
@@ -703,7 +688,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         RequestQueueHandler.getInstance(EditRequestSchedule.this).addToRequestQueue(str);
     }
 
-    private void updateSqliteInventory(String finalSetDate, String finalSetTime, String getMsg) {
-        db.updateReqInventoryDetails(id, finalSetDate, finalSetTime, getMsg);
-    }
+//    private void updateSqliteInventory(String finalSetDate, String finalSetTime, String getMsg) {
+//        db.updateReqInventoryDetails(id, finalSetDate, finalSetTime, getMsg);
+//    }
 }

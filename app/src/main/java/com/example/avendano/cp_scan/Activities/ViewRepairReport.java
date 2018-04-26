@@ -81,7 +81,7 @@ public class ViewRepairReport extends AppCompatActivity {
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT_URL + image_path))); /** replace with your own uri */
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(image_path))); /** replace with your own uri */
             }
         });
 
@@ -118,7 +118,7 @@ public class ViewRepairReport extends AppCompatActivity {
                                     if (obj.isNull("image"))
                                         image_path = "";
                                     else
-                                        image_path = AppConfig.ROOT_URL + path;
+                                        image_path = AppConfig.ROOT + path;
                                     if (image_path.trim().isEmpty())
                                         image.setVisibility(View.GONE);
                                     setRequestDetails(cust_name, tech_name, sched_date, sched_time, req_date,

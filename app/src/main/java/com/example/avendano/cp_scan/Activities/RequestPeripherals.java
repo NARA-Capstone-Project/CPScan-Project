@@ -325,7 +325,7 @@ public class RequestPeripherals extends AppCompatActivity {
                     JSONObject obj = new JSONObject(s);
                     if (!obj.getBoolean("error")) {
                         Toast.makeText(RequestPeripherals.this, "Request Sent!", Toast.LENGTH_SHORT).show();
-                        Log.e("MSG", obj.getString("msg"));
+                        Log.e("SMS", obj.getString("sms"));
                         finish();
                     } else {
                         Log.e("MSG", obj.getString("msg"));
@@ -333,6 +333,7 @@ public class RequestPeripherals extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Toast.makeText(RequestPeripherals.this, "An error occurred  while processing your request", Toast.LENGTH_SHORT).show();
                 }
             }
         }

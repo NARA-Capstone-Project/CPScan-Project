@@ -130,6 +130,7 @@ public class Main_Page extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(Main_Page.this, ProfileActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
         room.setOnClickListener(new View.OnClickListener() {
@@ -213,30 +214,32 @@ public class Main_Page extends AppCompatActivity {
                         String req_status = obj.getString("req_status");
 
                         if (req_status.equalsIgnoreCase("accepted")) {
-                            if (set_date.equalsIgnoreCase("anytime")) {
-                                room_name = room_name + " (Anytime)";
-                                tempRooms.add(room_name);
-                                room_ids.add(room_id);
-                                req_ids.add(req_id);
-                            } else {
-                                Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
-                                String strToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-                                Date today = new SimpleDateFormat("yyyy-MM-dd").parse(strToday);
-                                if (task_date.equals(today) || task_date.before(today)) {
-                                    if (task_date.before(today)) {
-                                        room_name = room_name + " (Missed)";
-                                        tempRoomsM.add(room_name);
-                                        room_idsM.add(room_id);
-                                        req_idsM.add(req_id);
-                                    } else {
-                                        room_name = room_name + " (Today -" + set_time + ")";
-                                        tempRooms.add(room_name);
-                                        room_ids.add(room_id);
-                                        req_ids.add(req_id);
+                            if(obj.getString("technician").equals(SharedPrefManager.getInstance(Main_Page.this).getUserId())){
+                                if (set_date.equalsIgnoreCase("anytime")) {
+                                    room_name = room_name + " (Anytime)";
+                                    tempRooms.add(room_name);
+                                    room_ids.add(room_id);
+                                    req_ids.add(req_id);
+                                } else {
+                                    Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
+                                    String strToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                                    Date today = new SimpleDateFormat("yyyy-MM-dd").parse(strToday);
+                                    if (task_date.equals(today) || task_date.before(today)) {
+                                        if (task_date.before(today)) {
+                                            room_name = room_name + " (Missed)";
+                                            tempRoomsM.add(room_name);
+                                            room_idsM.add(room_id);
+                                            req_idsM.add(req_id);
+                                        } else {
+                                            room_name = room_name + " (Today -" + set_time + ")";
+                                            tempRooms.add(room_name);
+                                            room_ids.add(room_id);
+                                            req_ids.add(req_id);
+                                        }
                                     }
                                 }
-                            }
 
+                            }
                         }
                     }
                     if (tempRooms.size() != 0 || tempRoomsM.size() != 0) {
@@ -375,10 +378,8 @@ public class Main_Page extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Toast.makeText(this, "RESUME", Toast.LENGTH_SHORT).show();
         String role = SharedPrefManager.getInstance(this).getUserRole();
         if (role.equalsIgnoreCase("technician")) {
-            Toast.makeText(this, "REGISTERED", Toast.LENGTH_SHORT).show();
             startService(receiverIntent);
             registerReceiver(reqCountReceiver, new IntentFilter(GetNewRepairRequest.BROADCAST_ACTION));
         }
@@ -394,31 +395,34 @@ public class Main_Page extends AppCompatActivity {
         volley.sendStringRequestGet(AppConfig.GET_COMPUTERS, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
-                Log.e("RESPONSE", response);
+                Log.e("ROOMID", " " + id);
+                Log.e("RESPONSE", "COMPS:" + response);
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
+                        int r_id = 0;
                         int comp_id = obj.getInt("comp_id");
-                        int room_id = 0;
                         if (!obj.isNull("room_id")) {
-                            room_id = obj.getInt("room_id");
+                            r_id = obj.getInt("room_id");
                         }
-                        String model = obj.getString("model");
-                        String mb = obj.getString("mb");
-                        String pr = obj.getString("pr");
-                        String monitor = obj.getString("monitor");
-                        String ram = obj.getString("ram");
-                        String kboard = obj.getString("kboard");
-                        String mouse = obj.getString("mouse");
-                        String vga = obj.getString("vga");
-                        String hdd = obj.getString("hdd");
-                        String comp_status = obj.getString("comp_status");
+                        Log.e("RIDS", "comp: " + comp_id+ " ROOM: " + r_id + " : " + id);
+                        if (r_id == id) {
+                            Log.e("COMP", " " + comp_id);
+                            String model = obj.getString("model");
+                            String mb = obj.getString("mb");
+                            String pr = obj.getString("pr");
+                            String monitor = obj.getString("monitor");
+                            String ram = obj.getString("ram");
+                            String kboard = obj.getString("kboard");
+                            String mouse = obj.getString("mouse");
+                            String vga = obj.getString("vga");
+                            String hdd = obj.getString("hdd");
+                            String comp_status = obj.getString("comp_status");
 
-                        if (room_id == id) {
                             int pc_no = obj.getInt("pc_no");
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                        }
+                            Log.e("PCTOASSESS", "COUNT: " + db.pcToAssessCount());                        }
                     }
                     goToAssessment(id, req_id);
                 } catch (JSONException e) {
@@ -430,7 +434,7 @@ public class Main_Page extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                error.printStackTrace();
             }
         });
     }

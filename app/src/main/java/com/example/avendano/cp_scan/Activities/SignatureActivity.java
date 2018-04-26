@@ -76,7 +76,6 @@ public class SignatureActivity extends AppCompatActivity {
                 Log.v("log_tag", "Panel Saved");
                 view.setDrawingCacheEnabled(true);
                 imageToString = mSignature.save(view);
-                Toast.makeText(SignatureActivity.this, "save Clicked!", Toast.LENGTH_SHORT).show();
                 saveSignature(imageToString);
             }
         });
@@ -127,6 +126,7 @@ public class SignatureActivity extends AppCompatActivity {
                     public void onSuccessResponse(String response) {
                         Log.e("RESPONSE", response);
                         try {
+                            progress.dismiss();
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
                                 Log.e("IMAGE", obj.getString("image"));
@@ -134,13 +134,13 @@ public class SignatureActivity extends AppCompatActivity {
                                     if (from.equalsIgnoreCase("request")) {
                                         Intent intent = new Intent();
                                         intent.putExtra("result", 1);
-                                        setResult(RESULT_CANCELED, intent);
+                                        setResult(RESULT_OK, intent);
                                         finish();
                                     } else if(from.equalsIgnoreCase("profile")){
                                         Intent intent = new Intent(SignatureActivity.this, EditProfileActivity.class);
                                         startActivity(intent);
                                         finish();
-                                    }else {
+                                    }else { //report
                                         updateSignedStatus();
                                     }
                                 } else {

@@ -38,7 +38,7 @@ public class QRCodeScan extends Service {
         super.onCreate();
         intent = new Intent(BROADCAST_ACTION);
         handler.removeCallbacks(sendUpdatesToUI);
-        handler.postDelayed(sendUpdatesToUI, 2000); // 1 second
+        handler.postDelayed(sendUpdatesToUI, 1000); // 1 second
     }
 
 
@@ -85,7 +85,7 @@ public class QRCodeScan extends Service {
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
-                Log.e("RESPONSE", s);
+                Log.e("RESPONSE", "GETTING SCAN: " + s);
                 if(!s.isEmpty()){
                     try{
                         JSONObject obj = new JSONObject(s);

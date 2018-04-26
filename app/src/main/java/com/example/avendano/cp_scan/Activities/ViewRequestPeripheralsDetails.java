@@ -175,6 +175,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
 
     private void signReport() {
         Intent intent = new Intent(this, SignatureActivity.class);
+        intent.putExtra("from", "request");
         startActivityForResult(intent, SIGN_REQ); //result 0 not signed or 1 signed;
     }
 

@@ -253,7 +253,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
             builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT_URL + image_path))); /** replace with your own uri */
+                    act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AppConfig.ROOT + image_path))); /** replace with your own uri */
                 }
             });
         }
