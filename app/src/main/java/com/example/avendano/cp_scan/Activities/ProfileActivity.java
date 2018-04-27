@@ -149,9 +149,25 @@ public class ProfileActivity extends AppCompatActivity {
 //        db.deleteReportDetails();
 //        db.deleteRooms();
 //        db.close();
-        SharedPrefManager.getInstance(ProfileActivity.this).logout();
-        startActivity(new Intent(ProfileActivity.this, LogInActivity.class));
-        finish();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sign Out")
+        .setMessage("Are you sure you want to sign out?")
+        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                SharedPrefManager.getInstance(ProfileActivity.this).logout();
+                startActivity(new Intent(ProfileActivity.this, LogInActivity.class));
+                finish();
+            }
+        })
+        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     @Override

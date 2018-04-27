@@ -103,7 +103,7 @@ public class Main_Page extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         //satrtactivityforresult
-                        Intent i = new Intent(Main_Page.this, RequestScheduleActivity.class);
+                        Intent i = new Intent(Main_Page.this, ScheduleOfRequestsActivity.class);
                         startActivity(i);
                     }
                 });

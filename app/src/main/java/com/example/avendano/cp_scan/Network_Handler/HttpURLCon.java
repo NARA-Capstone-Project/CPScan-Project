@@ -45,11 +45,7 @@ public class HttpURLCon {
                     sb.append(res);
                 }
                 response = sb.toString();
-            }else{
-                Log.e("RESPONSECODE", "" + responseCode);
-                response = "ERROR";
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }

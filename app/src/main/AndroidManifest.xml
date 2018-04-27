@@ -122,7 +122,11 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity android:name=".Activities.ViewRequestPeripheralsDetails" />
-        <activity android:name=".Activities.PeripheralsIssuance"></activity>
+        <activity android:name=".Activities.PeripheralsIssuance" />
+        <activity
+            android:name=".Activities.ScheduleOfRequestsActivity"
+            android:label="@string/title_activity_request_schedules"
+            android:exported="true"></activity>
     </application>
 
 </manifest>
