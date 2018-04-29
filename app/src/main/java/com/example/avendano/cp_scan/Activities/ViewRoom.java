@@ -36,6 +36,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -205,7 +207,7 @@ public class ViewRoom extends AppCompatActivity {
         room_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!image_path.isEmpty()){
+                if (!image_path.isEmpty()) {
                     //zoom
                 }
             }
@@ -246,10 +248,24 @@ public class ViewRoom extends AppCompatActivity {
                             String req_date = obj.getString("date_requested");
                             String req_time = obj.getString("time_requested");
                             String req_status = obj.getString("req_status");
+                            if(!req_status.equalsIgnoreCase("cancel") ||
+                                    req_status.equalsIgnoreCase("ignored")){
+                                if (!date.equalsIgnoreCase("anytime")) {
+                                    //check date if before
+                                    Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                                    Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
 
+                                    Log.e("DATE", "today: " + today + " set date: " + set_date);
+                                    if (set_date.before(today) && req_status.equalsIgnoreCase("pending")) {
+                                        req_status = "Resched";
+                                    } else if (set_date.before(today) && req_status.equalsIgnoreCase("accepted")) {
+                                        req_status = "Missed";
+                                    }
+                                }
+                            }
                             showRequestDetails(req_id, room_id, date, time,
                                     msg, req_date, req_time, req_status);
-                        }else{
+                        } else {
                             Intent intent = new Intent(ViewRoom.this, RequestForInventory.class);
                             intent.putExtra("room_id", room_id);
                             startActivity(intent);
@@ -294,31 +310,33 @@ public class ViewRoom extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
             }
-        })
-
-                .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        //cancel
-                        cancelRequestInventory(req_id);
-                    }
-                });
-        if (!req_status.equalsIgnoreCase("accepted")) {
-            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (connection_detector.isConnected()) {
-                        Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
-                        intent.putExtra("type", "inventory");
-                        intent.putExtra("room_pc_id", room_id);
-                        intent.putExtra("id", req_id);
-                        ViewRoom.this.startActivity(intent);
-                        finish();
-                    } else
-                        Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+        });
+////pending accepted or missed resched
+//        if (req_status.equalsIgnoreCase("pending") || req_status.equalsIgnoreCase("accepted")) {
+//            builder.setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    //cancel
+//                    cancelRequestInventory(req_id);
+//                }
+//            });
+//        }
+//        if (!req_status.equalsIgnoreCase("accepted")) {
+//            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    if (connection_detector.isConnected()) {
+//                        Intent intent = new Intent(ViewRoom.this, EditRequestSchedule.class);
+//                        intent.putExtra("type", "inventory");
+//                        intent.putExtra("room_pc_id", room_id);
+//                        intent.putExtra("id", req_id);
+//                        ViewRoom.this.startActivity(intent);
+//                        finish();
+//                    } else
+//                        Toast.makeText(ViewRoom.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        }
         AlertDialog alert = builder.create();
         alert.show();
     }

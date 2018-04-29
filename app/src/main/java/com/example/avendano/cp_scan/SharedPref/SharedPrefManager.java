@@ -93,11 +93,6 @@ public class SharedPrefManager {
         return sharedPreferences.getString(KEY_EXPIRE, null);
     }
 
-    public String getAcc_Status() {
-        SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(KEY_ACCSTATUS, null);
-    }
-
     public boolean isLoggedIn() {
         SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         if (sharedPreferences.getString(KEY_USERNAME, null) != null) {

@@ -47,8 +47,8 @@ public class Main_Page extends AppCompatActivity {
     SQLiteHelper db;
     VolleyRequestSingleton volley;
     TextView display_date;
-    Intent receiverIntent;
-    BroadcastReceiver reqCountReceiver;
+    Intent receiverIntent, notifIntent;
+    BroadcastReceiver reqCountReceiver, notifReceiver;
 
     int position = 0;
 

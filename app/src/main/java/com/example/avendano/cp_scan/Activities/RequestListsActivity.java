@@ -33,6 +33,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,6 +146,7 @@ public class RequestListsActivity extends AppCompatActivity {
         volley.sendStringRequestGet(url, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
+                Log.e("RESPONSE", response);
                 try {
                     JSONArray array = new JSONArray(response);
                     for (int i = 0; i < array.length(); i++) {
@@ -158,10 +161,24 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_status = obj.getString("req_status");
                         String req_date = obj.getString("date_requested");
                         String req_time = obj.getString("time_requested");
-                    //pending cancel accepted ignored
+                        //pending accepted ignored done
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                if (!req_status.equalsIgnoreCase("cancel")) {
+                                if (!(req_status.equalsIgnoreCase("cancel")) ||
+                                        req_status.equalsIgnoreCase("done")) {
+                                    //check if missed
+                                    if (!date.equalsIgnoreCase("anytime")) {
+                                            //check date if before
+                                            Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                                            Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+
+                                            Log.e("DATE", "today: " + today + " set date: " + set_date);
+                                            if(set_date.before(today) && req_status.equalsIgnoreCase("pending")){
+                                                req_status = "Need to Resched";
+                                            }else if(set_date.before(today) && req_status.equalsIgnoreCase("accepted")){
+                                                req_status = "Missed";
+                                            }
+                                    }
                                     RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
                                             , tech_id, date, time, msg, req_date, req_time, req_status);
                                     inventoryList.add(inventory);
@@ -170,14 +187,31 @@ public class RequestListsActivity extends AppCompatActivity {
                         } else {
                             if (req_status.equalsIgnoreCase("pending")) {
                                 if (tech_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                    RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
-                                            , tech_id, date, time, msg, req_date, req_time, req_status);
-                                    inventoryList.add(inventory);
+                                    if (!date.equalsIgnoreCase("anytime")) {
+                                        //check date if before
+                                        Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                                        Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+
+                                        Log.e("DATE", "today: " + today + " set date: " + set_date);
+                                        if(set_date.before(today)){
+                                            //missed or not accepted or hindi napansin need to resched
+                                            //do nothing
+                                        }else{
+                                            RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
+                                                    , tech_id, date, time, msg, req_date, req_time, req_status);
+                                            inventoryList.add(inventory);
+                                        }
+                                    }else{
+                                        RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
+                                                , tech_id, date, time, msg, req_date, req_time, req_status);
+                                        inventoryList.add(inventory);
+                                    }
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     Toast.makeText(RequestListsActivity.this, "Error Occured", Toast.LENGTH_SHORT).show();
                 }
                 if (inventoryList.size() != 0) {
@@ -236,7 +270,21 @@ public class RequestListsActivity extends AppCompatActivity {
 
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                if (!req_status.equalsIgnoreCase("cancel")) {
+                                if (!(req_status.equalsIgnoreCase("cancel") ||
+                                        req_status.equalsIgnoreCase("done"))) {
+                                    //check if missed
+                                    if (!date.equalsIgnoreCase("anytime")) {
+                                        //check date if before
+                                        Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                                        Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+
+                                        Log.e("DATE", "today: " + today + " set date: " + set_date);
+                                        if(set_date.before(today) && req_status.equalsIgnoreCase("pending")){
+                                            req_status = "Need to Resched";
+                                        }else if(set_date.before(today) && req_status.equalsIgnoreCase("accepted")){
+                                            req_status = "Missed";
+                                        }
+                                    }
                                     RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
                                             , date, time, msg, req_date, req_time, req_status, path, req_details);
                                     repairList.add(repair);
@@ -245,9 +293,26 @@ public class RequestListsActivity extends AppCompatActivity {
                         } else {
                             if (req_status.equalsIgnoreCase("pending")) {
                                 if (tech_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
-                                    RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
-                                            , date, time, msg, req_date, req_time, req_status, path, req_details);
-                                    repairList.add(repair);
+
+                                    if (!date.equalsIgnoreCase("anytime")) {
+                                        //check date if before
+                                        Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                                        Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+
+                                        Log.e("DATE", "today: " + today + " set date: " + set_date);
+                                        if(set_date.before(today)){
+                                            //missed or not accepted
+                                            //do nothing
+                                        }else{
+                                            RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                                    , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                            repairList.add(repair);
+                                        }
+                                    }else{
+                                        RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
+                                                , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                        repairList.add(repair);
+                                    }
                                 }
                             }
                         }
@@ -258,7 +323,7 @@ public class RequestListsActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(RequestListsActivity.this, "No Request", Toast.LENGTH_SHORT).show();
                     }
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     Toast.makeText(RequestListsActivity.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
@@ -303,8 +368,8 @@ public class RequestListsActivity extends AppCompatActivity {
                                     if (cust_id.equals(user_id)) {
                                         RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
                                         peripheralsList.add(peripherals);
-                                    }else if(tech_id.equals(user_id)){
-                                        if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")){
+                                    } else if (tech_id.equals(user_id)) {
+                                        if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
                                             RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
                                             peripheralsList.add(peripherals);
                                         }

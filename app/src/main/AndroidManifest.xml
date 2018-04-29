@@ -102,10 +102,6 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activities.RequestScheduleActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".Activities.ReportActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait" />

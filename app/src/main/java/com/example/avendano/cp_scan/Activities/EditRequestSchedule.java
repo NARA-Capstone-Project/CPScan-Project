@@ -74,9 +74,10 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     Toolbar toolbar;
     AlertDialog progress;
     ImageView photo1;
+    String tech_id, status;
     private final int IMG_REQUEST = 1, CAMERA_REQUEST = 0;
     private Bitmap bitmap;
-    boolean setImage = false;
+    boolean setImage = false, dateSet = false;
     VolleyRequestSingleton volley;
 
     @Override
@@ -89,7 +90,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         id = getIntent().getIntExtra("id", 0);  //req_id
         room_pc_id = getIntent().getIntExtra("room_pc_id", 0);  //comp or room id
         type = getIntent().getStringExtra("type");
-        r_id = getIntent().getIntExtra("r_id", 0);
+        status = getIntent().getStringExtra("status");
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -97,6 +98,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         getSupportActionBar().setTitle("Edit Request");
 
         progress = new SpotsDialog(this, "Loading...");
+        progress.setCancelable(false);
         progress.show();
 //        db = new SQLiteHandler(this);
         message = (EditText) findViewById(R.id.message);
@@ -111,6 +113,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0: {
+                        dateSet = false;
                         date.setVisibility(View.GONE);
                         break;
                     }
@@ -322,12 +325,15 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                         String msg = obj.getString("msg");
                         String req_details = obj.getString("req_details");
                         String path = obj.getString("image");
+                        String req_status = obj.getString("req_status");
 
                         if (req_id == id) {
                             if (!date.equalsIgnoreCase("anytime")) {
                                 date_type.setSelection(1);
                                 EditRequestSchedule.this.date.setText(date);
+                                dateSet = true;
                             }
+                            tech_id = obj.getString("tech_id");
                             message.setText(msg);
                             peripherals.setText(req_details);
                             if (obj.isNull("image"))
@@ -399,12 +405,15 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                         String date = obj.getString("date");
                         String time = obj.getString("time");
                         String msg = obj.getString("msg");
+                        String req_status = obj.getString("req_status");
 
                         if (req_id == id) {
                             if (!date.equalsIgnoreCase("anytime")) {
                                 date_type.setSelection(1);
                                 EditRequestSchedule.this.date.setText(date);
+                                dateSet = true;
                             }
+                            tech_id = obj.getString("technician");
                             EditRequestSchedule.this.time.setText(time);
                             message.setText(msg);
                             break;
@@ -432,33 +441,28 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 date.getText().toString().equalsIgnoreCase("yyyy-mm-dd")) {
             date.setError("Set date!");
             return false;
+        } else if (date_type.getSelectedItem().toString().equalsIgnoreCase("custom")) {
+            boolean r = false;
+            try {
+                Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                Date set_date = new SimpleDateFormat("yyyy-MM-dd").parse(date.getText().toString());
+
+                if (set_date.before(today)) {
+                    date.setError("Set Date!");
+                    r = false;
+                }else{
+                    r= true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return r;
         } else if (time.getText().toString().equalsIgnoreCase("HH:mm:ss")) {
             time.setError("Set date!");
             return false;
         } else {
             return true;
         }
-    }
-
-    private void goToViewRoom() {
-        Intent intent = new Intent(EditRequestSchedule.this, ViewRoom.class);
-        intent.putExtra("room_id", room_pc_id);
-        startActivity(intent);
-        finish();
-    }
-
-    private void goToViewPc() {
-//        int room_id = 0;
-        Intent intent = new Intent(EditRequestSchedule.this, ViewPc.class);
-        intent.putExtra("comp_id", room_pc_id);
-//        //search comp id by req_id
-//        Cursor c = db.getCompDetails(room_pc_id);
-//        if (c.moveToFirst()) {
-//            room_id = c.getInt(c.getColumnIndex(db.ROOMS_ID));
-//        }
-        intent.putExtra("room_id", r_id);
-        startActivity(intent);
-        finish();
     }
 
     @Override
@@ -468,6 +472,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         c.set(Calendar.MONTH, month);
         c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         Date getdate = c.getTime();
+        dateSet = true;
         String dateString = new SimpleDateFormat("yyyy-MM-dd").format(getdate);
         date.setText(dateString);
     }
@@ -478,8 +483,150 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         c.set(Calendar.HOUR_OF_DAY, hourOfDay);
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
-        String timeString = new SimpleDateFormat("hh:mm a").format(getTime);
-        time.setText(timeString);
+        String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
+        //check time
+        Date pickedTime;
+        try {
+            pickedTime = new SimpleDateFormat("HH:mm:ss").parse(timeString);
+
+            Date am = new SimpleDateFormat("HH:mm:ss").parse("07:59:00");
+            Date pm = new SimpleDateFormat("HH:mm:ss").parse("17:01:00");
+//            Log.e("TIME", "GETTIME: " + pickedTime);
+//            Log.e("TIME", "AM: " + am);
+//            Log.e("TIME", "PM: " + pm);
+//            Log.e("TIME", "TIME B4 AM: " + pickedTime.before(am));
+//            Log.e("TIME", "AM B4 TIME: " + am.before(pickedTime));
+//            Log.e("TIME", "TIME after AM: " + pickedTime.after(am));
+//            Log.e("TIME", "AM after TIME: " + am.after(pickedTime));
+//            Log.e("TIME", "TIME B4 PM: " + pickedTime.before(pm));
+//            Log.e("TIME", "PM B4 TIME: " + pm.before(pickedTime));
+//            Log.e("TIME", "TIME after PM: " + pickedTime.after(pm));
+//            Log.e("TIME", "PM after TIME: " + pm.after(pickedTime));
+            if (pickedTime.after(am) && pickedTime.before(pm)) {
+                if (dateSet)    //hindi anytime ung time
+                {
+                    checkTime(timeString, date.getText().toString());
+                } else
+                    time.setText(new SimpleDateFormat("HH:mm:ss").format(pickedTime));
+            } else {
+                Toast.makeText(this, "Pick time between 8AM and 5PM", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkTime(final String pickedTime, final String s) {
+        if (type.equalsIgnoreCase("inventory")) {
+            volley.sendStringRequestGet(AppConfig.GET_INVENTORY_REQ, new VolleyCallback() {
+                @Override
+                public void onSuccessResponse(String response) {
+                    try {
+                        JSONArray array = new JSONArray(response);
+                        int count = 0;
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            String t_id = obj.getString("technician");
+                            //check status kung ignored, cancel done
+                            if (!obj.getString("req_status").equalsIgnoreCase("Ignored") ||
+                                    obj.getString("req_status").equalsIgnoreCase("Cancel") ||
+                                    obj.getString("req_status").equalsIgnoreCase("Done")) {
+                                if (t_id.equals(tech_id) && obj.getInt("req_id") != id) {
+                                    //check date
+                                    if (s.equals(obj.getString("date")) || obj.getString("date").equalsIgnoreCase("anytime")) {
+
+                                        //check time
+                                        Date set_time = new SimpleDateFormat("HH:mm").parse(obj.getString("time"));
+                                        Date picked = new SimpleDateFormat("HH:mm").parse(pickedTime);
+                                        //plus one hour
+                                        Calendar cal1 = Calendar.getInstance();//set time
+                                        cal1.setTime(set_time);
+                                        cal1.add(Calendar.HOUR_OF_DAY, 1);
+
+                                        Calendar cal2 = Calendar.getInstance(); //pick time
+                                        cal2.setTime(picked);
+                                        cal2.add(Calendar.HOUR_OF_DAY, 1);
+                                        if ((picked.after(set_time) && picked.before(cal1.getTime())) || (picked.equals(set_time) || picked.equals(cal1.getTime()))
+                                                || (cal2.getTime().after(set_time) && cal2.getTime().before(cal1.getTime())) || (cal2.getTime().equals(set_time) || cal2.getTime().equals(cal1.getTime()))) {
+                                            Toast.makeText(EditRequestSchedule.this, "Picked time is not available", Toast.LENGTH_SHORT).show();
+                                            DialogFragment timePicker = new TimePicker();
+                                            timePicker.show(getSupportFragmentManager(), "time picker");
+                                            break;
+                                        } else {
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (count == array.length()) {
+                            time.setText(pickedTime);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else { // repair
+            volley.sendStringRequestGet(AppConfig.GET_REPAIR_REQ, new VolleyCallback() {
+                @Override
+                public void onSuccessResponse(String response) {
+                    try {
+                        JSONArray array = new JSONArray(response);
+                        int count = 0;
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject obj = array.getJSONObject(i);
+                            String t_id = obj.getString("tech_id");
+                            if (!obj.getString("req_status").equalsIgnoreCase("Ignored") ||
+                                    obj.getString("req_status").equalsIgnoreCase("Cancel") ||
+                                    obj.getString("req_status").equalsIgnoreCase("Done")) {
+                                if (t_id.equals(tech_id) && obj.getInt("req_id") != id) {
+                                    //check date
+                                    if (s.equals(obj.getString("set_date")) || obj.getString("set_date").equalsIgnoreCase("anytime")) {
+                                        //check time
+                                        Date set_time = new SimpleDateFormat("HH:mm").parse(obj.getString("set_time"));
+                                        Date picked = new SimpleDateFormat("HH:mm").parse(pickedTime);
+                                        //plus one hour
+                                        Calendar cal1 = Calendar.getInstance();//set time
+                                        cal1.setTime(set_time);
+                                        cal1.add(Calendar.HOUR_OF_DAY, 1);
+
+                                        Calendar cal2 = Calendar.getInstance(); //pick time
+                                        cal2.setTime(picked);
+                                        cal2.add(Calendar.HOUR_OF_DAY, 1);
+                                        if ((picked.after(set_time) && picked.before(cal1.getTime())) || (picked.equals(set_time) || picked.equals(cal1.getTime()))
+                                                || (cal2.getTime().after(set_time) && cal2.getTime().before(cal1.getTime())) || (cal2.getTime().equals(set_time) || cal2.getTime().equals(cal1.getTime()))) {
+                                            Toast.makeText(EditRequestSchedule.this, "Picked time is not available", Toast.LENGTH_SHORT).show();
+                                            DialogFragment timePicker = new TimePicker();
+                                            timePicker.show(getSupportFragmentManager(), "time picker");
+                                            break;
+                                        } else {
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        if (count == array.length()) {
+                            time.setText(pickedTime);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(EditRequestSchedule.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     @Override
@@ -492,21 +639,23 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.save: {
+                if (progress != null) {
+                    progress.dismiss();
+                }
                 progress.show();
-                progress.setCancelable(false);
                 if (checkSchedule()) {
+                    Log.e("STATUS", "jkl " + status);
                     new editRequests().execute();
-                } else {
+                }
+                else{
                     progress.dismiss();
                 }
                 Log.w("SEND REQUEST", "User request for inventory");
                 break;
             }
             case R.id.cancel: {
-                if (type.equalsIgnoreCase("inventory"))
-                    goToViewRoom();
-                else
-                    goToViewPc();
+                finish();
+                break;
             }
         }
 
@@ -522,24 +671,19 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        if (type.equalsIgnoreCase("inventory"))
-            goToViewRoom();
+        finish();
     }
 
     private class editRequests extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progress.show();
-            progress.setCancelable(false);
-        }
 
         @Override
         protected Void doInBackground(Void... voids) {
             if (type.equalsIgnoreCase("inventory"))
                 editRequestInventory();
-            else if (type.equalsIgnoreCase("repair"))
+            else if (type.equalsIgnoreCase("repair")) {
+                //if resched missed or ignored
                 editRequestRepair();
+            }
             return null;
         }
     }
@@ -573,22 +717,16 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             @Override
             public void onResponse(String response) {
                 Log.e("ERROR", response);
+                progress.dismiss();
                 try {
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         //update sqlite
-                        Handler h = new Handler();
-                        h.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-//                                updateReqRepDetails(id, finalSetDate, finalSetTime, getMsg, finalRep_msg);
-                                Toast.makeText(EditRequestSchedule.this, "Request Updated!", Toast.LENGTH_SHORT).show();
-                                progress.dismiss();
-                                goToViewPc();
-                            }
-                        }, 2000);
-                    } else
+                        Toast.makeText(EditRequestSchedule.this, "Request Updated!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
                         Toast.makeText(EditRequestSchedule.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Toast.makeText(EditRequestSchedule.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
@@ -604,6 +742,13 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
+                //        missed(accepted ung stat pero hindi nagawa ayon s sched) need to resched(pending pa rin kaya lng hindi napansin or walang action na ginawa) pending ignored
+                if (status.equalsIgnoreCase("ignored") ||
+                        status.equalsIgnoreCase("missed") ||
+                        status.equalsIgnoreCase("need to resched"))
+                    params.put("status", "pending");
+                else
+                    params.put("status", "");
                 params.put("msg", getMsg);
                 params.put("date", finalSetDate);
                 params.put("time", finalSetTime);
@@ -640,32 +785,35 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
             setDate = date.getText().toString();
 
         setTime = time.getText().toString();
+        final String query;
+//        missed(accepted ung stat pero hindi nagawa ayon s sched) need to resched(pending pa rin kaya lng hindi napansin or walang action na ginawa) pending ignored
+        if (status.equalsIgnoreCase("pending")) {
+            query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
+                    + setTime + "', message = '" + getMsg + "' WHERE req_id = ?";
+        } else { /// missed and ignored, need to resched
+            query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
+                    + setTime + "', message = '" + getMsg + "', req_status = 'Pending' WHERE req_id = ?";
+        }
 
-        final String query = "UPDATE request_inventory SET date = '" + setDate + "', time ='"
-                + setTime + "', message = '" + getMsg + "' WHERE req_id = ?";
-
+        Log.e("query", query);
         StringRequest str = new StringRequest(Request.Method.POST
                 , AppConfig.URL_UPDATE_SCHEDULE
                 , new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 Log.e("ERROR", response);
+                progress.dismiss();
                 try {
+
                     JSONObject obj = new JSONObject(response);
                     if (!obj.getBoolean("error")) {
                         //update sqlite
 //                        updateSqliteInventory(finalSetDate, finalSetTime, getMsg);
-                        Handler h = new Handler();
-                        h.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(EditRequestSchedule.this, "Request Updated!", Toast.LENGTH_SHORT).show();
-                                progress.dismiss();
-                                goToViewRoom();
-                            }
-                        }, 5000);
-                    } else
+                        Toast.makeText(EditRequestSchedule.this, "Request Updated!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
                         Toast.makeText(EditRequestSchedule.this, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

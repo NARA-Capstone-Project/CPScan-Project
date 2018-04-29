@@ -43,4 +43,5 @@ dependencies {
     compile 'com.nex3z:notification-badge:0.1.0'
     compile 'com.michaelmuenzer.android:ScrollableNumberPicker:0.2.2'
     compile 'de.codecrafters.tableview:tableview:2.2.0'
+    compile 'me.grantland:autofittextview:0.2.+'
 }

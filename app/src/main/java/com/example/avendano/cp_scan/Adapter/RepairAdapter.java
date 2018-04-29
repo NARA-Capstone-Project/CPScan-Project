@@ -25,6 +25,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cp_scan.Activities.EditRequestSchedule;
 import com.example.avendano.cp_scan.Network_Handler.VolleyCallback;
 import com.example.avendano.cp_scan.Network_Handler.VolleyRequestSingleton;
 import com.example.avendano.cp_scan.Network_Handler.Connection_Detector;
@@ -33,6 +34,7 @@ import com.example.avendano.cp_scan.Network_Handler.RequestQueueHandler;
 import com.example.avendano.cp_scan.Model.RequestRepair;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
+import com.google.zxing.client.result.ResultParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,9 +56,11 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
     Activity act;
     SwipeRefreshLayout swiper;
     String name = "";
-//    SQLiteHandler db;
+    Connection_Detector connection_detector;
+    //    SQLiteHandler db;
     android.app.AlertDialog progress;
     VolleyRequestSingleton volley;
+
     public RepairAdapter(List<RequestRepair> repairList, Context mCtx, Activity act, SwipeRefreshLayout swiper) {
         this.repairList = repairList;
         this.mCtx = mCtx;
@@ -64,6 +68,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         this.swiper = swiper;
 //        db = new SQLiteHandler(mCtx);
         volley = new VolleyRequestSingleton(mCtx);
+        connection_detector = new Connection_Detector(mCtx);
     }
 
     @Override
@@ -77,7 +82,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
     public void onBindViewHolder(RepairViewHolder holder, final int position) {
         final RequestRepair repair = repairList.get(position);
         holder.category.setText(repair.getCategory());
-        if(SharedPrefManager.getInstance(mCtx).getUserRole().equalsIgnoreCase("custodian")){
+        if (SharedPrefManager.getInstance(mCtx).getUserRole().equalsIgnoreCase("custodian")) {
             holder.status.setVisibility(View.VISIBLE);
             holder.status.setText("Status: " + repair.getReq_status());
             holder.btn_container.setVisibility(View.GONE);
@@ -107,19 +112,19 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                             + "\nAssigned Date: " + repair.getDate() + "\nAssigned Time: " + repair.getTime() + "\nReport Details: "
                             + repair.getRep_details() + "\nRequest Status: " + repair.getReq_status();
                 } else {
-                    msg_body = "Date requested: " + repair.getDate_req()  + "\nTime Requested: " + repair.getTime_req()
+                    msg_body = "Date requested: " + repair.getDate_req() + "\nTime Requested: " + repair.getTime_req()
                             + "\nAssigned Date: " + repair.getDate() + "\nAssigned Time: " + repair.getTime() + "\nReport Details: "
                             + repair.getRep_details() + "\nRequest Status: " + repair.getReq_status()
                             + "\n\nMessage: " + msg;
                 }
-                showDetails(msg_body, repair.getImage_path());
+                    showDetails(msg_body, repair.getImage_path(), repair.getReq_id(), repair.getReq_status(), position, repair.getComp_id());
             }
         });
     }
 
     private void updateDialog(final int req_id, final int position) {
         String msg = "";
-       msg = "Are you sure you want to ignore this request?";
+        msg = "Are you sure you want to ignore this request?";
         AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
         builder.setCancelable(false);
         builder.setMessage(msg)
@@ -215,19 +220,19 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         volley.sendStringRequestGet(AppConfig.GET_COMPUTERS, new VolleyCallback() {
             @Override
             public void onSuccessResponse(String response) {
-                try{
+                try {
                     JSONArray array = new JSONArray(response);
-                    for (int i = 0; i < array.length(); i++){
+                    for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         int c_id = obj.getInt("comp_id");
-                        if(c_id == comp_id){
+                        if (c_id == comp_id) {
                             int pc_no = obj.getInt("pc_no");
                             String room_name = obj.getString("room_name");
                             location.setText("PC " + pc_no + " of Room " + room_name);
                             break;
                         }
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -239,17 +244,13 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         });
     }
 
-    private void showDetails(String msg_body, final String image_path) {
+    private void showDetails(String msg_body, final String image_path, final int req_id, final String stat, final int position, final int comp_id) {
+        //if custodian may edit request
         AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
         builder.setTitle("Request Details");
         builder.setMessage(msg_body);
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        if(!image_path.isEmpty()){
+
+        if (!image_path.isEmpty()) {
             builder.setNeutralButton("View Image", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -257,6 +258,50 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                 }
             });
         }
+
+        if (SharedPrefManager.getInstance(mCtx).getUserRole().equalsIgnoreCase("custodian")) {
+            if (stat.equalsIgnoreCase("pending")) {
+                builder.setNegativeButton("Cancel Request", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        cancelRequestRepair(req_id, position);
+                    }
+                });
+            }
+            if (!(stat.equalsIgnoreCase("accepted")) || stat.equalsIgnoreCase("done")) {
+                builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //intent to edit request
+                        dialog.dismiss();
+                        Intent intent = new Intent(mCtx, EditRequestSchedule.class);
+                        intent.putExtra("type", "repair");
+                        intent.putExtra("room_pc_id", comp_id);
+                        intent.putExtra("id", req_id);
+                        intent.putExtra("status", stat);
+                        act.startActivity(intent);
+                    }
+                });
+            }
+            if (stat.equalsIgnoreCase("accepted") || stat.equalsIgnoreCase("done")) {
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+            }
+        } else {
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+        }
+
+
         AlertDialog alert = builder.create();
         alert.show();
     }
@@ -286,6 +331,89 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
             btn_container = (LinearLayout) itemView.findViewById(R.id.linear);
             status = (TextView) itemView.findViewById(R.id.req_status);
         }
+    }
+
+    private void cancelRequestRepair(final int req_id, final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
+        builder.setTitle("Cancel Request");
+        builder.setMessage("Are you sure you want to cancel your request?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (connection_detector.isConnected())
+                            cancelRequest(req_id, position);
+                        else
+                            Toast.makeText(mCtx, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void cancelRequest(final int req_id, final int position) {
+        class cancel {
+            void callCancel() {
+                new cancelling().execute();
+            }
+
+            class cancelling extends AsyncTask<Void, Void, Void> {
+
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    cancelRequest();
+                    return null;
+                }
+            }
+
+            private void cancelRequest() {
+
+                StringRequest str = new StringRequest(Request.Method.POST
+                        , AppConfig.URL_CANCEL_SCHEDULE
+                        , new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            //update sqlite
+                            if (!obj.getBoolean("error")) {
+                                repairList.remove(position);
+                                notifyItemRemoved(position);
+                                notifyItemRangeRemoved(position, repairList.size());
+                            } else {
+                                Toast.makeText(mCtx, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            Toast.makeText(mCtx, "An error occured, please try again later", Toast.LENGTH_SHORT).show();
+                            Log.e("JSONERROR", e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(mCtx, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> param = new HashMap<>();
+                        param.put("id", String.valueOf(req_id));
+                        param.put("req_type", "repair");
+                        return param;
+                    }
+                };
+                RequestQueueHandler.getInstance(mCtx).addToRequestQueue(str);
+            }
+        }
+        new cancel().callCancel();
     }
 
 }

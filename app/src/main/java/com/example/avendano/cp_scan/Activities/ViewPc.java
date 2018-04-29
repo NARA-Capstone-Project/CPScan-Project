@@ -664,31 +664,31 @@ public class ViewPc extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
             }
-        })
-                .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        //cancel
-                        cancelRequestRepair(req_id);
-                    }
-                });
-        if (!req_status.equalsIgnoreCase("accepted")) {
-            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (connection_detector.isConnected()) {
-                        Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
-                        intent.putExtra("type", "repair");
-                        intent.putExtra("room_pc_id", comp_id);
-                        intent.putExtra("r_id", room_id);
-                        intent.putExtra("id", req_id);
-                        ViewPc.this.startActivity(intent);
-                        finish();
-                    } else
-                        Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+        });
+//                .setNeutralButton("Cancel Request", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        //cancel
+//                        cancelRequestRepair(req_id);
+//                    }
+//                });
+//        if (!req_status.equalsIgnoreCase("accepted")) {
+//            builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    if (connection_detector.isConnected()) {
+//                        Intent intent = new Intent(ViewPc.this, EditRequestSchedule.class);
+//                        intent.putExtra("type", "repair");
+//                        intent.putExtra("room_pc_id", comp_id);
+//                        intent.putExtra("r_id", room_id);
+//                        intent.putExtra("id", req_id);
+//                        ViewPc.this.startActivity(intent);
+//                        finish();
+//                    } else
+//                        Toast.makeText(ViewPc.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        }
         AlertDialog alert = builder.create();
         alert.show();
     }

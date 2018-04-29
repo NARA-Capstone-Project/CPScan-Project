@@ -36,6 +36,7 @@ import com.example.avendano.cp_scan.DatePicker;
 import com.example.avendano.cp_scan.R;
 import com.example.avendano.cp_scan.TimePicker;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -65,9 +66,9 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
     private String TAG = "RequestForRepair";
     android.app.AlertDialog progress;
     boolean checkBox = false; // true missing false not working
-    boolean setImage = false;
+    boolean setImage = false, dateSet = false;
     int pc_no;
-    String room_name;
+    String room_name, tech_id;
     VolleyRequestSingleton volley;
 
     @Override
@@ -113,6 +114,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0: {
+                        dateSet = false;
                         date.setVisibility(View.GONE);
                         break;
                     }
@@ -154,6 +156,34 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             }
         });
 
+        getRoomTechnician();
+    }
+
+    private void getRoomTechnician() {
+        volley.sendStringRequestGet(AppConfig.GET_ROOMS, new VolleyCallback() {
+            @Override
+            public void onSuccessResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        int id = obj.getInt("room_id");
+                        if (id == room_id) {
+                            tech_id = obj.getString("tech_id");
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    RequestForRepair.this.tech_id = "";
+                }
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(RequestForRepair.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void peripheralsDialog() {
@@ -336,17 +366,17 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
             @Override
             public void onSuccessResponse(String response) {
                 Log.e("RESPONSe", response);
-                try{
+                try {
                     JSONObject obj = new JSONObject(response);
-                    if(!obj.getBoolean("error")){
+                    if (!obj.getBoolean("error")) {
                         Log.e("SMS", obj.getString("sms"));
                         Toast.makeText(RequestForRepair.this, "Request Sent!", Toast.LENGTH_SHORT).show();
                         finish();
-                    }else{
+                    } else {
                         Toast.makeText(RequestForRepair.this, "An Error occurred, pleaase try again later", Toast.LENGTH_SHORT).show();
                         progress.dismiss();
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Toast.makeText(RequestForRepair.this, "An Error occurred, please try again later", Toast.LENGTH_SHORT).show();
                     progress.dismiss();
                     e.printStackTrace();
@@ -387,6 +417,7 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         Date getdate = c.getTime();
         String dateString = new SimpleDateFormat("yyyy-MM-dd").format(getdate);
+        dateSet = true;
         date.setText(dateString);
     }
 
@@ -397,18 +428,43 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         c.set(Calendar.HOUR_OF_DAY, hourOfDay);
         c.set(Calendar.MINUTE, minute);
         Date getTime = c.getTime();
-        String timeString = new SimpleDateFormat("HH:mm").format(getTime);
-        time.setText(timeString+":00");
+        String timeString = new SimpleDateFormat("HH:mm:ss").format(getTime);
+        Date pickedTime;
+        try {
+            pickedTime = new SimpleDateFormat("HH:mm:ss").parse(timeString);
+
+            Date am = new SimpleDateFormat("HH:mm:ss").parse("07:59:00");
+            Date pm = new SimpleDateFormat("HH:mm:ss").parse("17:01:00");
+
+//            Log.e("TIME", "GETTIME: " + pickedTime);
+//            Log.e("TIME", "AM: " + am);
+//            Log.e("TIME", "PM: " + pm);
+//            Log.e("TIME", "TIME B4 AM: " + pickedTime.before(am));
+//            Log.e("TIME", "AM B4 TIME: " + am.before(pickedTime));
+//            Log.e("TIME", "TIME after AM: " + pickedTime.after(am));
+//            Log.e("TIME", "AM after TIME: " + am.after(pickedTime));
+//            Log.e("TIME", "TIME B4 PM: " + pickedTime.before(pm));
+//            Log.e("TIME", "PM B4 TIME: " + pm.before(pickedTime));
+//            Log.e("TIME", "TIME after PM: " + pickedTime.after(pm));
+//            Log.e("TIME", "PM after TIME: " + pm.after(pickedTime));
+            if (pickedTime.after(am) && pickedTime.before(pm)) {
+                if (dateSet)    //hindi anytime ung time
+                {
+                    checkTime(timeString, date.getText().toString());
+                } else
+                    time.setText(timeString);
+            } else {
+                Toast.makeText(this, "Pick time between 8AM and 5PM", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-//    private void gotoViewPc() {
-//        Intent intent = new Intent(RequestForRepair.this, ViewPc.class);
-//        intent.putExtra("comp_id", comp_id);
-//        startActivity(intent);
-//        finish();
-//    }
-
     private boolean checkInput() {
+        if(progress != null){
+            progress.dismiss();
+        }
         progress.show();
         progress.setCancelable(false);
         if (date_type.getSelectedItem().toString().equalsIgnoreCase("custom") &&
@@ -424,5 +480,67 @@ public class RequestForRepair extends AppCompatActivity implements DatePickerDia
         } else {
             return true;
         }
+    }
+
+    private void checkTime(final String pickedTime, final String date) {
+        //get all req kung saan ung id ni technician then compare time
+        volley.sendStringRequestGet(AppConfig.GET_REPAIR_REQ, new VolleyCallback() {
+            @Override
+            public void onSuccessResponse(String response) {
+                try {
+                    JSONArray array = new JSONArray(response);
+                    int count = 0;
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        String t_id = obj.getString("tech_id");
+                        if (!(obj.getString("req_status").equalsIgnoreCase("Ignored") ||
+                                obj.getString("req_status").equalsIgnoreCase("Cancel") ||
+                                obj.getString("req_status").equalsIgnoreCase("Done"))) {
+                            if (t_id.equals(tech_id)) {
+                                //check date
+                                if (date.equals(obj.getString("set_date")) || obj.getString("set_date").equalsIgnoreCase("anytime")) {
+                                    //check time
+                                    Date set_time = new SimpleDateFormat("HH:mm").parse(obj.getString("set_time"));
+                                    Date picked = new SimpleDateFormat("HH:mm").parse(pickedTime);
+                                    //plus one hour
+                                    Calendar cal1 = Calendar.getInstance();//set time
+                                    cal1.setTime(set_time);
+                                    cal1.add(Calendar.HOUR_OF_DAY, 1);
+
+                                    Calendar cal2 = Calendar.getInstance(); //pick time
+                                    cal2.setTime(picked);
+                                    cal2.add(Calendar.HOUR_OF_DAY, 1);
+                                    if ((picked.after(set_time) && picked.before(cal1.getTime())) || (picked.equals(set_time) || picked.equals(cal1.getTime()))
+                                            || (cal2.getTime().after(set_time) && cal2.getTime().before(cal1.getTime())) || (cal2.getTime().equals(set_time) || cal2.getTime().equals(cal1.getTime()))) {
+                                        Toast.makeText(RequestForRepair.this, "Picked time is not available", Toast.LENGTH_SHORT).show();
+                                        DialogFragment timePicker = new TimePicker();
+                                        timePicker.show(getSupportFragmentManager(), "time picker");
+                                        break;
+                                    } else {
+                                        count++;
+                                    }
+                                }else{
+                                    count++;
+                                }
+                            }else{
+                                count++;
+                            }
+                        }else{
+                            count++;
+                        }
+                    }
+                    if (count == array.length()) {
+                        time.setText(pickedTime);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(RequestForRepair.this, "Can't connect to the server", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
