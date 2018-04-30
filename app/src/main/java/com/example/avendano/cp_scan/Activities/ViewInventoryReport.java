@@ -87,8 +87,8 @@ public class ViewInventoryReport extends AppCompatActivity {
         Log.e("INTENT", "ID - " + rep_id);
 
         if (SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian") ||
-                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("head technician") ||
-                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin") || SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")) {
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("main technician") ||
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")) {
             sign.setVisibility(View.VISIBLE);
         }
 
@@ -97,7 +97,23 @@ public class ViewInventoryReport extends AppCompatActivity {
             public void onClick(View v) {
                 if (connection_detector.isConnected()) {
                     progress.show();
-                    checkSignature();
+                    if(SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole().equalsIgnoreCase("admin")){
+                        if(cust.getText().toString().equalsIgnoreCase("yes") &&
+                                tech.getText().toString().equalsIgnoreCase("yes")){
+                            checkSignature();
+                        }else{
+                            Toast.makeText(ViewInventoryReport.this, "Custodian or Technician hasn't signed yet", Toast.LENGTH_SHORT).show();
+                        }
+                    }else if(SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole().equalsIgnoreCase("main technician")){
+                        if(cust.getText().toString().equalsIgnoreCase("yes")){
+                            checkSignature();
+                        }else{
+                            Toast.makeText(ViewInventoryReport.this, "Custodian haven't signed yet", Toast.LENGTH_SHORT).show();
+                        }
+                    }else{//custodian
+                        checkSignature();
+                    }
+
                 } else
                     Toast.makeText(ViewInventoryReport.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
             }
@@ -146,7 +162,7 @@ public class ViewInventoryReport extends AppCompatActivity {
         String user_role = SharedPrefManager.getInstance(this).getUserRole();
         String query;
 
-        if (user_role.equalsIgnoreCase("head technician"))
+        if (user_role.equalsIgnoreCase("main technician"))
             query = "UPDATE assessment_reports SET htech_signed = 1 where rep_id = '" + rep_id + "'";
         else if (user_role.equalsIgnoreCase("custodian"))
             query = "UPDATE assessment_reports SET cust_signed = 1 where rep_id = '" + rep_id + "'";
@@ -165,7 +181,7 @@ public class ViewInventoryReport extends AppCompatActivity {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
                                 recreate();
-                            }else{
+                            } else {
                                 Toast.makeText(ViewInventoryReport.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
@@ -225,17 +241,24 @@ public class ViewInventoryReport extends AppCompatActivity {
                                             remark = remarks;
                                             custodian.setText(cust_name);
                                             technician.setText(tech_name);
-                                            if (cust_signed != 0)
+
+                                            if (cust_signed != 0) {
                                                 cust.setText("Yes");
-                                            else
+                                                if (SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole().equalsIgnoreCase("custodian"))
+                                                    sign.setVisibility(View.GONE);
+                                            } else
                                                 cust.setText("No");
-                                            if (tech_sign != 0)
+                                            if (tech_sign != 0) {
                                                 tech.setText("Yes");
-                                            else
+                                                if (SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole().equalsIgnoreCase("main technician"))
+                                                    sign.setVisibility(View.GONE);
+                                            } else
                                                 tech.setText("No");
-                                            if (admin_sign != 0)
+                                            if (admin_sign != 0) {
                                                 dean.setText("Yes");
-                                            else
+                                                if (SharedPrefManager.getInstance(ViewInventoryReport.this).getUserRole().equalsIgnoreCase("admin"))
+                                                    sign.setVisibility(View.GONE);
+                                            } else
                                                 dean.setText("No");
 
                                             loadDetailsHandler();

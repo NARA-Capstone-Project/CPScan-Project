@@ -67,8 +67,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
         holder.datetime.setText(details.getDate() + " " + details.getTime());
         if (details.getStatus().equalsIgnoreCase("accepted"))
             holder.status.setText("Status: Pending");
-        else
-            holder.status.setText("Status: " + details.getStatus());
 
         holder.card.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,7 +75,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
                 //if repair and done -> view requestrepair
             }
         });
-        if (details.getStatus().equalsIgnoreCase("accepted") && details.getTitle().equalsIgnoreCase("repair"))
+        if (details.getStatus().equalsIgnoreCase("accepted") && details.getTitle().contains("PC"))
             holder.report.setVisibility(View.VISIBLE);
 
         holder.report.setOnClickListener(new View.OnClickListener() {

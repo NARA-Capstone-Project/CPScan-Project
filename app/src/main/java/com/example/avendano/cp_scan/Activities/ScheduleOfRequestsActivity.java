@@ -177,18 +177,13 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
                         String status = obj.getString("req_status");
                         String tech_id = obj.getString("technician");
 
-                        if (status.equalsIgnoreCase("accepted") ||
-                                status.equalsIgnoreCase("done")) {
+                        if (status.equalsIgnoreCase("accepted")) {
                             if (SharedPrefManager.getInstance(getContext()).getUserId().equalsIgnoreCase(tech_id)) {
                                 Task task = new Task(set_date, set_time, msg,
-                                        "Inventory", room_id, req_id, status);
+                                        obj.getString("room_name"), room_id, req_id, status);
                                 taskList.add(task);
                             }
                         }
-
-                        Task task = new Task(set_date, set_time, msg,
-                                "Inventory", room_id, req_id, status);
-                        taskList.add(task);
                     }
                     if (taskList.size() != 0) {
                         taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, refresh);
@@ -282,11 +277,10 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
                         String status = obj.getString("req_status");
                         String tech_id = obj.getString("tech_id");
 
-                        if (status.equalsIgnoreCase("accepted") ||
-                                status.equalsIgnoreCase("done")) {
+                        if (status.equalsIgnoreCase("accepted")) {
                             if (SharedPrefManager.getInstance(getContext()).getUserId().equalsIgnoreCase(tech_id)) {
                                 Task task = new Task(set_date, set_time, msg,
-                                        "Repair", comp_id, req_id, status);
+                                        "PC " + obj.getInt("pc_no") + "/" + obj.getString("room_name"), comp_id, req_id, status);
                                 taskList.add(task);
                             }
                         }

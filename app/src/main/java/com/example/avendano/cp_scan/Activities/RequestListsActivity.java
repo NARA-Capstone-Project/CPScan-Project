@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -59,6 +60,8 @@ public class RequestListsActivity extends AppCompatActivity {
     PeripheralAdapter peripheralAdapter;
     VolleyRequestSingleton volley;
     int previousSelection = -1;
+    View v;
+    RelativeLayout relativeLayout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -80,8 +83,17 @@ public class RequestListsActivity extends AppCompatActivity {
         progress.show();
         progress.setCancelable(false);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        v = (View) findViewById(R.id.view);
+        relativeLayout = (RelativeLayout) findViewById(R.id.spinner);
 
         String[] items = new String[]{"Inventory Request", "Repair Request", "Peripherals Request"};
+        if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("admin")){
+            //peripherals lang ung iloload for approval
+            relativeLayout.setVisibility(View.GONE);
+            v.setVisibility(View.GONE);
+            request_type.setVisibility(View.GONE);
+        }
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         request_type.setAdapter(adapter);
         request_type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -129,12 +141,16 @@ public class RequestListsActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            if (request_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Request")) {
-                loadRequestInventory();
-            } else if (request_type.getSelectedItem().toString().equalsIgnoreCase("Repair Request")) {
-                loadRequestRepair();
-            } else {
+            if(SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("admin")){
                 loadRequestPeripherals();
+            }else{
+                if (request_type.getSelectedItem().toString().equalsIgnoreCase("Inventory Request")) {
+                    loadRequestInventory();
+                } else if (request_type.getSelectedItem().toString().equalsIgnoreCase("Repair Request")) {
+                    loadRequestRepair();
+                } else {
+                    loadRequestPeripherals();
+                }
             }
             return null;
         }
@@ -364,17 +380,34 @@ public class RequestListsActivity extends AppCompatActivity {
                                 String cust_id = obj.getString("cust_id");
                                 String user_id = SharedPrefManager.getInstance(RequestListsActivity.this).getUserId();
 
-                                if (!status.equalsIgnoreCase("received")) {
-                                    if (cust_id.equals(user_id)) {
+                                //if admin = for approval lang ung kukunin
+                                if(SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("admin")){
+                                    if (status.equalsIgnoreCase("confirmed")) {
                                         RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
                                         peripheralsList.add(peripherals);
-                                    } else if (tech_id.equals(user_id)) {
-                                        if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
-                                            RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
-                                            peripheralsList.add(peripherals);
+                                    }
+                                }else{
+                                    if (!status.equalsIgnoreCase("received")) {
+                                        if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("main technician")) {
+                                            if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
+                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                peripheralsList.add(peripherals);
+                                            }
+                                        }else{
+                                            if (cust_id.equals(user_id)) {
+                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                peripheralsList.add(peripherals);
+                                            } else if (tech_id.equals(user_id)) {
+                                                if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
+                                                    RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                    peripheralsList.add(peripherals);
+                                                }
+                                            }
                                         }
+
                                     }
                                 }
+
                             }
                             if (!peripheralsList.isEmpty()) {
                                 peripheralAdapter = new PeripheralAdapter(peripheralsList, RequestListsActivity.this, RequestListsActivity.this, refresh);

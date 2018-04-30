@@ -278,10 +278,7 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
         c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         Date getdate = c.getTime();
         String dateString = new SimpleDateFormat("yyyy-MM-dd").format(getdate);
-        if (date.getVisibility() == View.GONE) {
-            date.setVisibility(View.VISIBLE);
-            date.setText(dateString);
-        }
+        date.setText(dateString);
         dateSet = true;
     }
 
@@ -366,10 +363,10 @@ public class RequestForInventory extends AppCompatActivity implements DatePicker
                                         count++;
                                     }
                                 }
-                            }else{
+                            } else {
                                 count++;
                             }
-                        }else{
+                        } else {
                             count++;
                         }
                     }

@@ -52,7 +52,10 @@ public class PeripheralAdapter extends RecyclerView.Adapter<PeripheralAdapter.Ad
         holder.btn_container.setVisibility(View.INVISIBLE);
         holder.status.setVisibility(View.VISIBLE);
         holder.status.setText("Status: " + requestPeripherals.getStatus());
-
+        //status = pending, cancel, ignored, confirmed, approved, issued, received
+        //admin = confirmed lang yung kinukuha
+        //main and tech = as long as hindi ignored, cancel, received
+        //custodian = lahat kukunin
         holder.location.setText(requestPeripherals.getRoom_name());
         holder.category.setText(requestPeripherals.getCategory());
         holder.card.setOnClickListener(new View.OnClickListener() {

@@ -107,8 +107,10 @@ public class Main_Page extends AppCompatActivity {
                         startActivity(i);
                     }
                 });
-            } else {
+            } else if(role.equalsIgnoreCase("custodian")){
                 setContentView(R.layout.main_page_custodian);
+            }else{
+                setContentView(R.layout.main_head_layout); //request, reports, profile
             }
         }
 
@@ -119,7 +121,6 @@ public class Main_Page extends AppCompatActivity {
         display_date = (TextView) findViewById(R.id.date);
         display_date.setText(new SimpleDateFormat("MMM dd, yyyy").format(new Date()));
         account = (CardView) findViewById(R.id.account);
-        room = (CardView) findViewById(R.id.rooms);
         report = (CardView) findViewById(R.id.reports);
         req = (CardView) findViewById(R.id.requests);
 //        db = new SQLiteHandler(this);
@@ -133,13 +134,18 @@ public class Main_Page extends AppCompatActivity {
                 finish();
             }
         });
-        room.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Main_Page.this, RoomActivity.class);
-                startActivity(intent);
-            }
-        });
+        if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")||
+                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("technician")){
+
+            room = (CardView) findViewById(R.id.rooms);
+            room.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Main_Page.this, RoomActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -166,11 +172,14 @@ public class Main_Page extends AppCompatActivity {
                 boolean isNetworkAvailable = intent.getBooleanExtra(NetworkStateChange.IS_NETWORK_AVAILABLE, false);
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 if (isNetworkAvailable) {
+                    Toast.makeText(context, "Connected to the network", Toast.LENGTH_SHORT).show();
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
-                } else
+                } else {
+                    Toast.makeText(context, "Disconnected to the network", Toast.LENGTH_SHORT).show();
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
                             Snackbar.LENGTH_INDEFINITE).show();
+                }
             }
         }, intentFilter);
     }
@@ -214,7 +223,7 @@ public class Main_Page extends AppCompatActivity {
                         String req_status = obj.getString("req_status");
 
                         if (req_status.equalsIgnoreCase("accepted")) {
-                            if(obj.getString("technician").equals(SharedPrefManager.getInstance(Main_Page.this).getUserId())){
+                            if (obj.getString("technician").equals(SharedPrefManager.getInstance(Main_Page.this).getUserId())) {
                                 if (set_date.equalsIgnoreCase("anytime")) {
                                     room_name = room_name + " (Anytime)";
                                     tempRooms.add(room_name);
@@ -224,18 +233,11 @@ public class Main_Page extends AppCompatActivity {
                                     Date task_date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
                                     String strToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
                                     Date today = new SimpleDateFormat("yyyy-MM-dd").parse(strToday);
-                                    if (task_date.equals(today) || task_date.before(today)) {
-                                        if (task_date.before(today)) {
-                                            room_name = room_name + " (Missed)";
-                                            tempRoomsM.add(room_name);
-                                            room_idsM.add(room_id);
-                                            req_idsM.add(req_id);
-                                        } else {
-                                            room_name = room_name + " (Today -" + set_time + ")";
-                                            tempRooms.add(room_name);
-                                            room_ids.add(room_id);
-                                            req_ids.add(req_id);
-                                        }
+                                    if (task_date.equals(today)) {
+                                        room_name = room_name + " (Today -" + set_time + ")";
+                                        tempRooms.add(room_name);
+                                        room_ids.add(room_id);
+                                        req_ids.add(req_id);
                                     }
                                 }
 
@@ -406,7 +408,7 @@ public class Main_Page extends AppCompatActivity {
                         if (!obj.isNull("room_id")) {
                             r_id = obj.getInt("room_id");
                         }
-                        Log.e("RIDS", "comp: " + comp_id+ " ROOM: " + r_id + " : " + id);
+                        Log.e("RIDS", "comp: " + comp_id + " ROOM: " + r_id + " : " + id);
                         if (r_id == id) {
                             Log.e("COMP", " " + comp_id);
                             String model = obj.getString("model");
@@ -422,7 +424,8 @@ public class Main_Page extends AppCompatActivity {
 
                             int pc_no = obj.getInt("pc_no");
                             long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
-                            Log.e("PCTOASSESS", "COUNT: " + db.pcToAssessCount());                        }
+                            Log.e("PCTOASSESS", "COUNT: " + db.pcToAssessCount());
+                        }
                     }
                     goToAssessment(id, req_id);
                 } catch (JSONException e) {

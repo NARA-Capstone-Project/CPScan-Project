@@ -9,6 +9,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
         <RelativeLayout
+            android:id="@+id/spinner"
             android:layout_width="match_parent"
             android:layout_height="65dp"
             android:layout_margin="5dp"
@@ -22,6 +23,7 @@
         </RelativeLayout>
 
         <View
+            android:id="@+id/view"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginBottom="5dp"

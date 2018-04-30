@@ -171,7 +171,7 @@ public class SignatureActivity extends AppCompatActivity {
         String user_role = SharedPrefManager.getInstance(this).getUserRole();
         String query;
 
-        if (user_role.equalsIgnoreCase("head technician"))
+        if (user_role.equalsIgnoreCase("main technician"))
             query = "UPDATE assessment_reports SET htech_signed = 1 where rep_id = '" + rep_id + "'";
         else if (user_role.equalsIgnoreCase("custodian"))
             query = "UPDATE assessment_reports SET cust_signed = 1 where rep_id = '" + rep_id + "'";

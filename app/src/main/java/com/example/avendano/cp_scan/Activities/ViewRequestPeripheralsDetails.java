@@ -381,6 +381,8 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else {
                                         buttons.setVisibility(View.GONE);
                                     }
+                                }else{
+                                    buttons.setVisibility(View.GONE);
                                 }
                                 break;
                             }

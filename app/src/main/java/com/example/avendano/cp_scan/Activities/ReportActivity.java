@@ -160,7 +160,13 @@ public class ReportActivity extends AppCompatActivity {
                                     String date_req = obj.getString("date_req");
 
                                     if (status.equalsIgnoreCase("received")) {
-                                        if (cust_id.equals(user_id) || tech_id.equals(user_id)) {
+                                        if (SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("technician") ||
+                                                SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
+                                            if (cust_id.equals(user_id) || tech_id.equals(user_id)) {
+                                                Reports reports = new Reports(date_req, "Peripherals", room_name, 0, req_id);
+                                                reportsList.add(reports);
+                                            }
+                                        } else { //if main tech or admin
                                             Reports reports = new Reports(date_req, "Peripherals", room_name, 0, req_id);
                                             reportsList.add(reports);
                                         }
@@ -211,7 +217,15 @@ public class ReportActivity extends AppCompatActivity {
                                     String user_id = SharedPrefManager.getInstance(ReportActivity.this).getUserId();
                                     if (category.equalsIgnoreCase("repair")) {
                                         if (cat.contains("Repair")) {
-                                            if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                            if (SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("technician") ||
+                                                    SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
+
+                                                if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                                    String pc_name = "PC " + obj.getString("pc_no") + " of " + room_name;
+                                                    Reports reports = new Reports(date + " " + time, cat, pc_name, room_id, rep_id);
+                                                    reportsList.add(reports);
+                                                }
+                                            } else {
                                                 String pc_name = "PC " + obj.getString("pc_no") + " of " + room_name;
                                                 Reports reports = new Reports(date + " " + time, cat, pc_name, room_id, rep_id);
                                                 reportsList.add(reports);
@@ -219,7 +233,14 @@ public class ReportActivity extends AppCompatActivity {
                                         }
                                     } else {
                                         if (cat.contains("Inventory")) {
-                                            if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                            if (SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("technician") ||
+                                                    SharedPrefManager.getInstance(ReportActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
+
+                                                if (user_id.equals(cust_id) || user_id.equals(tech_id)) {
+                                                    Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
+                                                    reportsList.add(reports);
+                                                }
+                                            }else{
                                                 Reports reports = new Reports(date + " " + time, cat, room_name, room_id, rep_id);
                                                 reportsList.add(reports);
                                             }
