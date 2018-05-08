@@ -103,33 +103,33 @@ public class ViewRoom extends AppCompatActivity {
         }
 
         //BUTTONS
-        room_sched = (ImageView) findViewById(R.id.calendar);
-        room_sched.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Room Schedule
-                Bitmap bmp = null;
-                try {
-                    //Write file
-                    String filename = "bitmap.png";
-                    FileOutputStream stream = ViewRoom.this.openFileOutput(filename, Context.MODE_PRIVATE);
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-
-                    //Cleanup
-                    stream.close();
-                    bmp.recycle();
-
-                    //Pop intent
-
-                    Intent intent = new Intent(getApplicationContext(), ScheduleActivity.class);
-                    intent.putExtra("room_id", room_id);
-                    intent.putExtra("image", sched_image);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+//        room_sched = (ImageView) findViewById(R.id.calendar);
+//        room_sched.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //Room Schedule
+//                Bitmap bmp = null;
+//                try {
+//                    //Write file
+//                    String filename = "bitmap.png";
+//                    FileOutputStream stream = ViewRoom.this.openFileOutput(filename, Context.MODE_PRIVATE);
+//                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//
+//                    //Cleanup
+//                    stream.close();
+//                    bmp.recycle();
+//
+//                    //Pop intent
+//
+//                    Intent intent = new Intent(getApplicationContext(), ScheduleActivity.class);
+//                    intent.putExtra("room_id", room_id);
+//                    intent.putExtra("image", sched_image);
+//                    startActivity(intent);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
         room_computers = (ImageView) findViewById(R.id.computers);
         room_computers.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -470,13 +470,13 @@ public class ViewRoom extends AppCompatActivity {
                             if (obj.isNull("room_image"))
                                 image_path = "";
                             else {
-                                image_path = AppConfig.ROOT + path;
+                                image_path = AppConfig.ROOT + "/images/" + path;
                                 getImage();
                             }
                             if (obj.isNull("room_sched"))
                                 sched_image = "";
                             else {
-                                sched_image = AppConfig.ROOT + path;
+                                sched_image = AppConfig.ROOT + "/images/" +  path;
                             }
                             ViewRoom.this.lastAssess.setText(obj.getString("last_assess"));
                             break;

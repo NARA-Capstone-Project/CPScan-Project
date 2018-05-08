@@ -38,6 +38,7 @@ import java.util.Map;
 
 public class EditProfileActivity extends AppCompatActivity {
 
+    ProfileAdapter adapter;
     String[] titles = { "Phone","Name","Email", "Username", "Password", "Add Signature"};
     String[] userData = {SharedPrefManager.getInstance(EditProfileActivity.this).getUserPhone(),
             SharedPrefManager.getInstance(EditProfileActivity.this).getName()
@@ -57,8 +58,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
         db = new SQLiteHandler(EditProfileActivity.this);
 
+        checkSignature();
+
         ListView list = (ListView) findViewById(R.id.listview);
-        ProfileAdapter adapter = new ProfileAdapter();
+        adapter = new ProfileAdapter();
         list.setAdapter(adapter);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -76,7 +79,6 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
             }
         });
-        checkSignature();
     }
 
     private void checkSignature() {
@@ -100,6 +102,7 @@ public class EditProfileActivity extends AppCompatActivity {
                                 List<String> data = new ArrayList<String>(Arrays.asList(userData));
                                 data.remove(idx);
                                 userData = data.toArray(new String[data.size()]);
+                                adapter.notifyDataSetChanged();
                             }
                         } catch (JSONException e) {
                             Log.e("SIGN", response);
@@ -140,8 +143,10 @@ public class EditProfileActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             convertView = getLayoutInflater().inflate(R.layout.list_item, null);
             TextView title = (TextView) convertView.findViewById(R.id.title);
-            title.setText(titles[position]);
             final EditText user = (EditText) convertView.findViewById(R.id.userData);
+
+            title.setText(titles[position]);
+
             if (title.getText().toString().equalsIgnoreCase("add signature") ||
                     title.getText().toString().trim().equalsIgnoreCase("password")) {
                 user.setVisibility(View.GONE);
@@ -151,6 +156,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 user.setText(userData[position]);
                 user.setInputType(InputType.TYPE_CLASS_TEXT);
             }
+
 
             final int item = position;
             user.setOnClickListener(new View.OnClickListener() {

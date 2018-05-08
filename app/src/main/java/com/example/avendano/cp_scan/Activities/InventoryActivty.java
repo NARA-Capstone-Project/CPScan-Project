@@ -521,7 +521,7 @@ public class InventoryActivty extends AppCompatActivity {
                                         alert.show();
 
                                     } else {
-                                        int id = obj.getInt("room_id");
+                                        int id = obj.getInt("room_id"); //room id nung pc n naligaw para makuha ung user id then kukunin ung phone
                                         String room_name = obj.getString("room_name");
                                         int pc_no = obj.getInt("pc_no");
                                         showAlert("This is PC " + pc_no + " of " + room_name + " room", true, id, room_name, pc_no);

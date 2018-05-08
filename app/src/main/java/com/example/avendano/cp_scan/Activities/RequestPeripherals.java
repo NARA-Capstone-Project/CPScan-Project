@@ -60,6 +60,7 @@ public class RequestPeripherals extends AppCompatActivity {
     String room_name, method;//method = edit or request
     String[] peripheralsList = new String[]{"Mouse", "Keyboard", "Power Supply", "Power Cord", "Memory", "Video Card"
             , "Motherboard", "VGA Cable", "UTP Cable", "Router Hub"};
+    String[] purposeList = new String[] {"Missing","Defective","Replacement","Others..."};
     ArrayList<String> choices = new ArrayList<>();
     ArrayList<Integer> quantity = new ArrayList<>();
     ArrayList<String> unitValue = new ArrayList<>();

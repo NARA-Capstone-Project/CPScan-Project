@@ -112,6 +112,18 @@ public class Main_Page extends AppCompatActivity {
             }else{
                 setContentView(R.layout.main_head_layout); //request, reports, profile
             }
+            if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")||
+                    SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("technician")){
+
+                room = (CardView) findViewById(R.id.rooms);
+                room.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Main_Page.this, RoomActivity.class);
+                        startActivity(intent);
+                    }
+                });
+            }
         }
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -134,18 +146,7 @@ public class Main_Page extends AppCompatActivity {
                 finish();
             }
         });
-        if(SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("custodian")||
-                SharedPrefManager.getInstance(this).getUserRole().equalsIgnoreCase("technician")){
 
-            room = (CardView) findViewById(R.id.rooms);
-            room.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(Main_Page.this, RoomActivity.class);
-                    startActivity(intent);
-                }
-            });
-        }
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -172,11 +173,9 @@ public class Main_Page extends AppCompatActivity {
                 boolean isNetworkAvailable = intent.getBooleanExtra(NetworkStateChange.IS_NETWORK_AVAILABLE, false);
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 if (isNetworkAvailable) {
-                    Toast.makeText(context, "Connected to the network", Toast.LENGTH_SHORT).show();
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(context, "Disconnected to the network", Toast.LENGTH_SHORT).show();
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
                             Snackbar.LENGTH_INDEFINITE).show();
                 }

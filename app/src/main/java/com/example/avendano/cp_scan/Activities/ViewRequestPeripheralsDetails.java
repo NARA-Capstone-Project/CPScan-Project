@@ -368,6 +368,8 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("ignored")) {
                                         positive.setText("Resend Request");
                                         negative.setVisibility(View.GONE);
+                                    } else if (req_status.equalsIgnoreCase("confirmed")) {
+                                        buttons.setVisibility(View.GONE);
                                     } else { //if pending
                                         positive.setText("Edit");
                                         negative.setText("Cancel");
