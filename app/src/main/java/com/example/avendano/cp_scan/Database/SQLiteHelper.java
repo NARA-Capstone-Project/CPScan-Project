@@ -42,6 +42,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String COMP_ID = "comp_id";
     public static final String COMP_OS = "comp_os";
     public static final String COMP_MODEL = "model";
+    public static final String COMP_SERIAL = "comp_serial";
     public static final String COMP_NAME = "pc_no";
     public static final String COMP_PR = "processor";
     public static final String COMP_MB = "motherboard";
@@ -178,6 +179,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COMP_ID + " INTEGER, " //FOREIGN KEY
             + COMP_MODEL + " VARCHAR, "
             + COMP_NAME + " INTEGER,"
+            //add comp serial here
             + COMP_MB + " VARCHAR, "
             + REPORT_MB_SERIAL + " varchar,"
             + COMP_PR + " VARCHAR, "
@@ -265,6 +267,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COMP_ID + " INTEGER, " //FOREIGN KEY
             + COMP_NAME + " INTEGER,"
             + COMP_MODEL + " VARCHAR, "
+            + COMP_SERIAL + " VARCHAR, "
             + COMP_MB + " VARCHAR, "
             + REPORT_MB_SERIAL + " varchar,"
             + COMP_PR + " VARCHAR, "
@@ -284,6 +287,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COMP_ID + " INTEGER, " //FOREIGN KEY
             + COMP_NAME + " INTEGER, "
             + COMP_MODEL + " VARCHAR, "
+            + COMP_SERIAL + " VARCHAR, "
             + COMP_MB + " VARCHAR, "
             + COMP_PR + " VARCHAR, "
             + COMP_MONITOR + " VARCHAR, "
@@ -297,7 +301,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + " );";
     //DB DETAILS
     public static final String DB_NAME = "mySQL";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 9;
 
     public SQLiteHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -333,8 +337,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + ASSESSED_PC);
         onCreate(db);
     }
-
-
 
     //computers
     public void addComputers(int comp_id, int room_id, String os, int comp_name
@@ -508,7 +510,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
 
     //addpctoassess
-    public long addPctoAssess(int comp_id, String mb, String processor,
+    public long addPctoAssess(int comp_id,String comp_serial, String mb, String processor,
                               String monitor, String ram, String kboard,
                               String mouse, String status, String vga, String hdd, int pc_no, String model) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -517,6 +519,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(COMP_ID, comp_id);
         values.put(COMP_NAME, pc_no);
         values.put(COMP_MODEL, model);
+        values.put(COMP_SERIAL, comp_serial);
         values.put(COMP_MB, mb);
         values.put(COMP_PR, processor);
         values.put(COMP_MONITOR, monitor);
@@ -532,6 +535,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         long in = db.insert(PC_TO_ASSESS, null, values);
         return in;
     }
+
     public long getUnscannedCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         long count = DatabaseUtils.queryNumEntries(db, PC_TO_ASSESS, COLUMN_SCANNED
@@ -544,6 +548,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         long count = DatabaseUtils.queryNumEntries(db, PC_TO_ASSESS);
         return count;
     }
+
     public void deletePcToAssess() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM " + PC_TO_ASSESS);
@@ -562,9 +567,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Cursor c = db.rawQuery(sql, null);
         return c;
     }
+
     public Cursor getPcToAssess(int comp_id){
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COMP_ID, COMP_MODEL,COMP_NAME, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
+        String[] columns = {COMP_ID, COMP_SERIAL, COMP_MODEL,COMP_NAME, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, COLUMN_SCANNED};
         Cursor cursor = db.query(PC_TO_ASSESS, columns, COMP_ID + " = ?", new String[]
                 {String.valueOf(comp_id)}, null, null, null);
@@ -575,7 +581,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
 
     //assessed pc
-    public long addAssessedPc(int comp_id, int pc_no,String model, String mb,
+    public long addAssessedPc(int comp_id, int pc_no,String model, String comp_serial, String mb,
                               String mb_serial, String processor,
                               String monitor,String mon_serial, String ram, String kboard,
                               String mouse, String status, String vga, String hdd) {
@@ -585,6 +591,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(COMP_ID, comp_id);
         values.put(COMP_NAME, pc_no);
         values.put(COMP_MODEL, model);
+        values.put(COMP_SERIAL, comp_serial);
         values.put(COMP_MB, mb);
         values.put(REPORT_MB_SERIAL, mb_serial);
         values.put(COMP_PR, processor);
@@ -604,7 +611,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public Cursor getAssessedPc(){
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COMP_ID, COMP_NAME,COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
+        String[] columns = {COMP_ID, COMP_SERIAL, COMP_NAME,COMP_MODEL, COMP_MONITOR, COMP_HDD, COMP_KBOARD, COMP_MB, COMP_PR,
                 COMP_RAM, COMP_STATUS, COMP_VGA, COMP_MOUSE, REPORT_MB_SERIAL, REPORT_MON_SERIAL};
         Cursor cursor = db.query(ASSESSED_PC, columns, null, null, null, null, null);
         return cursor;

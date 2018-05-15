@@ -102,7 +102,7 @@ public class ReportDetailsAdapter extends RecyclerView.Adapter<RecyclerView.View
                         viewHolder.expandableLayout.toggle();
                     }
                 });
-
+                viewHolder.pc_serial.setText(reportDetailsList.get(position).getSerial());
                 viewHolder.pc_kb.setText(reportDetailsList.get(position).getKb());
                 viewHolder.pc_mb.setText(reportDetailsList.get(position).getMb());
                 viewHolder.pc_monitor.setText(reportDetailsList.get(position).getMonitor());
@@ -136,7 +136,7 @@ public class ReportDetailsAdapter extends RecyclerView.Adapter<RecyclerView.View
 class ViewHolderWithChildren extends RecyclerView.ViewHolder{
 
     TextView pcno, comp_status;
-    TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
+    TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb, pc_serial;
     RelativeLayout button;
     ExpandableLinearLayout expandableLayout;
 
@@ -144,6 +144,7 @@ class ViewHolderWithChildren extends RecyclerView.ViewHolder{
         super(itemView);
         pcno = (TextView) itemView.findViewById(R.id.pc);
         comp_status = (TextView) itemView.findViewById(R.id.status);
+        pc_serial = (TextView) itemView.findViewById(R.id.pc_serial);
         pc_monitor = (TextView) itemView.findViewById(R.id.pc_mon);
         pc_model = (TextView) itemView.findViewById(R.id.pc_model);
         pc_mb = (TextView) itemView.findViewById(R.id.pc_mb);

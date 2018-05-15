@@ -188,6 +188,7 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
                     if (taskList.size() != 0) {
                         taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, refresh);
                         recyclerView.setAdapter(taskAdapter);
+                        taskAdapter.notifyDataSetChanged();
                     } else {
                         Toast.makeText(getContext(), "No Inventory Schedule", Toast.LENGTH_SHORT).show();
                     }
@@ -288,6 +289,7 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
                     if (taskList.size() != 0) {
                         taskAdapter = new TaskAdapter(getContext(), getActivity(), taskList, refresh);
                         recyclerView.setAdapter(taskAdapter);
+                        taskAdapter.notifyDataSetChanged();
                     } else {
                         Toast.makeText(getContext(), "No Repair Schedule", Toast.LENGTH_SHORT).show();
                     }

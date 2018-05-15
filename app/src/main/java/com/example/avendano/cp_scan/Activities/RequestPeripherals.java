@@ -18,11 +18,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,10 +62,11 @@ public class RequestPeripherals extends AppCompatActivity {
     String room_name, method;//method = edit or request
     String[] peripheralsList = new String[]{"Mouse", "Keyboard", "Power Supply", "Power Cord", "Memory", "Video Card"
             , "Motherboard", "VGA Cable", "UTP Cable", "Router Hub"};
-    String[] purposeList = new String[] {"Missing","Defective","Replacement","Others..."};
+    String[] purposeList = new String[]{"Replacement", "Defective", "Missing", "Others..."};
     ArrayList<String> choices = new ArrayList<>();
     ArrayList<Integer> quantity = new ArrayList<>();
     ArrayList<String> unitValue = new ArrayList<>();
+    Spinner list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,13 +77,31 @@ public class RequestPeripherals extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
 
-        room_name = getIntent().getStringExtra("room_name");
+        room_name = getIntent().getStringExtra("room_name");//purpose kapag ieedit
         room_id = getIntent().getIntExtra("room_id", 0);
         method = getIntent().getStringExtra("method");
         req_id = getIntent().getIntExtra("req_id", 0);
 
         listView = (ListView) findViewById(R.id.peripherals);
-        purpose = (EditText) findViewById(R.id.purpose);
+        purpose = (EditText) findViewById(R.id.purpose); //default visibility = gone
+        list = (Spinner) findViewById(R.id.list);
+        ArrayAdapter<String> spin_adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, purposeList);
+        list.setAdapter(spin_adapter);
+        list.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //"Missing","Defective","Replacement","Others..."
+                if (position == 3) {
+                    purpose.setVisibility(View.VISIBLE);
+                } else
+                    purpose.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
         add = (FloatingActionButton) findViewById(R.id.add);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +117,19 @@ public class RequestPeripherals extends AppCompatActivity {
             showPeripherals();
         } else {
             getSupportActionBar().setTitle("Edit Request");
-            purpose.setText(room_name);
+            int counter = 0;
+            for (String val : purposeList) {
+                if (val.equals(room_name)) {
+                    list.setSelection(counter);
+                    break;
+                } else
+                    counter++;
+            }
+            if (counter == purposeList.length) {
+                purpose.setVisibility(View.VISIBLE);
+                list.setSelection(3);
+                purpose.setText(room_name);
+            }
             getPeripheralRequest();
         }
     }
@@ -252,9 +285,16 @@ public class RequestPeripherals extends AppCompatActivity {
                 if (choices.isEmpty()) {
                     Toast.makeText(this, "You haven't select any peripherals", Toast.LENGTH_SHORT).show();
                 } else {
-                    if (purpose.getText().toString().trim().isEmpty()) {
-                        Toast.makeText(this, "Please write the purpose of your request", Toast.LENGTH_SHORT).show();
-                        purpose.requestFocus();
+                    if (list.getSelectedItemPosition() == 3) {
+                        if (purpose.getText().toString().trim().length() == 0) {
+                            Toast.makeText(this, "Please write the purpose of your request", Toast.LENGTH_SHORT).show();
+                            purpose.requestFocus();
+                        }else {
+                            if (method.equalsIgnoreCase("request"))
+                                savePeripheralRequest();
+                            else
+                                editPeripheralRequest();
+                        }
                     } else {
                         if (method.equalsIgnoreCase("request"))
                             savePeripheralRequest();
@@ -288,7 +328,11 @@ public class RequestPeripherals extends AppCompatActivity {
                 //httpurl connection
                 JSONArray array = new JSONArray();
                 HttpURLCon con = new HttpURLCon();
-                String reqPurpose = purpose.getText().toString().trim();
+                String reqPurpose = "";
+                if (list.getSelectedItemPosition() == 3)
+                    reqPurpose = purpose.getText().toString().trim();
+                else
+                    reqPurpose = list.getSelectedItem().toString().trim();
                 String designation = SharedPrefManager.getInstance(RequestPeripherals.this).getName() + "/" + room_name;
 
                 for (int i = 0; i < choices.size(); i++) {
@@ -359,7 +403,12 @@ public class RequestPeripherals extends AppCompatActivity {
         }
         String details = array.toString();
         Map<String, String> param = new HashMap<>();
-        param.put("purpose", purpose.getText().toString().trim());
+        String reqPurpose = "";
+        if (list.getSelectedItemPosition() == 3)
+            reqPurpose = purpose.getText().toString().trim();
+        else
+            reqPurpose = list.getSelectedItem().toString().trim();
+        param.put("purpose", reqPurpose);
         param.put("details", details);
         param.put("req_id", String.valueOf(req_id));
 
@@ -369,15 +418,15 @@ public class RequestPeripherals extends AppCompatActivity {
                     @Override
                     public void onSuccessResponse(String response) {
                         Log.e("EDIT", response);
-                        try{
+                        try {
                             JSONObject obj = new JSONObject(response);
-                            if(!obj.getBoolean("error")){
+                            if (!obj.getBoolean("error")) {
                                 Toast.makeText(RequestPeripherals.this, "Updated!", Toast.LENGTH_SHORT).show();
                                 finish();
-                            }else{
+                            } else {
                                 Toast.makeText(RequestPeripherals.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(RequestPeripherals.this, "An error occurred, please try again later", Toast.LENGTH_SHORT).show();
                         }
@@ -385,7 +434,7 @@ public class RequestPeripherals extends AppCompatActivity {
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String string= (error instanceof TimeoutError) ? "Server took too long to respond" : "Can't connect to the server";
+                        String string = (error instanceof TimeoutError) ? "Server took too long to respond" : "Can't connect to the server";
                         Toast.makeText(RequestPeripherals.this, string, Toast.LENGTH_SHORT).show();
                     }
                 }, param);

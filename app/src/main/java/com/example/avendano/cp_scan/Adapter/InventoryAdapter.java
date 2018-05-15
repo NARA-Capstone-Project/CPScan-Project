@@ -1,6 +1,7 @@
 package com.example.avendano.cp_scan.Adapter;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,8 +16,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +63,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     android.app.AlertDialog progress;
     VolleyRequestSingleton volley;
     Connection_Detector connection_detector;
+    String reason;
 
     public InventoryAdapter(List<RequestInventory> inventoryList, Context mCtx, Activity act, SwipeRefreshLayout swiper) {
         this.inventoryList = inventoryList;
@@ -67,6 +73,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         volley = new VolleyRequestSingleton(mCtx);
         connection_detector = new Connection_Detector(mCtx);
 //        db = new SQLiteHandler(mCtx);
+        reason = "";
     }
 
     @Override
@@ -149,31 +156,66 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     }
 
     private void updateDialog(final int req_id, final int position) {
-        String msg = "Are you sure you want to ignore this request?";
-        AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
-        builder.setCancelable(false);
-        builder.setMessage(msg)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Connection_Detector connection_detector = new Connection_Detector(mCtx);
-                        if (connection_detector.isConnected()) {
-                            progress = new SpotsDialog(mCtx, "Loading...");
-                            progress.setCancelable(false);
-                            progress.show();
-                            updateRequest(req_id, "ignore", position);
-                        } else
-                            Toast.makeText(mCtx, "No internet connection", Toast.LENGTH_SHORT).show();
+        final Spinner reasons;
+        final EditText custom;
+        final Dialog dialog = new Dialog(mCtx);
+        TextView diag_msg;
+        dialog.setContentView(R.layout.cancel_dialog);
+        custom = (EditText) dialog.findViewById(R.id.custom);
+        reasons = (Spinner) dialog.findViewById(R.id.reasons);
+        diag_msg = (TextView) dialog.findViewById(R.id.txt_msg);
+        Button save = (Button) dialog.findViewById(R.id.save);
+        Button cancel = (Button) dialog.findViewById(R.id.cancel);
+        diag_msg.setText("Input the reason of ignoring this request: ");
+
+        String items[] = new String[]{"I'm Busy", "I'm not in University", "I'm not available", "Others..."};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mCtx, R.layout.support_simple_spinner_dropdown_item, items);
+        reasons.setAdapter(adapter);
+        reasons.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 3)
+                    custom.setVisibility(View.VISIBLE);
+                else {
+                    reason = reasons.getSelectedItem().toString().trim();
+                    custom.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        if (reasons.getSelectedItemPosition() == 3)
+            reason = custom.getText().toString().trim();
+        else
+            reason = reasons.getSelectedItem().toString().trim();
+
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mCtx, "Reason: " + reason, Toast.LENGTH_SHORT).show();
+                //if pos == 3 = check if may laman ung custom text, update status to ignored
+                if (reasons.getSelectedItemPosition() == 3) {
+                    if (reason.trim().isEmpty()) {
+                        custom.setError("Empty Field!");
+                    } else {
+                        updateRequest(req_id, "ignore", position);
                     }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
+                }
+            }
+        });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.setTitle("Ignore Request");
+        dialog.show();
     }
 
     private void updateRequest(final int req_id, final String button, final int position) {
@@ -188,7 +230,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             private void updateRequest(String btn_clicked) {
                 String query = "";
                 if (btn_clicked.equalsIgnoreCase("ignore"))
-                    query = "UPDATE request_inventory SET req_status = 'Ignored' WHERE req_id = ?";
+                    query = "UPDATE request_inventory SET req_status = 'Ignored', cancel_remarks = '"+reason+"' WHERE req_id = ?";
                 else
                     query = "UPDATE request_inventory SET req_status = 'Accepted' WHERE req_id = ?";
 

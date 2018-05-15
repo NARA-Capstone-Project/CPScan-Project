@@ -1,5 +1,6 @@
 package com.example.avendano.cp_scan.Activities;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -11,8 +12,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.TimeoutError;
@@ -53,13 +59,15 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
     LinearLayout buttons;
     Button positive, negative;
     Toolbar toolbar;
-    String purpose;
+    String purpose, reason;
     int SIGN_REQ = 0, ISSUED = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request_peripherals_details);
+
+        reason = "";
 
         req_id = getIntent().getIntExtra("req_id", 0);
 
@@ -110,12 +118,12 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                         i.putExtra("method", "edit");
                         startActivity(i);
                     } else if (positive.getText().toString().equalsIgnoreCase("approve")) {
-                        updateRequestStatus(req_id, "Approved");
+                        checkSignature("approve");
                     } else if (positive.getText().toString().equalsIgnoreCase("Confirm")) {
                         updateRequestStatus(req_id, "Confirmed");
                     } else if (positive.getText().toString().equalsIgnoreCase("sign")) {
                         //check first kung may signature na si user
-                        checkSignature();
+                        checkSignature("receive");
                     } else if (positive.getText().toString().equalsIgnoreCase("Resend Request")) {
                         updateRequestStatus(req_id, "Pending");
                     } else if (positive.getText().toString().equalsIgnoreCase("Issue Peripherals")) {
@@ -132,14 +140,76 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                     if (negative.getText().toString().equalsIgnoreCase("cancel")) {
                         updateRequestStatus(req_id, "Cancel");
                     } else if (negative.getText().toString().equalsIgnoreCase("ignore")) {
-                        updateRequestStatus(req_id, "Ignored");
+                        ignoreDialog(req_id);
                     }
                 }
             });
         }
     }
 
-    private void checkSignature() {
+    private void ignoreDialog(final int req_id) {
+        final Spinner reasons;
+        final EditText custom;
+        final Dialog dialog = new Dialog(this);
+        TextView diag_msg;
+        dialog.setContentView(R.layout.cancel_dialog);
+        custom = (EditText) dialog.findViewById(R.id.custom);
+        reasons = (Spinner) dialog.findViewById(R.id.reasons);
+        diag_msg = (TextView) dialog.findViewById(R.id.txt_msg);
+        Button save = (Button) dialog.findViewById(R.id.save);
+        Button cancel = (Button) dialog.findViewById(R.id.cancel);
+        diag_msg.setText("Input the reason of ignoring this request: ");
+
+        String items[] = new String[]{"Out of Stock", "Lack of Stock", "Can't issue the requested peripherals on the date you set", "Others..."};
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
+        reasons.setAdapter(adapter);
+        reasons.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 3)
+                    custom.setVisibility(View.VISIBLE);
+                else {
+                    reason = reasons.getSelectedItem().toString().trim();
+                    custom.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        if (reasons.getSelectedItemPosition() == 3)
+            reason = custom.getText().toString().trim();
+        else
+            reason = reasons.getSelectedItem().toString().trim();
+
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //if pos == 3 = check if may laman ung custom text, update status to ignored
+                if (reasons.getSelectedItemPosition() == 3) {
+                    if (reason.trim().isEmpty()) {
+                        custom.setError("Empty Field!");
+                    } else {
+                        updateRequestStatus(req_id, "Ignored");
+                    }
+                }
+            }
+        });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.setTitle("Ignore Request");
+        dialog.show();
+    }
+
+    private void checkSignature(final String string) {
         Map<String, String> param = new HashMap<>();
         param.put("user_id", SharedPrefManager.getInstance(this).getUserId());
 
@@ -153,7 +223,10 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                             if (obj.isNull("signature")) {
                                 signReport();
                             } else {
-                                updateRequestStatus(req_id, "Received");
+                                if(string.equalsIgnoreCase("approve"))
+                                    updateRequestStatus(req_id, "Approved");
+                                else
+                                    updateRequestStatus(req_id, "Received");
                             }
 
                         } catch (JSONException e) {
@@ -185,7 +258,9 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         String query = "UPDATE request_peripherals SET req_status = '" + update + "' WHERE req_id = '" + req_id + "'";
         if(update.equalsIgnoreCase("approved")){
             String approve_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-             query = "UPDATE request_peripherals SET req_status = '" + update + "' WHERE req_id = '" + req_id + "'";
+             query = "UPDATE request_peripherals SET req_status = '" + update + "', approved_date = '"+approve_date+"' WHERE req_id = '" + req_id + "'";
+        }else  if(update.equalsIgnoreCase("ignored")){
+            query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = '"+reason+"' WHERE req_id = '" + req_id + "'";
         }
         Map<String, String> param = new HashMap<>();
         param.put("query", query);
@@ -377,7 +452,6 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                 } else if (role.equalsIgnoreCase("technician")) {
                                     if (req_status.equalsIgnoreCase("approved")) {
                                         positive.setText("Issue Peripherals");
-                                        negative.setVisibility(View.GONE);
                                     } else if (req_status.equalsIgnoreCase("pending")) {
                                         positive.setText("Confirm");
                                     } else {

@@ -164,7 +164,6 @@
 
 
                         <ImageView
-                            android:id="@+id/icon1"
                             android:layout_width="30dp"
                             android:layout_height="30dp"
                             android:layout_centerHorizontal="true"
@@ -230,7 +229,6 @@
 
 
                         <ImageView
-                            android:id="@+id/icon2"
                             android:layout_width="30dp"
                             android:layout_height="30dp"
                             android:layout_centerHorizontal="true"

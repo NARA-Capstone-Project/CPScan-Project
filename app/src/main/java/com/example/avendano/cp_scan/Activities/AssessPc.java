@@ -34,9 +34,9 @@ public class AssessPc extends AppCompatActivity {
     int comp_id, room_id, req_id;
     Toolbar toolbar;
     RadioGroup mon_stat, mb_stat, pr_stat, ram_stat, hdd_stat, kb_stat, vga_stat, mouse_stat;
-    TextView mon, mb, pr, ram, hdd, kb, vga, mouse;
+    TextView mon, mb, pr, ram, hdd, kb, vga, mouse, pc_serial, pc_model;
     String WORKING = "OK", NOT_WORKING = "None/Not Working", MISSING = "Missing";
-    String COMP_STATUS_NOT_WORKING = "Defective", comp_status, model;
+    String COMP_STATUS_NOT_WORKING = "Defective", comp_status;
     String mon_status, mb_status, pr_status, ram_status, hdd_status, kb_status, vga_status, mouse_status;
     SQLiteHelper db;
     AlertDialog progress;
@@ -69,6 +69,8 @@ public class AssessPc extends AppCompatActivity {
         kb = (TextView) findViewById(R.id.kboard);
         vga = (TextView) findViewById(R.id.vga);
         mouse = (TextView) findViewById(R.id.mouse);
+        pc_serial = (TextView) findViewById(R.id.comp_serial);
+        pc_model = (TextView) findViewById(R.id.comp_model);
 
         //radiogroup
         mon_stat = (RadioGroup) findViewById(R.id.btn_mon);
@@ -203,6 +205,8 @@ public class AssessPc extends AppCompatActivity {
             protected Void doInBackground(Void... voids) {
                 Cursor c = db.getPcToAssess(comp_id);
                 if (c.moveToFirst()) {
+                    pc_model.setText(c.getString(c.getColumnIndex(db.COMP_MODEL)));
+                    pc_serial.setText(c.getString(c.getColumnIndex(db.COMP_SERIAL)));
                     mon.setText(c.getString(c.getColumnIndex(db.COMP_MONITOR)));
                     mb.setText(c.getString(c.getColumnIndex(db.COMP_MB)));
                     pr.setText(c.getString(c.getColumnIndex(db.COMP_PR)));
@@ -212,7 +216,6 @@ public class AssessPc extends AppCompatActivity {
                     vga.setText(c.getString(c.getColumnIndex(db.COMP_VGA)));
                     mouse.setText(c.getString(c.getColumnIndex(db.COMP_MOUSE)));
                     pc_no = c.getInt(c.getColumnIndex(db.COMP_NAME));
-                    model = c.getString(c.getColumnIndex(db.COMP_MODEL));
                 } else {
                     goToInventoryAct();
                 }
@@ -353,7 +356,8 @@ public class AssessPc extends AppCompatActivity {
             } else {
                 comp_status = "Working";
             }
-            long insert = db.addAssessedPc(comp_id, pc_no, model, mb_status, mb.getText().toString(),
+            long insert = db.addAssessedPc(comp_id, pc_no, pc_model.getText().toString().trim(),pc_serial.getText().toString().trim()
+                    , mb_status, mb.getText().toString(),
                     pr_status, mon_status, mon.getText().toString(), ram_status, kb_status, mouse_status,
                     comp_status, vga_status, hdd_status
             );

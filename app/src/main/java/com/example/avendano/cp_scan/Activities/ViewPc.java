@@ -35,6 +35,7 @@ import com.example.avendano.cp_scan.SharedPref.SharedPrefManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class ViewPc extends AppCompatActivity {
 
     int pc;
     TextView pcno, room_name, comp_status, instr, pc_os;
-    TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb;
+    TextView pc_model, pc_mb, pc_monitor, pc_processor, pc_ram, pc_hdd, pc_mouse, pc_vga, pc_kb, pc_serial;
     CheckBox monitor, mb, pr, ram, hdd, keyboard, mouse, vga;
     Button report, cancel;
     RadioGroup rGroup;
@@ -80,6 +81,7 @@ public class ViewPc extends AppCompatActivity {
         progressDialog.show();
         pcno = (TextView) findViewById(R.id.pc_no);
         room_name = (TextView) findViewById(R.id.pc_room);
+        pc_serial = (TextView) findViewById(R.id.pc_serial);
         pc_model = (TextView) findViewById(R.id.pc_model);
         pc_monitor = (TextView) findViewById(R.id.pc_monitor);
         pc_mb = (TextView) findViewById(R.id.pc_mb);
@@ -822,6 +824,8 @@ public class ViewPc extends AppCompatActivity {
                                     //pc = obj.getInt("pc_no");
                                     else
                                         pcno.setText("PC " + obj.getInt("pc_no"));
+                                    if(!obj.isNull("comp_serial"))
+                                        pc_serial.setText(obj.getString("comp_serial"));
                                     pc_model.setText(obj.getString("model"));
                                     pc_processor.setText(obj.getString("pr"));
                                     pc_mb.setText(obj.getString("mb"));

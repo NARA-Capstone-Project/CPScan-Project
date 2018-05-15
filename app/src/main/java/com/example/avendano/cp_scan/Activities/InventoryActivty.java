@@ -62,7 +62,6 @@ public class InventoryActivty extends AppCompatActivity {
     BroadcastReceiver qrScanReceiver;
     SQLiteHelper dbHelper;
     Toolbar toolbar;
-    Button scan;
     EditText serial_edttxt, remark;
     RecyclerView recyclerView;
     List<Assess_Computers> pcList;
@@ -148,7 +147,6 @@ public class InventoryActivty extends AppCompatActivity {
         room_id = getIntent().getIntExtra("room_id", 0);
         req_id = getIntent().getIntExtra("req_id", 0);
 
-        scan = (Button) findViewById(R.id.scan);
         serial_edttxt = (EditText) findViewById(R.id.serial_number);
         recyclerView = (RecyclerView) findViewById(R.id.scan_recycler);
         recyclerView.setHasFixedSize(true);
@@ -193,20 +191,6 @@ public class InventoryActivty extends AppCompatActivity {
                     }
                 }
                 return false;
-            }
-        });
-
-        //scanned
-        scan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                IntentIntegrator integrator = new IntentIntegrator(InventoryActivty.this);
-                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
-                integrator.setPrompt("Place QR code to scan");
-                integrator.setCameraId(0);
-                integrator.setBeepEnabled(false);
-                integrator.setBarcodeImageEnabled(false);
-                integrator.initiateScan();
             }
         });
 
@@ -256,43 +240,6 @@ public class InventoryActivty extends AppCompatActivity {
                 Log.e("ERROR", error.getMessage());
             }
         });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if (result != null) {
-            if (result.getContents() == null) {
-                Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
-            } else {
-                //split # offline or online
-                final String serial = result.getContents();
-//                String[] parts = content.split("#");
-//                String serial = parts[0];
-//                String conn = parts[1];
-                if (checkSerial(serial)) {
-                    if (!checkIfScanned(serial)) {
-                        //send serial to db
-                        receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
-                        receiverIntent.putExtra("content", serial);
-                        qrScanReceiver = new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                sendDetailsToAssess(serial, intent);
-                            }
-                        };
-                        sendSerialToTrigger(serial);
-                    } else {
-                        //unregister receiver
-                        Toast.makeText(InventoryActivty.this, "PC already assessed", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    searchSerial(serial);
-                }
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
     }
 
     private void sendDetailsToAssess(String serial, Intent intent) {
@@ -411,8 +358,9 @@ public class InventoryActivty extends AppCompatActivity {
                 String monitor = c.getString(c.getColumnIndex(dbHelper.COMP_MONITOR));
                 String mb = c.getString(c.getColumnIndex(dbHelper.COMP_MB));
                 int scanned = c.getInt(c.getColumnIndex(dbHelper.COLUMN_SCANNED));
+                String comp_serial = c.getString(c.getColumnIndex(dbHelper.COMP_SERIAL));
 
-                if (serial.equals(monitor) || serial.equals(mb)) {
+                if (serial.equals(monitor) || serial.equals(mb) || serial.equals(comp_serial)) {
                     if (scanned == 1)
                         return true;
                     else
@@ -429,9 +377,10 @@ public class InventoryActivty extends AppCompatActivity {
             do {
                 String monitor = c.getString(c.getColumnIndex(dbHelper.COMP_MONITOR));
                 String mb = c.getString(c.getColumnIndex(dbHelper.COMP_MB));
+                String comp_serial = c.getString(c.getColumnIndex(dbHelper.COMP_SERIAL));
                 Log.w("MONITOR: ", "Serial: " + monitor);
                 Log.w("MB: ", "Serial: " + mb);
-                if (serial.equals(monitor) || serial.equals(mb)) {
+                if (serial.equals(monitor) || serial.equals(mb) || serial.equals(comp_serial)) {
                     return true;
                 }
             } while (c.moveToNext());
@@ -445,9 +394,10 @@ public class InventoryActivty extends AppCompatActivity {
             do {
                 String monitor = c.getString(c.getColumnIndex(dbHelper.COMP_MONITOR));
                 String mb = c.getString(c.getColumnIndex(dbHelper.COMP_MB));
+                String comp_serial = c.getString(c.getColumnIndex(dbHelper.COMP_SERIAL));
                 int comp_id = c.getInt(c.getColumnIndex(dbHelper.COMP_ID));
 
-                if (serial.equals(monitor) || serial.equals(mb)) {
+                if (serial.equals(monitor) || serial.equals(mb) || serial.equals(comp_serial)) {
                     return comp_id;
                 }
             } while (c.moveToNext());
@@ -473,7 +423,8 @@ public class InventoryActivty extends AppCompatActivity {
                         cursor.getString(cursor.getColumnIndex(dbHelper.COMP_STATUS)),
                         cursor.getInt(cursor.getColumnIndex(dbHelper.COMP_ID)),
                         cursor.getInt(cursor.getColumnIndex(dbHelper.COMP_NAME)),
-                        cursor.getInt(cursor.getColumnIndex(dbHelper.COLUMN_SCANNED))
+                        cursor.getInt(cursor.getColumnIndex(dbHelper.COLUMN_SCANNED)),
+                        cursor.getString(cursor.getColumnIndex(dbHelper.COMP_SERIAL))
                 );
 
                 pcList.add(scan);
@@ -505,8 +456,9 @@ public class InventoryActivty extends AppCompatActivity {
                                 JSONObject obj = array.getJSONObject(i);
                                 String monitor = obj.getString("monitor");
                                 String mb = obj.getString("mb");
+                                String comp_serial = obj.getString("comp_serial");
 
-                                if (serial.equals(monitor) || serial.equals(mb)) {
+                                if (serial.equals(monitor) || serial.equals(mb) || serial.equals(comp_serial)) {
                                     if (obj.isNull("room_id")) {
                                         AlertDialog.Builder builder = new AlertDialog.Builder(InventoryActivty.this);
                                         builder.setMessage("This computer is not assigned to any room");
@@ -717,6 +669,7 @@ public class InventoryActivty extends AppCompatActivity {
                         JSONObject obj = new JSONObject();
                         int comp_id = c.getInt(c.getColumnIndex(dbHelper.COMP_ID));
                         int pc_no = c.getInt(c.getColumnIndex(dbHelper.COMP_NAME));
+                        String comp_serial = c.getString(c.getColumnIndex(dbHelper.COMP_SERIAL));
                         String model = c.getString(c.getColumnIndex(dbHelper.COMP_MODEL));
                         String mb = c.getString(c.getColumnIndex(dbHelper.COMP_MB));
                         String mb_serial = c.getString(c.getColumnIndex(dbHelper.REPORT_MB_SERIAL));
@@ -733,6 +686,7 @@ public class InventoryActivty extends AppCompatActivity {
                         try {
                             obj.put("comp_id", comp_id);
                             obj.put("pc_no", pc_no);
+                            obj.put("comp_serial", comp_serial);
                             obj.put("model", model);
                             obj.put("mb", mb);
                             obj.put("mb_serial", mb_serial);

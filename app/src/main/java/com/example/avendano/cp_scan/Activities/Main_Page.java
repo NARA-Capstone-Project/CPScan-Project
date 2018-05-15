@@ -72,7 +72,6 @@ public class Main_Page extends AppCompatActivity {
 
                 setContentView(R.layout.main_page_technician);
                 req_sched = (CardView) findViewById(R.id.req_sched);
-                scan = (CardView) findViewById(R.id.quick_scan);
                 inventory = (CardView) findViewById(R.id.start_inventory);
                 badge = (NotificationBadge) findViewById(R.id.badge);
                 badge.setAnimationEnabled(false);
@@ -90,12 +89,6 @@ public class Main_Page extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         getRoomToAssess();
-                    }
-                });
-                scan.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        scanPc();
                     }
                 });
 
@@ -297,16 +290,6 @@ public class Main_Page extends AppCompatActivity {
         badge.setNumber(sum);
     }
 
-    private void scanPc() {
-        IntentIntegrator integrator = new IntentIntegrator(Main_Page.this);
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
-        integrator.setPrompt("Place QR code to scan");
-        integrator.setCameraId(0);
-        integrator.setBeepEnabled(false);
-        integrator.setBarcodeImageEnabled(false);
-        integrator.initiateScan();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -404,8 +387,12 @@ public class Main_Page extends AppCompatActivity {
                         JSONObject obj = array.getJSONObject(i);
                         int r_id = 0;
                         int comp_id = obj.getInt("comp_id");
+                        String comp_serial = "";
                         if (!obj.isNull("room_id")) {
                             r_id = obj.getInt("room_id");
+                        }
+                        if (!obj.isNull("comp_serial")) {
+                            comp_serial = obj.getString("comp_serial");
                         }
                         Log.e("RIDS", "comp: " + comp_id + " ROOM: " + r_id + " : " + id);
                         if (r_id == id) {
@@ -422,7 +409,8 @@ public class Main_Page extends AppCompatActivity {
                             String comp_status = obj.getString("comp_status");
 
                             int pc_no = obj.getInt("pc_no");
-                            long in = db.addPctoAssess(comp_id, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
+                            //add comp serial
+                            long in = db.addPctoAssess(comp_id, comp_serial, mb, pr, monitor, ram, kboard, mouse, comp_status, vga, hdd, pc_no, model);
                             Log.e("PCTOASSESS", "COUNT: " + db.pcToAssessCount());
                         }
                     }

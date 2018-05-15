@@ -315,8 +315,9 @@ public class ViewInventoryReport extends AppCompatActivity {
                                         String hdd = obj.getString("hdd");
                                         String comp_status = obj.getString("comp_status");
                                         int pc_no = obj.getInt("pc_no");
+                                        String serial = obj.getString("comp_serial");
 
-                                        ReportDetails reports = new ReportDetails(pc_no, mon, mb, pr, ram, hdd, vga
+                                        ReportDetails reports = new ReportDetails(serial,pc_no, mon, mb, pr, ram, hdd, vga
                                                 , mouse, kb, comp_status, model, true);
                                         reportDetailsList.add(reports);
                                     }

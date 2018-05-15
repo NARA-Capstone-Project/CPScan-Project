@@ -68,6 +68,7 @@ public class AssessAdapter extends RecyclerView.Adapter<AssessAdapter.AssessHold
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     long in = db.addAssessedPc(comps.getComp_id(), comps.getPc_no(), comps.getModel(),
+                                            comps.getComp_serial(),
                                             "PC MISSING", comps.getMb()
                                             , "PC MISSING", "PC MISSING", comps.getMonitor(),
                                             "PC MISSING", "PC MISSING",

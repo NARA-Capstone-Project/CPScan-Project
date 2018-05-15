@@ -5,11 +5,11 @@ package com.example.avendano.cp_scan.Model;
  */
 
 public class ReportDetails {
-    String monitor, mb, pr, ram, hdd, vga, mouse, kb,status, model;
+    String monitor, mb, pr, ram, hdd, vga, mouse, kb,status, model, serial;
     boolean isExpandable;
     int pc_no;
 
-    public ReportDetails(int pc_no, String monitor, String mb, String pr, String ram, String hdd, String vga, String mouse, String kb, String status, String model, boolean isExpandable) {
+    public ReportDetails(String serial, int pc_no, String monitor, String mb, String pr, String ram, String hdd, String vga, String mouse, String kb, String status, String model, boolean isExpandable) {
         this.pc_no = pc_no;
         this.monitor = monitor;
         this.mb = mb;
@@ -22,6 +22,15 @@ public class ReportDetails {
         this.status = status;
         this.model = model;
         this.isExpandable = isExpandable;
+        this.serial = serial;
+    }
+
+    public String getSerial() {
+        return serial;
+    }
+
+    public void setSerial(String serial) {
+        this.serial = serial;
     }
 
     public int getPc_no() {

@@ -25,7 +25,7 @@
             android:background="@drawable/bg_spinner">
 
             <Spinner
-                android:id="@+id/list_type"
+                android:id="@+id/list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="5dp"></Spinner>

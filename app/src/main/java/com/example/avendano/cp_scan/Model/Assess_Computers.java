@@ -6,7 +6,7 @@ package com.example.avendano.cp_scan.Model;
 
 public class Assess_Computers {
 
-        private String model;
+        private String model, comp_serial;
         private String mb;
         private String processor;
         private String monitor;
@@ -81,7 +81,7 @@ public class Assess_Computers {
         public Assess_Computers(String model, String mb, String processor, String monitor,
                                 String ram, String kboard, String mouse,
                                 String vga, String hdd, String status,
-                                int comp_id, int pc_no, int scanned) {
+                                int comp_id, int pc_no, int scanned, String comp_serial) {
             this.model = model;
             this.pc_no = pc_no;
             this.scanned = scanned;
@@ -95,9 +95,14 @@ public class Assess_Computers {
             this.hdd = hdd;
             this.status = status;
             this.comp_id = comp_id;
+            this.comp_serial = comp_serial;
         }
 
-        private String mouse;
+    public String getComp_serial() {
+        return comp_serial;
+    }
+
+    private String mouse;
         private String vga;
         private String hdd;
         private String status;

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="10dp"
+    >
+    <TextView
+        android:id="@+id/txt_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"/>
+    <RelativeLayout
+        android:id="@+id/spinner"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_margin="5dp"
+        android:background="@drawable/bg_spinner">
+
+        <Spinner
+            android:id="@+id/reasons"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            ></Spinner>
+    </RelativeLayout>
+    <EditText
+        android:visibility="gone"
+        android:id="@+id/custom"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:background="@drawable/style_edittext"
+        android:hint="Reason..."
+        />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:text="Save"
+            android:id="@+id/save"
+            android:textColor="@color/colorAccent"/>
+        <Button
+            android:layout_toLeftOf="@+id/save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:text="Cancel"
+            android:id="@+id/cancel"
+            android:textColor="@color/colorAccent"/>
+
+    </RelativeLayout>
+</LinearLayout>
