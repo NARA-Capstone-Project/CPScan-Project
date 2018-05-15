@@ -190,11 +190,17 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
             public void onClick(View v) {
                 //if pos == 3 = check if may laman ung custom text, update status to ignored
                 if (reasons.getSelectedItemPosition() == 3) {
-                    if (reason.trim().isEmpty()) {
+                    if (custom.getText().toString().trim().isEmpty()) {
                         custom.setError("Empty Field!");
                     } else {
+                        dialog.dismiss();
+                        reason = custom.getText().toString().trim();
                         updateRequestStatus(req_id, "Ignored");
                     }
+                }else
+                {
+                    dialog.dismiss();
+                    updateRequestStatus(req_id, "Ignored");
                 }
             }
         });
@@ -255,6 +261,8 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
     private void updateRequestStatus(final int req_id, final String update) {
         final android.app.AlertDialog progress = new SpotsDialog(this, "Updating...");
         progress.show();
+        if(reason.contains("'"))
+            reason = reason.replace("'", "\''");
         String query = "UPDATE request_peripherals SET req_status = '" + update + "' WHERE req_id = '" + req_id + "'";
         if(update.equalsIgnoreCase("approved")){
             String approve_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -406,11 +414,14 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                 String tech_name = obj.getString("tech_name");
                                 String purpose = obj.getString("purpose");
                                 String date_req = obj.getString("date_req");
+                                String cancel_rem = "";
+                                if(!obj.isNull("cancel_remarks"))
+                                    cancel_rem = "\n\nCancellation Note: " + obj.getString("cancel_remarks");
                                 req_status = obj.getString("req_status");
                                 String msg = "Designation: " + designation + "\nPurpose: " +
                                         purpose + "\nDate Requested: " + date_req
                                         + "\nTechnician: " + tech_name
-                                        + "\nStatus: " + req_status;
+                                        + "\nStatus: " + req_status + cancel_rem;
                                 AlertDialog.Builder builder = new AlertDialog.Builder(ViewRequestPeripheralsDetails.this);
                                 builder.setTitle("Information....")
                                         .setMessage(msg)

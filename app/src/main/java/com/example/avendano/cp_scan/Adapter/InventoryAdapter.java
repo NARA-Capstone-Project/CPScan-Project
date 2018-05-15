@@ -111,15 +111,18 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             @Override
             public void onClick(View v) {
                 String msg = inventory.getMsg();
-                String msg_body = "";
+                String msg_body = "", cancel_rem = "";
+                if(!inventory.getCancel().isEmpty())
+                    cancel_rem = "\n\nCancellation Note: " + inventory.getCancel();
+                ;
                 if (msg.length() > 0) {
                     msg_body = "Date requested: " + inventory.getDate_req() + "\nTime Requested: " + inventory.getTime_req()
                             + "\nAssigned Date: " + inventory.getDate() + "\nAssigned Time: " + inventory.getTime() + "\nRequest Status: "
-                            + inventory.getReq_status() + "\n\nMessage: " + msg;
+                            + inventory.getReq_status() + "\n\nMessage: " + msg + cancel_rem;
                 } else {
                     msg_body = "Date requested: " + inventory.getDate_req() + "\nTime Requested: " + inventory.getTime_req()
                             + "\nAssigned Date: " + inventory.getDate() + "\nAssigned Time: " + inventory.getTime()
-                            + "\nRequest Status: " + inventory.getReq_status();
+                            + "\nRequest Status: " + inventory.getReq_status() + cancel_rem;
                 }
                 showDetails(msg_body, inventory.getReq_id(), inventory.getRoom_id(), position, inventory.getReq_status());
             }
@@ -188,22 +191,28 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             }
         });
 
-        if (reasons.getSelectedItemPosition() == 3)
-            reason = custom.getText().toString().trim();
-        else
-            reason = reasons.getSelectedItem().toString().trim();
+        reason = reasons.getSelectedItem().toString().trim();
 
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mCtx, "Reason: " + reason, Toast.LENGTH_SHORT).show();
                 //if pos == 3 = check if may laman ung custom text, update status to ignored
                 if (reasons.getSelectedItemPosition() == 3) {
-                    if (reason.trim().isEmpty()) {
+                    if (custom.getText().toString().trim().isEmpty()) {
                         custom.setError("Empty Field!");
                     } else {
+                        dialog.dismiss();
+                        progress = new SpotsDialog(mCtx, "Loading...");
+                        progress.setCancelable(false);
+                        reason = custom.getText().toString().trim();
                         updateRequest(req_id, "ignore", position);
                     }
+                }else
+                {
+                    dialog.dismiss();
+                    progress = new SpotsDialog(mCtx, "Loading...");
+                    progress.setCancelable(false);
+                    updateRequest(req_id, "ignore", position);
                 }
             }
         });
@@ -229,12 +238,15 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
 
             private void updateRequest(String btn_clicked) {
                 String query = "";
+                if(reason.contains("'"))
+                    reason = reason.replace("'", "\''");
                 if (btn_clicked.equalsIgnoreCase("ignore"))
                     query = "UPDATE request_inventory SET req_status = 'Ignored', cancel_remarks = '"+reason+"' WHERE req_id = ?";
                 else
                     query = "UPDATE request_inventory SET req_status = 'Accepted' WHERE req_id = ?";
 
                 final String finalQuery = query;
+                Log.e("QUERY", finalQuery);
                 StringRequest str = new StringRequest(Request.Method.POST
                         , AppConfig.URL_UPDATE_SCHEDULE
                         , new Response.Listener<String>() {

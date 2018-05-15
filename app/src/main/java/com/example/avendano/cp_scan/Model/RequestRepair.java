@@ -6,11 +6,11 @@ package com.example.avendano.cp_scan.Model;
 
 public class RequestRepair {
     int req_id, comp_id;
-    String custodian, tech, date, time, msg, date_req, time_req, req_status, image_path, rep_details;
+    String cancel_remarks, custodian, tech, date, time, msg, date_req, time_req, req_status, image_path, rep_details;
 
     public RequestRepair(int req_id, int comp_id, String custodian, String tech, String date,
                          String time, String msg, String date_req, String time_req, String req_status
-            , String image_path, String rep_details) {
+            , String image_path, String rep_details, String cancel_remarks) {
         this.req_id = req_id;
         this.comp_id = comp_id;
         this.custodian = custodian;
@@ -23,6 +23,11 @@ public class RequestRepair {
         this.req_status = req_status;
         this.image_path = image_path;
         this.rep_details = rep_details;
+        this.cancel_remarks = cancel_remarks;
+    }
+
+    public String getCancel_remarks() {
+        return cancel_remarks;
     }
 
     public String getImage_path() {

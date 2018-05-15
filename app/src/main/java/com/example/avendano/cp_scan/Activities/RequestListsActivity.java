@@ -177,6 +177,9 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_status = obj.getString("req_status");
                         String req_date = obj.getString("date_requested");
                         String req_time = obj.getString("time_requested");
+                        String cancel_rem="";
+                        if(!obj.isNull("cancel_remarks"))
+                            cancel_rem = obj.getString("cancel_remarks");
                         //pending accepted ignored done
                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("custodian")) {
                             if (cust_id.equals(SharedPrefManager.getInstance(RequestListsActivity.this).getUserId())) {
@@ -196,7 +199,7 @@ public class RequestListsActivity extends AppCompatActivity {
                                             }
                                     }
                                     RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
-                                            , tech_id, date, time, msg, req_date, req_time, req_status);
+                                            , tech_id, date, time, msg, req_date, req_time, req_status, cancel_rem);
                                     inventoryList.add(inventory);
                                 }
                             }
@@ -214,12 +217,12 @@ public class RequestListsActivity extends AppCompatActivity {
                                             //do nothing
                                         }else{
                                             RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
-                                                    , tech_id, date, time, msg, req_date, req_time, req_status);
+                                                    , tech_id, date, time, msg, req_date, req_time, req_status, cancel_rem);
                                             inventoryList.add(inventory);
                                         }
                                     }else{
                                         RequestInventory inventory = new RequestInventory(req_id, room_id, cust_id
-                                                , tech_id, date, time, msg, req_date, req_time, req_status);
+                                                , tech_id, date, time, msg, req_date, req_time, req_status, cancel_rem);
                                         inventoryList.add(inventory);
                                     }
                                 }
@@ -281,6 +284,9 @@ public class RequestListsActivity extends AppCompatActivity {
                         String req_time = obj.getString("time_req");
                         String req_details = obj.getString("req_details");
                         String path = obj.getString("image");
+                        String cancel_rem = "";
+                        if(!obj.isNull("cancel_remarks"))
+                            cancel_rem = obj.getString("cancel_remarks");
                         if (obj.isNull("image"))
                             path = "";
 
@@ -302,7 +308,7 @@ public class RequestListsActivity extends AppCompatActivity {
                                         }
                                     }
                                     RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
-                                            , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                            , date, time, msg, req_date, req_time, req_status, path, req_details, cancel_rem);
                                     repairList.add(repair);
                                 }
                             }
@@ -321,12 +327,12 @@ public class RequestListsActivity extends AppCompatActivity {
                                             //do nothing
                                         }else{
                                             RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
-                                                    , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                                    , date, time, msg, req_date, req_time, req_status, path, req_details, cancel_rem);
                                             repairList.add(repair);
                                         }
                                     }else{
                                         RequestRepair repair = new RequestRepair(req_id, comp_id, cust_id, tech_id
-                                                , date, time, msg, req_date, req_time, req_status, path, req_details);
+                                                , date, time, msg, req_date, req_time, req_status, path, req_details,cancel_rem);
                                         repairList.add(repair);
                                     }
                                 }
@@ -379,27 +385,30 @@ public class RequestListsActivity extends AppCompatActivity {
                                 String tech_id = obj.getString("tech_id");
                                 String cust_id = obj.getString("cust_id");
                                 String user_id = SharedPrefManager.getInstance(RequestListsActivity.this).getUserId();
+                                String cancel_rem="";
+                                if(!obj.isNull("cancel_remarks"))
+                                    cancel_rem = obj.getString("cancel_remarks");
 
                                 //if admin = for approval lang ung kukunin
                                 if(SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("admin")){
                                     if (status.equalsIgnoreCase("confirmed")) {
-                                        RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                        RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                         peripheralsList.add(peripherals);
                                     }
                                 }else{
                                     if (!status.equalsIgnoreCase("received")) {
                                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("main technician")) {
                                             if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
-                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                 peripheralsList.add(peripherals);
                                             }
                                         }else{
                                             if (cust_id.equals(user_id)) {
-                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                 peripheralsList.add(peripherals);
                                             } else if (tech_id.equals(user_id)) {
                                                 if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
-                                                    RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status);
+                                                    RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                     peripheralsList.add(peripherals);
                                                 }
                                             }

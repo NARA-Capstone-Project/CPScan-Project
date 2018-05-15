@@ -6,12 +6,17 @@ package com.example.avendano.cp_scan.Model;
 
 public class RequestPeripherals {
     int req_id;
-    String category, room_name, status;
+    String category, room_name, status, cancel;
 
-    public RequestPeripherals(int req_id,  String room_name, String status) {
+    public RequestPeripherals(int req_id,  String room_name, String status, String cancel) {
         this.req_id = req_id;
         this.room_name = room_name;
         this.status = status;
+        this.cancel = cancel;
+    }
+
+    public String getCancel() {
+        return cancel;
     }
 
     public String getStatus() {

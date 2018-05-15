@@ -191,11 +191,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
                 Toast.makeText(mCtx, "Reason: " + reason, Toast.LENGTH_SHORT).show();
                 //if pos == 3 = check if may laman ung custom text, update status to ignored
                 if (reasons.getSelectedItemPosition() == 3) {
-                    if (reason.trim().isEmpty()) {
+                    if (custom.getText().toString().trim().isEmpty()) {
                         custom.setError("Empty Field!");
                     } else {
+                        dialog.dismiss();
+                        reason = custom.getText().toString().trim();
                         ignoreSchedule(req_id, position);
                     }
+                }else
+                {
+                    dialog.dismiss();
+                    ignoreSchedule(req_id, position);
                 }
             }
         });
@@ -211,6 +217,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
     }
 
     private void ignoreSchedule(final int req_id, final int position) {
+
+        if(reason.contains("'"))
+            reason = reason.replace("'", "\''");
 
         class IgnoringProcess extends AsyncTask<Void, Void, String> {
             String query = "";
@@ -250,7 +259,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
                 }
             }
         }
-//        new IgnoringProcess().execute();
+        new IgnoringProcess().execute();
     }
 
 

@@ -6,9 +6,9 @@ package com.example.avendano.cp_scan.Model;
 
 public class RequestInventory {
     int req_id, room_id;
-    String custodian, tech, date, time, msg, date_req, time_req, req_status;
+    String cancel, custodian, tech, date, time, msg, date_req, time_req, req_status;
 
-    public RequestInventory(int req_id, int room_id, String custodian, String tech, String date, String time, String msg, String date_req, String time_req, String req_status) {
+    public RequestInventory(int req_id, int room_id, String custodian, String tech, String date, String time, String msg, String date_req, String time_req, String req_status, String cancel) {
         this.req_id = req_id;
         this.room_id = room_id;
         this.custodian = custodian;
@@ -19,7 +19,13 @@ public class RequestInventory {
         this.date_req = date_req;
         this.time_req = time_req;
         this.req_status = req_status;
+        this.cancel = cancel;
     }
+
+    public String getCancel() {
+        return cancel;
+    }
+
     public String getCategory(){return "Inventory Request";}
 
     public int getReq_id() {
