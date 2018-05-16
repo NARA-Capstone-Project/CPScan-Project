@@ -55,7 +55,7 @@
                 android:id="@+id/negative"
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"
-                android:text="Ignore"
+                android:text="Decline"
                 android:textColor="@color/button_color"
                 android:background="@drawable/style_button_white"/>
         </LinearLayout>

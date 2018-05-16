@@ -58,8 +58,8 @@ import dmax.dialog.SpotsDialog;
 public class InventoryActivty extends AppCompatActivity {
 
 
-    Intent receiverIntent;
-    BroadcastReceiver qrScanReceiver;
+//    Intent receiverIntent;
+//    BroadcastReceiver qrScanReceiver;
     SQLiteHelper dbHelper;
     Toolbar toolbar;
     EditText serial_edttxt, remark;
@@ -255,9 +255,9 @@ public class InventoryActivty extends AppCompatActivity {
             for (int i = 0; i < details.size(); i++) {
                 Log.e("DETAILSINV", details.get(i));
             }
-            unregisterReceiver(qrScanReceiver);
-            stopService(receiverIntent);
-            deleteDataFromTemp(comp_id,details);
+//            unregisterReceiver(qrScanReceiver);
+//            stopService(receiverIntent);
+//            deleteDataFromTemp(comp_id,details);
         }
     }
 
@@ -326,8 +326,8 @@ public class InventoryActivty extends AppCompatActivity {
                     JSONObject obj = new JSONObject(s);
                     if (!obj.getBoolean("error")) {
                         //register receiver
-                        startService(receiverIntent);
-                        registerReceiver(qrScanReceiver, new IntentFilter(QRCodeScan.BROADCAST_ACTION));
+//                        startService(receiverIntent);
+//                        registerReceiver(qrScanReceiver, new IntentFilter(QRCodeScan.BROADCAST_ACTION));
                     } else {
                         progress.dismiss();
                         Toast.makeText(InventoryActivty.this, "Error occurred while getting computer info using QR", Toast.LENGTH_SHORT).show();

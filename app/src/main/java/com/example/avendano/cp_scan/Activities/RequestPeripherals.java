@@ -67,6 +67,7 @@ public class RequestPeripherals extends AppCompatActivity {
     ArrayList<Integer> quantity = new ArrayList<>();
     ArrayList<String> unitValue = new ArrayList<>();
     Spinner list;
+    TextView peripheral_count;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +84,8 @@ public class RequestPeripherals extends AppCompatActivity {
         req_id = getIntent().getIntExtra("req_id", 0);
 
         listView = (ListView) findViewById(R.id.peripherals);
+        peripheral_count = (TextView) findViewById(R.id.total_peripherals);
+        peripheral_count.setText("Total No. of Requisition: " + choices.size());
         purpose = (EditText) findViewById(R.id.purpose); //default visibility = gone
         list = (Spinner) findViewById(R.id.list);
         ArrayAdapter<String> spin_adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, purposeList);
@@ -142,13 +145,15 @@ public class RequestPeripherals extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
                         if (isChecked) {
                             choices.add(peripheralsList[which]);
-                            quantity.add(1);
+                            quantity.add(0);
                             unitValue.add("");
+                            peripheral_count.setText("Total No. of Requisition: " + choices.size());
                         } else if (choices.contains(peripheralsList[which])) {
                             int idx = choices.indexOf(peripheralsList[which]);
                             choices.remove(peripheralsList[which]);
                             quantity.remove(idx);
                             unitValue.remove(idx);
+                            peripheral_count.setText("Total No. of Requisition: " + choices.size());
                         }
                     }
                 })
@@ -238,15 +243,32 @@ public class RequestPeripherals extends AppCompatActivity {
             delete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String toRemove = peripheral.getText().toString();
-                    List<String> list = new ArrayList<String>(Arrays.asList(peripheralsList));
-                    list.add(toRemove);
-                    peripheralsList = list.toArray(new String[list.size()]);
-                    int idx = choices.indexOf(toRemove);
-                    quantity.remove(idx);
-                    unitValue.remove(idx);
-                    choices.remove(toRemove);
-                    PeripheralsAdapter.this.notifyDataSetChanged();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(RequestPeripherals.this);
+                    builder.setTitle("Confirmation")
+                            .setMessage("Are you sure you want to remove this peripheral?")
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String toRemove = peripheral.getText().toString();
+                                    List<String> list = new ArrayList<String>(Arrays.asList(peripheralsList));
+                                    list.add(toRemove);
+                                    peripheralsList = list.toArray(new String[list.size()]);
+                                    int idx = choices.indexOf(toRemove);
+                                    quantity.remove(idx);
+                                    unitValue.remove(idx);
+                                    choices.remove(toRemove);
+                                    peripheral_count.setText("Total No. of Requisition: " + choices.size());
+                                    PeripheralsAdapter.this.notifyDataSetChanged();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    AlertDialog alert = builder.create();
+                    alert.show();
                 }
             });
 
@@ -284,12 +306,14 @@ public class RequestPeripherals extends AppCompatActivity {
                 //check kung may napili
                 if (choices.isEmpty()) {
                     Toast.makeText(this, "You haven't select any peripherals", Toast.LENGTH_SHORT).show();
+                }else if(quantity.contains(0)){
+                    Toast.makeText(this, "Quantity must not be 0", Toast.LENGTH_SHORT).show();
                 } else {
                     if (list.getSelectedItemPosition() == 3) {
                         if (purpose.getText().toString().trim().length() == 0) {
                             Toast.makeText(this, "Please write the purpose of your request", Toast.LENGTH_SHORT).show();
                             purpose.requestFocus();
-                        }else {
+                        } else {
                             if (method.equalsIgnoreCase("request"))
                                 savePeripheralRequest();
                             else
@@ -488,6 +512,7 @@ public class RequestPeripherals extends AppCompatActivity {
                             list.remove(toRemove);
                             peripheralsList = list.toArray(new String[list.size()]);
                         }
+                        peripheral_count.setText("Total No. of Requisition: " + choices.size());
                         PeripheralsAdapter adapter = new PeripheralsAdapter();
                         listView.setAdapter(adapter);
                     } catch (Exception e) {

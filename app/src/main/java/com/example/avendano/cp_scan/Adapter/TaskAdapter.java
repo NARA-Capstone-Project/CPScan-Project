@@ -188,7 +188,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mCtx, "Reason: " + reason, Toast.LENGTH_SHORT).show();
                 //if pos == 3 = check if may laman ung custom text, update status to ignored
                 if (reasons.getSelectedItemPosition() == 3) {
                     if (custom.getText().toString().trim().isEmpty()) {
@@ -228,7 +227,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskHolder> {
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                query = "UPDATE request_repair SET req_status = 'Ignored', cancel_remarks = '" + reason + "' WHERE req_id = " + req_id + "";
+                query = "UPDATE request_repair SET req_status = 'Declined', cancel_remarks = '" + reason + "' WHERE req_id = " + req_id + "";
                 param.put("query", query);
             }
 

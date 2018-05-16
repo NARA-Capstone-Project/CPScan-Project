@@ -398,16 +398,16 @@ public class RequestListsActivity extends AppCompatActivity {
                                 }else{
                                     if (!status.equalsIgnoreCase("received")) {
                                         if (SharedPrefManager.getInstance(RequestListsActivity.this).getUserRole().equalsIgnoreCase("main technician")) {
-                                            if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
+                                            if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("declined")) {
                                                 RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                 peripheralsList.add(peripherals);
                                             }
-                                        }else{
+                                        }else{//tech and cust
                                             if (cust_id.equals(user_id)) {
                                                 RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                 peripheralsList.add(peripherals);
                                             } else if (tech_id.equals(user_id)) {
-                                                if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("ignored")) {
+                                                if (!status.equalsIgnoreCase("cancel") || status.equalsIgnoreCase("declined")) {
                                                     RequestPeripherals peripherals = new RequestPeripherals(req_id, room_name, status, cancel_rem);
                                                     peripheralsList.add(peripherals);
                                                 }

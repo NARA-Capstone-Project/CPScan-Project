@@ -13,19 +13,21 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:text="Unit: "/>
+        android:text="Unit: "
+        android:paddingTop="3dp"/>
     <EditText
+        android:padding="2dp"
         android:layout_alignParentTop="true"
         android:id="@+id/unit"
         android:layout_toRightOf="@id/txt"
         android:background="@drawable/style_edittext"
-        android:layout_width="60dp"
-        android:layout_height="20dp" />
+        android:layout_width="70dp"
+        android:layout_height="25dp" />
 
     <ImageView
         android:id="@+id/remove"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:src="@drawable/ic_remove"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"/>
@@ -38,8 +40,10 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:text="TextView"
+        android:layout_marginTop="5dp"
         android:layout_marginBottom="3dp"/>
     <TextView
+        android:layout_marginTop="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/qty"
@@ -48,15 +52,17 @@
 
     <com.michaelmuenzer.android.scrollablennumberpicker.ScrollableNumberPicker
         android:layout_alignParentRight="true"
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="5dp"
         android:layout_below="@id/remove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/qty"
-        app:snp_buttonIconLeft="@drawable/ic_leftarrow"
-        app:snp_buttonIconRight="@drawable/ic_rightarrow"
+        app:snp_buttonIconLeft="@drawable/ic_minus_icon"
+        app:snp_buttonIconRight="@drawable/ic_add_icon"
+        app:snp_buttonPaddingLeft="5dp"
+        app:snp_buttonPaddingRight="5dp"
         app:snp_maxValue="20"
-        app:snp_minValue="1"
+        app:snp_minValue="0"
         app:snp_value="1"
         app:snp_stepSize="1"
         app:snp_updateInterval="10">

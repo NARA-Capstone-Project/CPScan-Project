@@ -45,7 +45,7 @@ public class QRCodeScan extends Service {
     private Runnable sendUpdatesToUI = new Runnable() {
         @Override
         public void run() {
-            GetScannedQR();
+//            GetScannedQR();
             handler.postDelayed(this, 10000);
         }
     };
@@ -56,59 +56,59 @@ public class QRCodeScan extends Service {
         return START_STICKY;
     }
 
-    private void GetScannedQR() {
-        class getScan extends AsyncTask<Void, Void, String>{
-            private AsyncTask<Void,Void,String> task = null;
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                task = this;
-                if(content.isEmpty()){
-                    task.cancel(true);
-                }
-            }
-
-            @Override
-            protected String doInBackground(Void... voids) {
-                String response = "";
-                if(isCancelled()){
-                    response = "";
-                }else{
-                    Map<String, String> param = new HashMap<>();
-                    param.put("serial", content);
-                    HttpURLCon con = new HttpURLCon();
-                    response = con.sendPostRequest(AppConfig.SCAN, param);
-                }
-                return response;
-            }
-
-            @Override
-            protected void onPostExecute(String s) {
-                super.onPostExecute(s);
-                Log.e("RESPONSE", "GETTING SCAN: " + s);
-                if(!s.isEmpty()){
-                    try{
-                        JSONObject obj = new JSONObject(s);
-                        //mb serial mon serial, ram, kboard mouse and hdd
-                        if(!obj.getBoolean("error")){
-                            if(!obj.isNull("mb_serial")){
-                                intent.putExtra("mb_serial", obj.getString("mb_serial"));
-                                intent.putExtra("hdd", obj.getString("hdd"));
-                                intent.putExtra("mouse", obj.getString("mouse"));
-                                intent.putExtra("ram", obj.getString("ram"));
-                                intent.putExtra("kboard", obj.getString("kboard"));
-                                sendBroadcast(intent);
-                            }
-                        }
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        new getScan().execute();
-    }
+//    private void GetScannedQR() {
+//        class getScan extends AsyncTask<Void, Void, String>{
+//            private AsyncTask<Void,Void,String> task = null;
+//            @Override
+//            protected void onPreExecute() {
+//                super.onPreExecute();
+//                task = this;
+//                if(content.isEmpty()){
+//                    task.cancel(true);
+//                }
+//            }
+//
+//            @Override
+//            protected String doInBackground(Void... voids) {
+//                String response = "";
+//                if(isCancelled()){
+//                    response = "";
+//                }else{
+//                    Map<String, String> param = new HashMap<>();
+//                    param.put("serial", content);
+//                    HttpURLCon con = new HttpURLCon();
+//                    response = con.sendPostRequest(AppConfig.SCAN, param);
+//                }
+//                return response;
+//            }
+//
+//            @Override
+//            protected void onPostExecute(String s) {
+//                super.onPostExecute(s);
+//                Log.e("RESPONSE", "GETTING SCAN: " + s);
+//                if(!s.isEmpty()){
+//                    try{
+//                        JSONObject obj = new JSONObject(s);
+//                        //mb serial mon serial, ram, kboard mouse and hdd
+//                        if(!obj.getBoolean("error")){
+//                            if(!obj.isNull("mb_serial")){
+//                                intent.putExtra("mb_serial", obj.getString("mb_serial"));
+//                                intent.putExtra("hdd", obj.getString("hdd"));
+//                                intent.putExtra("mouse", obj.getString("mouse"));
+//                                intent.putExtra("ram", obj.getString("ram"));
+//                                intent.putExtra("kboard", obj.getString("kboard"));
+//                                sendBroadcast(intent);
+//                            }
+//                        }
+//                    }catch(Exception e){
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
+//
+//        new getScan().execute();
+//    }
 
     @Override
     public void onDestroy() {

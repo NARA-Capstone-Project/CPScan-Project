@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@color/button_color"
-            android:text="Ignore"
+            android:text="Decline"
             android:textColor="@color/white" />
     </LinearLayout>
 

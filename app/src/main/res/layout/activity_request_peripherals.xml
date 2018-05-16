@@ -45,6 +45,7 @@
             android:padding="5dp"/>
     </LinearLayout>
 
+
     <View
         android:id="@+id/view"
         android:layout_below="@id/linear"
@@ -54,11 +55,21 @@
         android:layout_marginTop="3dp"
         android:background="@color/darkGrey" />
 
+    <TextView
+        android:layout_below="@id/view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:id="@+id/total_peripherals"
+        android:text="Total No. Of Requisition: 0"
+        android:textColor="@color/black"
+        android:layout_margin = "3dp"/>
+
     <ListView
         android:id="@+id/peripherals"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/view"></ListView>
+        android:layout_below="@id/total_peripherals"></ListView>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/add"

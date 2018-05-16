@@ -139,7 +139,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                 public void onClick(View v) {
                     if (negative.getText().toString().equalsIgnoreCase("cancel")) {
                         updateRequestStatus(req_id, "Cancel");
-                    } else if (negative.getText().toString().equalsIgnoreCase("ignore")) {
+                    } else if (negative.getText().toString().equalsIgnoreCase("decline")) {
                         ignoreDialog(req_id);
                     }
                 }
@@ -158,7 +158,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         diag_msg = (TextView) dialog.findViewById(R.id.txt_msg);
         Button save = (Button) dialog.findViewById(R.id.save);
         Button cancel = (Button) dialog.findViewById(R.id.cancel);
-        diag_msg.setText("Input the reason of ignoring this request: ");
+        diag_msg.setText("Input the reason of declining this request: ");
 
         String items[] = new String[]{"Out of Stock", "Lack of Stock", "Can't issue the requested peripherals on the date you set", "Others..."};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
@@ -195,12 +195,11 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                     } else {
                         dialog.dismiss();
                         reason = custom.getText().toString().trim();
-                        updateRequestStatus(req_id, "Ignored");
+                        updateRequestStatus(req_id, "Declined");
                     }
-                }else
-                {
+                } else {
                     dialog.dismiss();
-                    updateRequestStatus(req_id, "Ignored");
+                    updateRequestStatus(req_id, "Declined");
                 }
             }
         });
@@ -211,7 +210,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
-        dialog.setTitle("Ignore Request");
+        dialog.setTitle("Decline Request");
         dialog.show();
     }
 
@@ -229,7 +228,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                             if (obj.isNull("signature")) {
                                 signReport();
                             } else {
-                                if(string.equalsIgnoreCase("approve"))
+                                if (string.equalsIgnoreCase("approve"))
                                     updateRequestStatus(req_id, "Approved");
                                 else
                                     updateRequestStatus(req_id, "Received");
@@ -261,14 +260,14 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
     private void updateRequestStatus(final int req_id, final String update) {
         final android.app.AlertDialog progress = new SpotsDialog(this, "Updating...");
         progress.show();
-        if(reason.contains("'"))
+        if (reason.contains("'"))
             reason = reason.replace("'", "\''");
         String query = "UPDATE request_peripherals SET req_status = '" + update + "' WHERE req_id = '" + req_id + "'";
-        if(update.equalsIgnoreCase("approved")){
+        if (update.equalsIgnoreCase("approved")) {
             String approve_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-             query = "UPDATE request_peripherals SET req_status = '" + update + "', approved_date = '"+approve_date+"' WHERE req_id = '" + req_id + "'";
-        }else  if(update.equalsIgnoreCase("ignored")){
-            query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = '"+reason+"' WHERE req_id = '" + req_id + "'";
+            query = "UPDATE request_peripherals SET req_status = '" + update + "', approved_date = '" + approve_date + "' WHERE req_id = '" + req_id + "'";
+        } else if (update.equalsIgnoreCase("declined")) {
+            query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = '" + reason + "' WHERE req_id = '" + req_id + "'";
         }
         Map<String, String> param = new HashMap<>();
         param.put("query", query);
@@ -415,7 +414,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                 String purpose = obj.getString("purpose");
                                 String date_req = obj.getString("date_req");
                                 String cancel_rem = "";
-                                if(!obj.isNull("cancel_remarks"))
+                                if (!obj.isNull("cancel_remarks"))
                                     cancel_rem = "\n\nCancellation Note: " + obj.getString("cancel_remarks");
                                 req_status = obj.getString("req_status");
                                 String msg = "Designation: " + designation + "\nPurpose: " +
@@ -451,7 +450,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else if (req_status.equalsIgnoreCase("received")) {
                                         //sa reports
                                         buttons.setVisibility(View.GONE);
-                                    } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("ignored")) {
+                                    } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("decline")) {
                                         positive.setText("Resend Request");
                                         negative.setVisibility(View.GONE);
                                     } else if (req_status.equalsIgnoreCase("confirmed")) {
@@ -468,7 +467,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else {
                                         buttons.setVisibility(View.GONE);
                                     }
-                                }else{
+                                } else {
                                     buttons.setVisibility(View.GONE);
                                 }
                                 break;
@@ -491,7 +490,10 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == SIGN_REQ) {
                 if (result == 1) {  //signed
-                    updateRequestStatus(req_id, "Received");
+                    if (positive.getText().toString().trim().equalsIgnoreCase("sign"))
+                        updateRequestStatus(req_id, "Received");
+                    else
+                        updateRequestStatus(req_id, "Approved");
                 }
             }
         }

@@ -144,7 +144,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
         diag_msg = (TextView) dialog.findViewById(R.id.txt_msg);
         Button save = (Button) dialog.findViewById(R.id.save);
         Button cancel = (Button) dialog.findViewById(R.id.cancel);
-        diag_msg.setText("Input the reason of ignoring this request: ");
+        diag_msg.setText("Input the reason of declining this request: ");
 
         String items[] = new String[]{"Computer is still working", "Can't Repair", "Computer is Missing", "Others..."};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(mCtx, R.layout.support_simple_spinner_dropdown_item, items);
@@ -183,14 +183,14 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                         progress = new SpotsDialog(mCtx, "Loading...");
                         progress.setCancelable(false);
                         reason = custom.getText().toString().trim();
-                        updateRequest(req_id, "ignore", position);
+                        updateRequest(req_id, "decline", position);
                     }
                 }else
                 {
                     dialog.dismiss();
                     progress = new SpotsDialog(mCtx, "Loading...");
                     progress.setCancelable(false);
-                    updateRequest(req_id, "ignore", position);
+                    updateRequest(req_id, "decline", position);
                 }
 
             }
@@ -202,7 +202,7 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                 dialog.dismiss();
             }
         });
-        dialog.setTitle("Ignore Request");
+        dialog.setTitle("Decline Request");
         dialog.show();
     }
 
@@ -220,8 +220,8 @@ public class RepairAdapter extends RecyclerView.Adapter<RepairAdapter.RepairView
                 if(reason.contains("'"))
                     reason = reason.replace("'", "\''");
 
-                if (btn_clicked.equalsIgnoreCase("ignore"))
-                    query = "UPDATE request_repair SET req_status = 'Ignored', cancel_remarks = '"+reason+"' WHERE req_id = ?";
+                if (btn_clicked.equalsIgnoreCase("decline"))
+                    query = "UPDATE request_repair SET req_status = 'Declined', cancel_remarks = '"+reason+"' WHERE req_id = ?";
                 else
                     query = "UPDATE request_repair SET req_status = 'Accepted' WHERE req_id = ?";
 
