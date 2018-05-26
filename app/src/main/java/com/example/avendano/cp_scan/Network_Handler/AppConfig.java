@@ -42,7 +42,6 @@ public class AppConfig {
     public static String GET_PERIPHERALS_DETAILS = ROOT + "get_peripheral_details.php";
     public static String EDIT_PERIPHERALS = ROOT + "update_request_peripherals.php";
     public static String ISSUE_PERIPHERALS = ROOT + "issue_peripherals.php";
-    public static String SCAN = ROOT + "scanning.php";
     public static String SEND_SERIAL = ROOT + "sendQRSerial.php";
     public static String NOTIF_COUNTER = ROOT + "notif_counter.php";
 }

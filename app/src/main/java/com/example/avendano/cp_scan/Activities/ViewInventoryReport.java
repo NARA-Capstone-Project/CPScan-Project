@@ -61,6 +61,7 @@ public class ViewInventoryReport extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(R.string.app_name);
 
         volley = new VolleyRequestSingleton(this);
         connection_detector = new Connection_Detector(this);

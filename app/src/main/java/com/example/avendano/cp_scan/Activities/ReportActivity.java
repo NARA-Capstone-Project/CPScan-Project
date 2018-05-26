@@ -74,7 +74,7 @@ public class ReportActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         list_type = (Spinner) findViewById(R.id.list_type);
-        String[] items = new String[]{"Inventory Reports", "Repair Reports", "Peripheral Requests"};
+        String[] items = new String[]{"Inventory Reports", "Repair Reports", "Peripheral Reports"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         list_type.setAdapter(adapter);

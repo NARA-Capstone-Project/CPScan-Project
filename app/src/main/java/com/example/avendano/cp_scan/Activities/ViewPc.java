@@ -353,7 +353,7 @@ public class ViewPc extends AppCompatActivity {
                 String hdd = pc_hdd.getText().toString().trim();
                 String vga = pc_vga.getText().toString().trim();
                 String comp_status = "";
-
+                String comp_serial = pc_serial.getText().toString().trim();
                 try {
                     idx = rGroup.getCheckedRadioButtonId();
                     btn = rGroup.findViewById(idx);
@@ -442,6 +442,7 @@ public class ViewPc extends AppCompatActivity {
                         comp_status = "Working";
                     }
 
+                    obj.put("comp_serial", comp_serial);
                     obj.put("comp_id", comp_id);
                     obj.put("pc_no", pc_no);
                     obj.put("model", pc_model.getText().toString().trim());

@@ -50,6 +50,7 @@ public class ViewRepairReport extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(R.string.app_name);
         volley = new VolleyRequestSingleton(this);
 
         rep_id = getIntent().getIntExtra("rep_id", 0);
